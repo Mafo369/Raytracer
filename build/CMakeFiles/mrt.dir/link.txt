@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -std=c++14 -g -fopenmp -O  -rdynamic CMakeFiles/mrt.dir/image.cpp.o CMakeFiles/mrt.dir/kdtree.cpp.o CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o CMakeFiles/mrt.dir/main.cpp.o CMakeFiles/mrt.dir/raytracer.cpp.o CMakeFiles/mrt.dir/scene.cpp.o  -o mrt 

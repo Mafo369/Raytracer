@@ -1,0 +1,4 @@
+/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/rebuild_cache.dir
+/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/edit_cache.dir
+/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir
+/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/unit-test.dir
