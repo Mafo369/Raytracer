@@ -6,6 +6,7 @@
 #include "scene_types.h"
 #include <stdio.h>
 #include <cmath>
+#include <string.h>
 
 #include <glm/gtc/epsilon.hpp>
 
@@ -85,40 +86,46 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
   size_t objectCount = scene->objects.size();
 
 //!\todo loop on each object of the scene to compute intersection
-  Intersection *temp;
+
   float dist;
 
   for(size_t i = 0; i<objectCount; i++){
+    Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
     if(scene->objects[i]->geom.type == PLANE){
       if(intersectPlane(ray, temp, scene->objects[i])){
+        float temp_dist = distance(ray->orig, temp->position);
         if(hasIntersection){
-          float temp_dist = distance(ray->orig, temp->position);
           if(temp_dist < dist){
-            intersection = temp;
-            dist = temp_dist; 
+            dist = temp_dist;
+            memcpy(intersection, temp, sizeof(Intersection));
           }
-        }else{
-          hasIntersection = true;
-          intersection = temp;
-          dist = distance(ray->orig, intersection->position);
         }
-      }
-    }else if(scene->objects[i]->geom.type == SPHERE){
-      if(intersectSphere(ray, intersection, scene->objects[i])){
-        if(hasIntersection){
-          float temp_dist = distance(ray->orig,temp->position);
-          if(temp_dist < dist){
-            intersection = temp;
-            dist = temp_dist; 
-          }
-        }else{
+        else{
           hasIntersection = true;
-          intersection = temp;
-          dist = distance(ray->orig, intersection->position);
+          memcpy(intersection, temp, sizeof(Intersection));
+          dist = temp_dist; 
         }
       }
     }
+    else if(scene->objects[i]->geom.type == SPHERE){
+      if(intersectSphere(ray, temp, scene->objects[i])){
+        float temp_dist = distance(ray->orig, temp->position);
+        if(hasIntersection){
+          if(temp_dist < dist){
+            dist = temp_dist;
+            memcpy(intersection, temp, sizeof(Intersection));
+          }
+        }
+        else{
+          hasIntersection = true;
+          memcpy(intersection, temp, sizeof(Intersection));
+          dist = temp_dist;
+        }
+      }
+    }
+    free(temp);
   }
+
 
   return hasIntersection;
 }
@@ -223,6 +230,11 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat) {
 //! \todo compute bsdf, return the shaded color taking into account the
 //! lightcolor
 
+  float ln = dot(l, n);
+  float pi = M_PI;
+
+  if(ln > 0)
+    ret = (mat->diffuseColor/pi) * ln * lc;
 
   return ret;
 }
@@ -236,7 +248,17 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
   Intersection intersection;
 
   if(intersectScene(scene, ray, &intersection)){
-    ret = (0.5f * intersection.normal) + 0.5f;
+    //ret = (0.5f * intersection.normal) + 0.5f;
+    
+
+    size_t lightsCount = scene->lights.size();
+    
+    for(size_t i=0; i<lightsCount; i++){
+      vec3 n = ray->dir * -1.0f;
+      vec3 lp = scene->lights[i]->position - intersection.position;
+      vec3 l = lp/length(lp);
+      ret += shade(intersection.normal, n, l, scene->lights[i]->color, intersection.mat);
+    }
   }else{
     ret = scene->skyColor;
   }
