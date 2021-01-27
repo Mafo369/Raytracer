@@ -85,16 +85,38 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
   size_t objectCount = scene->objects.size();
 
 //!\todo loop on each object of the scene to compute intersection
+  Intersection *temp;
+  float dist;
 
   for(size_t i = 0; i<objectCount; i++){
     if(scene->objects[i]->geom.type == PLANE){
-      hasIntersection = intersectPlane(ray, intersection, scene->objects[i]);
-      if(hasIntersection)
-        return true;
+      if(intersectPlane(ray, temp, scene->objects[i])){
+        if(hasIntersection){
+          float temp_dist = distance(ray->orig, temp->position);
+          if(temp_dist < dist){
+            intersection = temp;
+            dist = temp_dist; 
+          }
+        }else{
+          hasIntersection = true;
+          intersection = temp;
+          dist = distance(ray->orig, intersection->position);
+        }
+      }
     }else if(scene->objects[i]->geom.type == SPHERE){
-      hasIntersection = intersectSphere(ray, intersection, scene->objects[i]);
-      if(hasIntersection)
-        return true;
+      if(intersectSphere(ray, intersection, scene->objects[i])){
+        if(hasIntersection){
+          float temp_dist = distance(ray->orig,temp->position);
+          if(temp_dist < dist){
+            intersection = temp;
+            dist = temp_dist; 
+          }
+        }else{
+          hasIntersection = true;
+          intersection = temp;
+          dist = distance(ray->orig, intersection->position);
+        }
+      }
     }
   }
 
