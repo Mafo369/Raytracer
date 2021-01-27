@@ -250,22 +250,31 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
   if(intersectScene(scene, ray, &intersection)){
     //ret = (0.5f * intersection.normal) + 0.5f;
     
-
     size_t lightsCount = scene->lights.size();
     
     for(size_t i=0; i<lightsCount; i++){
       vec3 n = ray->dir * -1.0f;
       vec3 lp = scene->lights[i]->position - intersection.position;
       vec3 l = lp/length(lp);
-      ret += shade(intersection.normal, n, l, scene->lights[i]->color, intersection.mat);
+      
+      Ray *ray_ombre = (Ray *)malloc(sizeof(Ray));
+      ray_ombre->orig = intersection.position + (acne_eps * l);
+      ray_ombre->dir = l;
+      ray_ombre->tmax = ray->tmax;
+      ray_ombre->tmin = ray->tmin;
+
+      Intersection temp_inter;
+      if(!intersectScene(scene, ray_ombre, &temp_inter)){
+        ret += shade(intersection.normal, n, l, scene->lights[i]->color, intersection.mat);
+      }
+      else
+        ret += 0.f;
+
+      free(ray_ombre);
     }
   }else{
     ret = scene->skyColor;
   }
-
-
-
-
 
 
   return ret;
