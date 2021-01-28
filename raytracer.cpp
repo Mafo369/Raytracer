@@ -293,7 +293,7 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
   //! = RDM_Smith
   
   float d = RDM_Beckmann(NdotH, m->roughness);
-  float f = RDM_Fresnel(LdotH, m->roughness, m->IOR); 
+  float f = RDM_Fresnel(LdotH, 1.f, m->IOR); 
   float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
 
   return color3(m->specularColor * ((d*f*g)/(4 * LdotN * VdotN)));
