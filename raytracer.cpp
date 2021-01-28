@@ -199,9 +199,19 @@ float RDM_chiplus(float c) { return (c > 0.f) ? 1.f : 0.f; }
  */
 float RDM_Beckmann(float NdotH, float alpha) {
 
-
   //! \todo compute Beckmann normal distribution
-  return 0.5f;
+  
+  float phi = RDM_chiplus(NdotH);
+
+  float cos2 = NdotH*NdotH;
+  float tan2 = (1-(cos2))/cos2;
+  float alpha2 = alpha*alpha;
+  float e = exp(-tan2/(alpha2));
+  float pi_alpha_cos = M_PI * alpha2 * (cos2*cos2);
+
+  float d = phi * (e/pi_alpha_cos) ;
+
+  return d;
 
 }
 
@@ -211,7 +221,30 @@ float RDM_Beckmann(float NdotH, float alpha) {
 float RDM_Fresnel(float LdotH, float extIOR, float intIOR) {
 
   //! \todo compute Fresnel term
-  return 0.5f;
+
+  float n1_n2 = (extIOR/intIOR) * (extIOR/intIOR);
+  float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
+  if(sin2_t > 1.0f)
+    return 1.0f;
+  float cos_t = sqrtf(1-sin2_t);
+  
+  float ncos_minus_it = (extIOR * LdotH - intIOR * cos_t);
+  float ncos_minus2_it = ncos_minus_it * ncos_minus_it;
+  float ncos_plus_it = (extIOR * LdotH + intIOR * cos_t);
+  float ncos_plus2_it = ncos_plus_it * ncos_plus_it;
+
+  float ncos_minus_ti = (extIOR * cos_t - intIOR * LdotH);
+  float ncos_minus2_ti = ncos_minus_ti * ncos_minus_ti;
+  float ncos_plus_ti = (extIOR * cos_t + intIOR * LdotH);
+  float ncos_plus2_ti = ncos_plus_ti * ncos_plus_ti;
+
+
+  float rs = ncos_minus2_it/ncos_plus2_it;
+  float rp = ncos_minus2_ti/ncos_plus2_ti;
+
+  float f = (rs + rp)/2;
+
+  return f;
 
 }
 
@@ -220,8 +253,22 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR) {
 float RDM_G1(float DdotH, float DdotN, float alpha) {
 
   //! \todo compute G1 term of the Smith fonction
-  return 0.5f;
+  
+  float tanx = sqrtf(1-(DdotN * DdotN))/DdotN;
+  float b = 1/(alpha * tanx);
+  
+  float k = DdotH/DdotN;
 
+  float phi_k = RDM_chiplus(k);
+
+  if(b < 1.6f){
+    float b2 = b*b;
+    float fraction = (3.535*b + 2.181*b2)/(1 + 2.276*b + 2.577*b2);
+    float g1 = phi_k * fraction;
+    return g1;
+  }  
+
+  return phi_k;
 }
 
 // LdotH : Light . Half
@@ -230,10 +277,7 @@ float RDM_G1(float DdotH, float DdotN, float alpha) {
 // VdotN : View . Norm
 float RDM_Smith(float LdotH, float LdotN, float VdotH, float VdotN,
                 float alpha) {
-
-  //! \todo the Smith fonction
-  return 0.5f;
-
+  return RDM_G1(LdotH, LdotN, alpha) * RDM_G1(VdotH, VdotN, alpha);
 }
 
 // Specular term of the Cook-torrance bsdf
@@ -247,15 +291,19 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
 
   //! \todo specular term of the bsdf, using D = RDB_Beckmann, F = RDM_Fresnel, G
   //! = RDM_Smith
-  return color3(.5f);
+  
+  float d = RDM_Beckmann(NdotH, m->roughness);
+  float f = RDM_Fresnel(LdotH, m->roughness, m->IOR); 
+  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
+
+  return color3(m->specularColor * ((d*f*g)/(4 * LdotN * VdotN)));
 
 }
 // diffuse term of the cook torrance bsdf
 color3 RDM_bsdf_d(Material *m) {
 
-  //! \todo compute diffuse component of the bsdf
-  return color3(.5f);
-
+  float pi = M_PI;
+  return color3(m->diffuseColor/pi);
 }
 
 // The full evaluation of bsdf(wi, wo) * cos (thetai)
@@ -269,7 +317,7 @@ color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
                 Material *m) {
 
   //! \todo compute bsdf diffuse and specular term
-  return color3(0.f);
+  return color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
 
 }
 
@@ -282,10 +330,22 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat) {
 //! lightcolor
 
   float ln = dot(l, n);
-  float pi = M_PI;
+  //float pi = M_PI;
 
-  if(ln > 0)
+  /*if(ln > 0)
     ret = (mat->diffuseColor/pi) * ln * lc;
+  */
+  if(ln > 0){
+    vec3 vl = v + l;
+    vec3 h = vl/length(vl);
+
+    float LdotH = dot(l, h);
+    float NdotH = dot(n, h);
+    float VdotH = dot(v, h);
+    float LdotN = dot(l, n);
+    float VdotN = dot(v, n);
+    ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat) * LdotN;
+  }
 
   return ret;
 }
