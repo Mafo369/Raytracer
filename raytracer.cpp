@@ -132,54 +132,6 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
   return hasIntersection;
 }
 
-bool intersectScene1(const Scene *scene, Ray *ray, Intersection *intersection) {
-  bool hasIntersection = false;
-  size_t objectCount = scene->objects.size();
-
-//!\todo loop on each object of the scene to compute intersection
-
-  float dist;
-
-  for(size_t i = 0; i<objectCount; i++){
-    Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
-    if(scene->objects[i]->geom.type == PLANE){
-      if(intersectPlane(ray, temp, scene->objects[i])){
-        float temp_dist = distance(ray->orig, temp->position);
-        if(hasIntersection){
-          if(temp_dist < dist){
-            dist = temp_dist;
-            memcpy(intersection, temp, sizeof(Intersection));
-          }
-        }
-        else{
-          hasIntersection = true;
-          memcpy(intersection, temp, sizeof(Intersection));
-          dist = temp_dist; 
-        }
-      }
-    }
-    else if(scene->objects[i]->geom.type == SPHERE){
-      if(intersectSphere(ray, temp, scene->objects[i])){
-        float temp_dist = distance(ray->orig, temp->position);
-        if(hasIntersection){
-          if(temp_dist < dist){
-            dist = temp_dist;
-            memcpy(intersection, temp, sizeof(Intersection));
-          }
-        }
-        else{
-          hasIntersection = true;
-          memcpy(intersection, temp, sizeof(Intersection));
-          dist = temp_dist;
-        }
-      }
-    }
-    free(temp);
-  }
-
-
-  return hasIntersection;
-}
 
 /* ---------------------------------------------------------------------------
  */
@@ -221,6 +173,9 @@ float RDM_Beckmann(float NdotH, float alpha) {
 float RDM_Fresnel(float LdotH, float extIOR, float intIOR) {
 
   //! \todo compute Fresnel term
+  if(LdotH < 0){
+    LdotH = -LdotH;
+  }
 
   float n1_n2 = (extIOR/intIOR) * (extIOR/intIOR);
   float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
@@ -363,8 +318,9 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
   Intersection intersection;
 
 
-  if(ray->depth > 10)
+  if(ray->depth > 5)
     return color3(0.f);
+
 
   if(intersectScene(scene, ray, &intersection)){
     //ret = (0.5f * intersection.normal) + 0.5f;
@@ -373,9 +329,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
 
     for(size_t i=0; i<lightsCount; i++){
 
-      if(ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0)
-        return color3(1.f);
-
+      
       vec3 v = ray->dir * -1.0f;
       vec3 lp = scene->lights[i]->position - intersection.position;
       vec3 l = lp/length(lp);
@@ -397,7 +351,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
       free(ray_ombre);
     }
       
-    if(ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0)
+    
+    if(ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0)
       return color3(1.f);
     
     vec3 r = reflect(ray->dir, intersection.normal);
@@ -409,9 +364,16 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
     ray_ref->tmax = 10000;
 
     color3 cr = trace_ray(scene, ray_ref, tree);
-    float LdotH = abs(dot(ray_ref->dir, intersection.normal)); 
+    float LdotH = dot(ray_ref->dir,intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
-  
+
+    if(f < 0.f || f > 1.f)
+      printf("f=%f\n",f);
+
+    if(cr.r > 1.f && cr.g > 1.f && cr.b > 1.f){
+      //printf("r=%f g=%f b=%f\n",cr.r,cr.g,cr.b);
+    }
+
     ret +=  (f * cr * intersection.mat->specularColor);
 
     free(ray_ref);
