@@ -224,8 +224,9 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR) {
 
   float n1_n2 = (extIOR/intIOR) * (extIOR/intIOR);
   float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
-  if(sin2_t > 1.0f)
-    return 1.0f;
+  if(sin2_t > 1.0f){
+    return 1.f;
+  }
   float cos_t = sqrtf(1-sin2_t);
   
   float ncos_minus_it = (extIOR * LdotH - intIOR * cos_t);
@@ -243,6 +244,9 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR) {
   float rp = ncos_minus2_ti/ncos_plus2_ti;
 
   float f = (rs + rp)/2;
+
+  float term1 = extIOR * cos_t;
+  float term2 = intIOR * LdotH;
 
   return f;
 
@@ -358,13 +362,21 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
+
+  if(ray->depth > 10)
+    return color3(0.f);
+
   if(intersectScene(scene, ray, &intersection)){
     //ret = (0.5f * intersection.normal) + 0.5f;
     
     size_t lightsCount = scene->lights.size();
 
     for(size_t i=0; i<lightsCount; i++){
-      vec3 n = ray->dir * -1.0f;
+
+      if(ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0)
+        return color3(1.f);
+
+      vec3 v = ray->dir * -1.0f;
       vec3 lp = scene->lights[i]->position - intersection.position;
       vec3 l = lp/length(lp);
       
@@ -375,16 +387,34 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
       ray_ombre->tmin = 0;
 
       Intersection temp_inter;
-      //Intersection *temp_inter = (Intersection *)malloc(sizeof(Intersection));
       if(!intersectScene(scene, ray_ombre, &temp_inter)){
-        ret += shade(intersection.normal, n, l, scene->lights[i]->color, intersection.mat);
+        ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
       }
-      else
-        ret += 0.f;
-
-      //free(temp_inter);
+      else{
+        ret += color3(0.f);
+      }
+    
       free(ray_ombre);
     }
+      
+    if(ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0)
+      return color3(1.f);
+    
+    vec3 r = reflect(ray->dir, intersection.normal);
+    Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
+    ray_ref->orig = intersection.position + (acne_eps * r);
+    ray_ref->dir = r; 
+    ray_ref->depth =  ray->depth + 1;
+    ray_ref->tmin = 0;
+    ray_ref->tmax = 10000;
+
+    color3 cr = trace_ray(scene, ray_ref, tree);
+    float LdotH = abs(dot(ray_ref->dir, intersection.normal)); 
+    float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+  
+    ret +=  (f * cr * intersection.mat->specularColor);
+
+    free(ray_ref);
   }else{
     ret = scene->skyColor;
   }
