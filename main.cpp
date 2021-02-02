@@ -267,6 +267,50 @@ Scene *initScene4() {
   return scene;
 }
 
+Scene *initScene5() {
+
+  Scene *scene = initScene();
+  setCamera(scene, point3(3, 0, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+            (float)WIDTH / (float)HEIGHT);
+  setSkyColor(scene, color3(0.2, 0.2, 0.7));
+
+  Material mat;
+  mat.IOR = 1.12;
+  mat.roughness = 0.2;
+  mat.specularColor = color3(0.4f);
+  mat.diffuseColor = color3(0.6f);
+
+  for (int i = 0; i < 10; ++i) {
+    mat.diffuseColor = color3(0.301, 0.034, 0.039);
+    mat.specularColor = color3(1.0, 0.992, 0.98);
+    mat.IOR = 1.1382;
+    mat.roughness = 0.0886;
+    mat.roughness = ((float)10 - i) / (10 * 9.f);
+    addObject(scene, initSphere(point3(0, 0, -1.5 + i / 9.f * 3.f), .15, mat));
+  }
+  for (int i = 0; i < 10; ++i) {
+    mat.diffuseColor = color3(0.012, 0.036, 0.106);
+    mat.specularColor = color3(1.0, 0.965, 1.07);
+    mat.IOR = 1.1153;
+    mat.roughness = 0.068;
+    mat.roughness = ((float)i + 1) / 10.f;
+    addObject(scene, initSphere(point3(0, 1, -1.5 + i / 9.f * 3.f), .15, mat));
+  }
+  mat.diffuseColor = color3(0.014, 0.012, 0.012);
+  mat.specularColor = color3(1.0, 0.882, 0.786);
+  mat.IOR = 2.4449;
+  mat.roughness = 0.0681;
+  addObject(scene, initSphere(point3(-3.f, 1.f, 0.f), 2., mat));
+
+  mat.diffuseColor = color3(0.014, 0.012, 0.012);
+  mat.specularColor = color3(0.7, 0.882, 0.786);
+  mat.IOR = 6;
+  mat.roughness = 0.0181;
+  addObject(scene, initPlane(vec3(0, 1, 0), +1, mat));
+
+  addLight(scene, initLight(point3(10, 100, 100), color3(50, 50, 50)));
+  return scene;
+}
 
 int main(int argc, char *argv[]) {
   printf("Welcome to the L3 IGTAI RayTracer project\n");
@@ -304,6 +348,10 @@ int main(int argc, char *argv[]) {
     break;
   case 4:
     scene = initScene4();
+    break;
+
+  case 5:
+    scene = initScene5();
     break;
 
   default:
