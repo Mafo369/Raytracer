@@ -7,6 +7,8 @@
 #include <vector>
 #include <stack>
 
+#include <limits>
+
 typedef struct s_kdtreeNode KdTreeNode;
 
 struct s_kdtreeNode {
@@ -50,8 +52,47 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node);
 
 KdTree*  initKdTree(Scene *scene) {
 
-    //!\todo compute scene bbox, store object in outOfTree or inTree depending on type
-    return NULL;
+  //!\todo compute scene bbox, store object in outOfTree or inTree depending on type
+  KdTree *tree = new KdTree();
+
+  for(int i = 0; i < scene->objects.size(); i++){
+    if(scene->objects[i]->geom.type == PLANE){
+      tree->outOfTree.push_back(i)
+    }else if(scene->objects[i]->geom.type == SPHERE){
+      tree->inTree.push_back(i);
+    }
+  }
+
+  tree->depthLimit = 20;
+  tree->objLimit = scene->objects.size() * sizeof(Object);
+
+  KdTreeNode *root = initNode(false, 0, 0);
+    
+  std::vector<float> x_vector;
+  std::vector<float> y_vector;
+  std::vector<float> z_vector;
+
+  for(int i = 0; i < node->objects.size(); i++){
+    float x = scene->objects[i]->geom.position.x;
+    float y = scene->objects[i]->geom.position.y;
+    float z = scene->objects[i]->geom.position.z;
+  
+    x_vector.push_back(x);
+    y_vector.push_back(y);
+    z_vector.push_back(z);   
+  }
+  float xmin = std::min_element(x_vector.begin(),x_vector.end());
+  float ymin = std::min_element(y_vector.begin(),y_vector.end());
+  float zmin = std::min_element(z_vector.begin(),z_vector.end());
+  float xmax = std::max_element(x_vector.begin(),x_vector.end());
+  float ymax = std::max_element(y_vector.begin(),y_vector.end());
+  float zmax = std::max_element(z_vector.begin(),z_vector.end());
+
+  root->min = vec3(xmin, ymin, zmin);
+  root->max = vec3(xmax, ymax, zmax); 
+  
+  tree->root = root;
+  return tree;
 
 }
 
@@ -69,7 +110,39 @@ bool intersectSphereAabb(vec3 sphereCenter, float sphereRadius, vec3 aabbMin, ve
 
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
 
-    //!\todo generate children, compute split position, move objets to children and subdivide if needed.
+  //!\todo generate children, compute split position, move objets to children and subdivide if needed.
+  KdTreeNode *new_node = new KdTreeNode();
+  int d = (node->depth) % 3;
+  
+  float xmin, ymin, zmin;
+  float xmax, ymax, zmax;
+  
+  vec3 min;
+  vec3 max;
+  for(int i = 0; i < node->objects.size(); i++){
+    float x = node->objects[i]->geom.position.x;
+    float y = node->objects[i]->geom.position.y;
+    float z = node->objects[i]->geom.position.z;
+
+    if(xmin > x){
+      xmin = x;
+    }
+    if(ymin > y){
+      ymin = y;
+    }
+    if(zmin > z){
+      zmin = z;
+    }
+    if(x > xmax){
+      xmax = x;
+    }
+    if(y > ymax){
+      ymax = y;
+    }
+    if(z > zmax){
+      zmax = z;
+    }
+  }
 
 
 }

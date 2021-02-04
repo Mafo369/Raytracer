@@ -367,7 +367,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
   Intersection intersection;
 
 
-  if(ray->depth > 1)
+  if(ray->depth > 10)
     return color3(0.f);
 
 
@@ -416,8 +416,6 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
     float LdotH = dot(ray_ref->dir,intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
-    if(f < 0.f || f > 1.f)
-      printf("f=%f\n",f);
 
     if(cr.r > 1.f && cr.g > 1.f && cr.b > 1.f){
       //printf("r=%f g=%f b=%f\n",cr.r,cr.g,cr.b);
@@ -432,6 +430,56 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
 
 
   return ret;
+}
+
+color3 trace_ray_multisampling(Scene *scene, KdTree *tree, vec3 dx, vec3 dy, vec3 ray_dir){
+
+    Ray rx;
+    rayInit(&rx, scene->cam.position, normalize(ray_dir));
+    color3 c = trace_ray(scene, &rx, tree);
+
+    Ray rx1;
+    vec3 ray_dir1 = ray_dir + dx * 0.5f; 
+    rayInit(&rx1, scene->cam.position, normalize(ray_dir1));
+    color3 c1 = trace_ray(scene, &rx1, tree);
+
+    Ray rx2;
+    vec3 ray_dir2 = ray_dir - dx * 0.5f; 
+    rayInit(&rx2, scene->cam.position, normalize(ray_dir2));
+    color3 c2 = trace_ray(scene, &rx2, tree);
+      
+    Ray rx3;
+    vec3 ray_dir3 = ray_dir + dy * 0.5f; 
+    rayInit(&rx3, scene->cam.position, normalize(ray_dir3));
+    color3 c3 = trace_ray(scene, &rx3, tree);
+      
+    Ray rx4;
+    vec3 ray_dir4 = ray_dir - dy * 0.5f; 
+    rayInit(&rx4, scene->cam.position, normalize(ray_dir4));
+    color3 c4 = trace_ray(scene, &rx4, tree);
+      
+    Ray rx5;
+    vec3 ray_dir5 = ray_dir + dx * 0.5f + dy * 0.5f; 
+    rayInit(&rx5, scene->cam.position, normalize(ray_dir5));
+    color3 c5 = trace_ray(scene, &rx5, tree);
+      
+    Ray rx6;
+    vec3 ray_dir6 = ray_dir + dx * 0.5f - dy * 0.5f; 
+    rayInit(&rx6, scene->cam.position, normalize(ray_dir6));
+    color3 c6 = trace_ray(scene, &rx6, tree);
+      
+    Ray rx7;
+    vec3 ray_dir7 = ray_dir - dx * 0.5f + dy * 0.5f; 
+    rayInit(&rx7, scene->cam.position, normalize(ray_dir7));
+    color3 c7 = trace_ray(scene, &rx7, tree);
+      
+    Ray rx8;
+    vec3 ray_dir8 = ray_dir - dx * 0.5f - dy * 0.5f; 
+    rayInit(&rx8, scene->cam.position, normalize(ray_dir8));
+    color3 c8 = trace_ray(scene, &rx8, tree);
+
+    return ((c + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8) * (1.f/9.f));
+  
 }
 
 void renderImage(Image *img, Scene *scene) {
@@ -470,56 +518,14 @@ void renderImage(Image *img, Scene *scene) {
 #pragma omp parallel for
     for (size_t i = 0; i < img->width; i++) {
       color3 *ptr = getPixelPtr(img, i, j);
+
       vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
                      float(i) * dx + float(j) * dy;
-
-      Ray rx;
-      rayInit(&rx, scene->cam.position, normalize(ray_dir));
-
-      Ray rx1;
-      vec3 ray_dir1 = ray_dir + dx * 0.5f; 
-      rayInit(&rx1, scene->cam.position, normalize(ray_dir1));
-      color3 c1 = trace_ray(scene, &rx1, tree);
-
-      Ray rx2;
-      vec3 ray_dir2 = ray_dir - dx * 0.5f; 
-      rayInit(&rx2, scene->cam.position, normalize(ray_dir2));
-      color3 c2 = trace_ray(scene, &rx2, tree);
       
-      Ray rx3;
-      vec3 ray_dir3 = ray_dir + dy * 0.5f; 
-      rayInit(&rx3, scene->cam.position, normalize(ray_dir3));
-      color3 c3 = trace_ray(scene, &rx3, tree);
+      /*Ray rx;
+      rayInit(&rx, scene->cam.position, normalize(ray_dir));*/
       
-      Ray rx4;
-      vec3 ray_dir4 = ray_dir - dy * 0.5f; 
-      rayInit(&rx4, scene->cam.position, normalize(ray_dir4));
-      color3 c4 = trace_ray(scene, &rx4, tree);
-      
-      Ray rx5;
-      vec3 ray_dir5 = ray_dir + dx * 0.5f + dy * 0.5f; 
-      rayInit(&rx5, scene->cam.position, normalize(ray_dir5));
-      color3 c5 = trace_ray(scene, &rx5, tree);
-      
-      Ray rx6;
-      vec3 ray_dir6 = ray_dir + dx * 0.5f - dy * 0.5f; 
-      rayInit(&rx6, scene->cam.position, normalize(ray_dir6));
-      color3 c6 = trace_ray(scene, &rx6, tree);
-      
-      Ray rx7;
-      vec3 ray_dir7 = ray_dir - dx * 0.5f + dy * 0.5f; 
-      rayInit(&rx7, scene->cam.position, normalize(ray_dir7));
-      color3 c7 = trace_ray(scene, &rx7, tree);
-      
-      Ray rx8;
-      vec3 ray_dir8 = ray_dir - dx * 0.5f - dy * 0.5f; 
-      rayInit(&rx8, scene->cam.position, normalize(ray_dir8));
-      color3 c8 = trace_ray(scene, &rx8, tree);
-
-      color3 c = trace_ray(scene, &rx, tree);
-
-      
-      *ptr = (c + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8) * (1.f/9.f);
+      *ptr = trace_ray_multisampling(scene, tree, dx, dy, ray_dir);
 
       //*ptr = trace_ray(scene, &rx, tree);
     }
