@@ -367,7 +367,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
   Intersection intersection;
 
 
-  if(ray->depth > 10)
+  if(ray->depth > 1)
     return color3(0.f);
 
 
@@ -488,7 +488,7 @@ void renderImage(Image *img, Scene *scene) {
   //! and kdtree initializaion
   float aspect = 1.f / scene->cam.aspect;
 
-  KdTree *tree = NULL;
+  KdTree *tree = initKdTree(scene);
 
 
 //! \todo initialize KdTree

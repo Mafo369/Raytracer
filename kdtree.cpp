@@ -7,6 +7,7 @@
 #include <vector>
 #include <stack>
 
+#include <algorithm>
 #include <limits>
 
 typedef struct s_kdtreeNode KdTreeNode;
@@ -55,9 +56,9 @@ KdTree*  initKdTree(Scene *scene) {
   //!\todo compute scene bbox, store object in outOfTree or inTree depending on type
   KdTree *tree = new KdTree();
 
-  for(int i = 0; i < scene->objects.size(); i++){
+  for(size_t i = 0; i < scene->objects.size(); i++){
     if(scene->objects[i]->geom.type == PLANE){
-      tree->outOfTree.push_back(i)
+      tree->outOfTree.push_back(i);
     }else if(scene->objects[i]->geom.type == SPHERE){
       tree->inTree.push_back(i);
     }
@@ -72,28 +73,33 @@ KdTree*  initKdTree(Scene *scene) {
   std::vector<float> y_vector;
   std::vector<float> z_vector;
 
-  for(int i = 0; i < node->objects.size(); i++){
-    float x = scene->objects[i]->geom.position.x;
-    float y = scene->objects[i]->geom.position.y;
-    float z = scene->objects[i]->geom.position.z;
+  for(size_t i = 0; i < scene->objects.size(); i++){
+    float x = scene->objects[i]->geom.sphere.center.x;
+    float y = scene->objects[i]->geom.sphere.center.y;
+    float z = scene->objects[i]->geom.sphere.center.z;
   
     x_vector.push_back(x);
     y_vector.push_back(y);
     z_vector.push_back(z);   
   }
-  float xmin = std::min_element(x_vector.begin(),x_vector.end());
-  float ymin = std::min_element(y_vector.begin(),y_vector.end());
-  float zmin = std::min_element(z_vector.begin(),z_vector.end());
-  float xmax = std::max_element(x_vector.begin(),x_vector.end());
-  float ymax = std::max_element(y_vector.begin(),y_vector.end());
-  float zmax = std::max_element(z_vector.begin(),z_vector.end());
+  float xmin = *std::min_element(x_vector.begin(),x_vector.end());
+  float ymin = *std::min_element(y_vector.begin(),y_vector.end());
+  float zmin = *std::min_element(z_vector.begin(),z_vector.end());
+  float xmax = *std::max_element(x_vector.begin(),x_vector.end());
+  float ymax = *std::max_element(y_vector.begin(),y_vector.end());
+  float zmax = *std::max_element(z_vector.begin(),z_vector.end());
 
   root->min = vec3(xmin, ymin, zmin);
   root->max = vec3(xmax, ymax, zmax); 
+
+  for(size_t i = 0; i < tree->inTree.size();i++){
+    root->objects.push_back(tree->inTree[i]);
+  }
   
   tree->root = root;
+  subdivide(scene, tree, tree->root);
+  printf("root.size=%lu\n",tree->root->objects.size());
   return tree;
-
 }
 
 
@@ -108,42 +114,131 @@ bool intersectSphereAabb(vec3 sphereCenter, float sphereRadius, vec3 aabbMin, ve
 }
 
 
+float surfaceArea(vec3 min, vec3 max){
+  float dx = max.x - min.x;
+  float dy = max.y - min.y;
+  float dz = max.z - min.z;
+
+  return 2*dx*dy + 2*dx*dz + 2*dy*dz;
+}
+
+float prob_hit(vec3 min1, vec3 max1, vec3 min2, vec3 max2){
+  return surfaceArea(min2, max2)/surfaceArea(min1, max1); 
+}
+
+float lambda(int nl, int nr, float pl, float pr){
+  if((nl == 0 || nr == 0) && !(pl == 1 || pr == 1))
+    return 0.8f;
+  return 1.f;
+}
+
+#define COST_TRAVERSE 1.0
+#define COST_INTERSECT 1.5
+
+float cost(int nl, int nr, float pl, float pr){
+  return (lambda(nl, nr, pl, pr) * (COST_TRAVERSE + COST_INTERSECT * (pl * nl + pr * nr)));
+}
+
+void splitBox(int d, vec3 min, vec3 max, float split, vec3 &min_vl, vec3 &max_vl, vec3 &min_vr, vec3 &max_vr){
+  min_vl = min;
+  max_vl = max;
+  min_vr = min;
+  max_vr = max;
+  if(d == 0){
+    max_vl.x = split;
+    min_vr.x = split;
+  }else if(d == 1){
+    max_vl.y = split;
+    min_vr.y = split;
+  }else{
+    max_vl.z = split;
+    min_vr.z = split;
+  }
+}
+
+void sah(int d, float split, vec3 min, vec3 max, int nl, int nr, int np, float &cp){
+  cp = INFINITY;
+
+  vec3 min_vl, max_vl;
+  vec3 min_vr, max_vr;
+  splitBox(d, min, max, split, min_vl, max_vl, min_vr, max_vr);
+  float pl, pr;
+  pl = prob_hit(min_vl, max_vl, min, max);
+  pr = prob_hit(min_vr, max_vr, min, max);
+  if(pl == 0 || pr == 0)
+    return ;
+  
+  float cpl, cpr;
+  cpl = cost(nl+np, nr, pl, pr);
+  cpr = cost(nl, nr+np, pl, pr);
+
+}
+
+bool in_box(vec3 p, vec3 min, vec3 max){
+  //printf("p.x=%f p.y=%f p.z=%f min.x=%f min.y=%f min.z=%f max.x=%f max.y=%f max.z=%f",p.x,p.y,p.z,min.x,min.y,min.z,max.x,max.y,max.z);
+  if(min.x <= p.x && p.x <= max.x && min.y <= p.y && p.y <= max.y 
+      && min.z <= p.z && p.z <= max.z)
+    return true;
+  return false;
+}
+
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
 
   //!\todo generate children, compute split position, move objets to children and subdivide if needed.
-  KdTreeNode *new_node = new KdTreeNode();
+  
+  if(node->depth >= tree->depthLimit || node->objects.size() <= 1){
+    node->leaf = true;
+    return ;
+  }
+  
   int d = (node->depth) % 3;
-  
-  float xmin, ymin, zmin;
-  float xmax, ymax, zmax;
-  
-  vec3 min;
-  vec3 max;
-  for(int i = 0; i < node->objects.size(); i++){
-    float x = node->objects[i]->geom.position.x;
-    float y = node->objects[i]->geom.position.y;
-    float z = node->objects[i]->geom.position.z;
+  KdTreeNode *node_left = initNode(false, d, node->depth + 1);
+  KdTreeNode *node_right = initNode(false, d, node->depth + 1);
+  float split;
 
-    if(xmin > x){
-      xmin = x;
-    }
-    if(ymin > y){
-      ymin = y;
-    }
-    if(zmin > z){
-      zmin = z;
-    }
-    if(x > xmax){
-      xmax = x;
-    }
-    if(y > ymax){
-      ymax = y;
-    }
-    if(z > zmax){
-      zmax = z;
-    }
+  node_left->min = node->min;
+  node_left->max = node->max;
+  node_right->min = node->min;
+  node_right->max = node->max;
+  
+  if(d == 0){
+    split = (node->max.x - node->min.x)/2 + node->min.x;
+    node_left->max.x = split;
+    node_right->min.x = split;
+  }else if(d == 1){
+    split = (node->max.y - node->min.y)/2 + node->min.y;
+    node_left->max.y = split;
+    node_right->min.y = split;
+  }else{
+    split = (node->max.z - node->min.z)/2 + node->min.z;
+    node_left->max.z = split;
+    node_right->min.z = split;
   }
 
+  node->split = split;
+  node->left = node_left;
+  node->right = node_right;
+  
+  size_t check = 0;
+  for(size_t i = 0; i < node->objects.size(); i++){
+    if(intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius,node_left->min, node_left->max)){
+      node_left->objects.push_back(i);
+      check++;
+    }
+    if(intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius,node_right->min, node_right->max)){
+      node_right->objects.push_back(i);
+      check++;
+    }
+  }
+  if(check < node->objects.size()-1){
+    printf("CHECK WRONG: check=%lu size=%lu\n", check, node->objects.size()-1);
+    return ;
+  }
+
+  node->objects.clear();
+   
+  subdivide(scene, tree, node_left);
+  subdivide(scene, tree, node_right); 
 
 }
 
