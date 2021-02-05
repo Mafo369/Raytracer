@@ -178,7 +178,6 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
     free(temp);
   }
 
-
   return hasIntersection;
 }
 
@@ -253,7 +252,6 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR) {
   float term2 = intIOR * LdotH;
 
   return f;
-
 }
 
 // DdotH : Dir . Half
@@ -361,7 +359,7 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat) {
 //! if tree is not null, use intersectKdTree to compute the intersection instead
 //! of intersect scene
 
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
+color3 trace_ray1(Scene *scene, Ray *ray, KdTree *tree) {
 
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
@@ -391,6 +389,77 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
 
       Intersection temp_inter;
       if(!intersectScene(scene, ray_ombre, &temp_inter)){
+        ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
+      }
+      else{
+        ret += color3(0.f);
+      }
+    
+      free(ray_ombre);
+    }
+      
+    
+    if(ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0)
+      return color3(1.f);
+    
+    vec3 r = reflect(ray->dir, intersection.normal);
+    Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
+    ray_ref->orig = intersection.position + (acne_eps * r);
+    ray_ref->dir = r; 
+    ray_ref->depth =  ray->depth + 1;
+    ray_ref->tmin = 0;
+    ray_ref->tmax = 10000;
+
+    color3 cr = trace_ray1(scene, ray_ref, tree);
+    float LdotH = dot(ray_ref->dir,intersection.normal);
+    float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+
+
+    if(cr.r > 1.f && cr.g > 1.f && cr.b > 1.f){
+      //printf("r=%f g=%f b=%f\n",cr.r,cr.g,cr.b);
+    }
+
+    ret +=  (f * cr * intersection.mat->specularColor);
+
+    free(ray_ref);
+  }else{
+    ret = scene->skyColor;
+  }
+
+
+  return ret;
+}
+
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
+
+  color3 ret = color3(0, 0, 0);
+  Intersection intersection;
+
+
+  if(ray->depth > 1)
+    return color3(0.f);
+
+
+  if(intersectKdTree(scene, tree, ray, &intersection)){
+    //ret = (0.5f * intersection.normal) + 0.5f;
+    
+    size_t lightsCount = scene->lights.size();
+
+    for(size_t i=0; i<lightsCount; i++){
+
+      
+      vec3 v = ray->dir * -1.0f;
+      vec3 lp = scene->lights[i]->position - intersection.position;
+      vec3 l = lp/length(lp);
+      
+      Ray *ray_ombre = (Ray *)malloc(sizeof(Ray));
+      ray_ombre->orig = intersection.position + (acne_eps * l);
+      ray_ombre->dir = l;
+      ray_ombre->tmax = distance(ray_ombre->orig, scene->lights[i]->position);
+      ray_ombre->tmin = 0;
+
+      Intersection temp_inter;
+      if(!intersectKdTree(scene, tree, ray_ombre, &temp_inter)){
         ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
       }
       else{

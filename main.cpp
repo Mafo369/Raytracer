@@ -69,6 +69,12 @@ Scene *initScene0() {
   addLight(scene, initLight(point3(10, 10, 10), color3(1, 1, 1)));
   addLight(scene, initLight(point3(4, 10, -2), color3(1, 1, 1)));
 
+  //mat.diffuseColor = color3(0.8f, 0.8f, 0.5f);
+  //addObject(scene, initSphere(point3(-0.25, -0.25, -0.25), .25, mat));
+
+  //mat.diffuseColor = color3(0.9f, 0.f, 0.5f);
+  //addObject(scene, initSphere(point3(1.25, 1.25, 1.25), .25, mat));
+
   return scene;
 }
 
@@ -147,6 +153,12 @@ Scene *initScene2() {
                                   .15, mat));
     }
   }
+  /*mat.diffuseColor = color3(0.8f, 0.8f, 0.5f);
+  addObject(scene, initSphere(point3(-1.5, 0, 0.4), .25, mat));
+
+  mat.diffuseColor = color3(0.8f, 0.8f, 0.5f);
+  addObject(scene, initSphere(point3(1.5, 0, 1.6), .25, mat));*/
+
   addLight(scene, initLight(point3(-20, 5, 10), color3(30, 30, 30)));
   addLight(scene, initLight(point3(10, 10, 10), color3(30, 30, 30)));
   addLight(scene, initLight(point3(50, -100, 10), color3(1, 0.7, 2)));

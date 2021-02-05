@@ -9,6 +9,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <string.h>
 
 typedef struct s_kdtreeNode KdTreeNode;
 
@@ -50,6 +51,7 @@ struct s_kdtree {
 };
 
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node);
+static bool intersectAabb(Ray *theRay,  vec3 min, vec3 max);
 
 KdTree*  initKdTree(Scene *scene) {
 
@@ -73,10 +75,17 @@ KdTree*  initKdTree(Scene *scene) {
   std::vector<float> y_vector;
   std::vector<float> z_vector;
 
+  float rad = scene->objects[0]->geom.sphere.radius;
+
   for(size_t i = 0; i < scene->objects.size(); i++){
+    float temp_rad = scene->objects[i]->geom.sphere.radius;
+    if(temp_rad > rad){
+      rad = temp_rad;
+    }
     float x = scene->objects[i]->geom.sphere.center.x;
     float y = scene->objects[i]->geom.sphere.center.y;
     float z = scene->objects[i]->geom.sphere.center.z;
+
   
     x_vector.push_back(x);
     y_vector.push_back(y);
@@ -89,8 +98,8 @@ KdTree*  initKdTree(Scene *scene) {
   float ymax = *std::max_element(y_vector.begin(),y_vector.end());
   float zmax = *std::max_element(z_vector.begin(),z_vector.end());
 
-  root->min = vec3(xmin, ymin, zmin);
-  root->max = vec3(xmax, ymax, zmax); 
+  root->min = vec3(xmin, ymin, zmin)-rad;
+  root->max = vec3(xmax, ymax, zmax)+rad; 
 
   for(size_t i = 0; i < tree->inTree.size();i++){
     root->objects.push_back(tree->inTree[i]);
@@ -98,7 +107,6 @@ KdTree*  initKdTree(Scene *scene) {
   
   tree->root = root;
   subdivide(scene, tree, tree->root);
-  printf("root.size=%lu\n",tree->root->objects.size());
   return tree;
 }
 
@@ -174,14 +182,6 @@ void sah(int d, float split, vec3 min, vec3 max, int nl, int nr, int np, float &
 
 }
 
-bool in_box(vec3 p, vec3 min, vec3 max){
-  //printf("p.x=%f p.y=%f p.z=%f min.x=%f min.y=%f min.z=%f max.x=%f max.y=%f max.z=%f",p.x,p.y,p.z,min.x,min.y,min.z,max.x,max.y,max.z);
-  if(min.x <= p.x && p.x <= max.x && min.y <= p.y && p.y <= max.y 
-      && min.z <= p.z && p.z <= max.z)
-    return true;
-  return false;
-}
-
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
 
   //!\todo generate children, compute split position, move objets to children and subdivide if needed.
@@ -222,31 +222,130 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
   size_t check = 0;
   for(size_t i = 0; i < node->objects.size(); i++){
     if(intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius,node_left->min, node_left->max)){
-      node_left->objects.push_back(i);
+      node_left->objects.push_back(node->objects[i]);
       check++;
     }
     if(intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius,node_right->min, node_right->max)){
-      node_right->objects.push_back(i);
+      node_right->objects.push_back(node->objects[i]);
       check++;
+    }
+    if(check < i){
+      printf("wrong check: node.x=%f node.y=%f node.z=%f\n", scene->objects[node->objects[i]]->geom.sphere.center.x, scene->objects[node->objects[i]]->geom.sphere.center.y,
+          scene->objects[node->objects[i]]->geom.sphere.center.z);
     }
   }
   if(check < node->objects.size()-1){
     printf("CHECK WRONG: check=%lu size=%lu\n", check, node->objects.size()-1);
     return ;
   }
-
   node->objects.clear();
    
   subdivide(scene, tree, node_left);
   subdivide(scene, tree, node_right); 
-
 }
 
 bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackNode currentNode, Ray * ray, Intersection *intersection) {
 
     //! \todo traverse kdtree to find intersection
 
-    return false;
+    bool hasIntersection = false;
+    float dist;
+    if(!stack->empty()){
+      if(currentNode.node->leaf){
+        for(size_t i = 0; i < currentNode.node->objects.size(); i++){
+          //printf("%f %f %f\n",scene->objects[currentNode.node->objects[i]]->geom.sphere.center.x, scene->objects[currentNode.node->objects[i]]->geom.sphere.center.y, scene->objects[currentNode.node->objects[i]]->geom.sphere.center.z);
+          Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
+          if(intersectSphere(ray, temp, scene->objects[currentNode.node->objects[i]])){
+            float temp_dist = ray->tmax;
+            if(hasIntersection){
+              if(temp_dist < dist){
+                dist = temp_dist;
+                memcpy(intersection, temp, sizeof(Intersection));
+              }
+            }
+            else{
+              hasIntersection = true;
+              memcpy(intersection, temp, sizeof(Intersection));
+              dist = temp_dist;
+            }
+          }
+          free(temp);
+        }
+        if(hasIntersection){
+          return true;
+        }
+        else{
+          if(!stack->empty()){
+            memcpy(&currentNode, &stack->top(), sizeof(StackNode));
+            stack->pop();
+            return traverse(scene, tree, stack, currentNode, ray, intersection);
+          }
+        }
+      }
+      else{
+        Ray *ray_left = new Ray();
+        Ray *ray_right = new Ray();
+        //ray_left = ray;
+        //ray_right = ray;
+        memcpy(ray_left, ray, sizeof(Ray));
+        memcpy(ray_right, ray, sizeof(Ray));
+        bool intersect_left = intersectAabb(ray_left, currentNode.node->left->min, currentNode.node->left->max);
+        bool intersect_right = intersectAabb(ray_right, currentNode.node->right->min, currentNode.node->right->max);
+        if(intersect_left && intersect_right){
+          if(ray_right->tmin < ray_left->tmin){
+            StackNode s_node;
+            s_node.node = currentNode.node->left;
+            s_node.tmin = ray_left->tmin;
+            s_node.tmax = ray_left->tmax;
+            stack->push(s_node);
+            StackNode c_node;
+            c_node.node = currentNode.node->right;
+            c_node.tmin = ray_right->tmin;
+            c_node.tmax = ray_right->tmax;
+            currentNode = c_node;
+          }
+          else{
+            StackNode s_node;
+            s_node.node = currentNode.node->right;
+            s_node.tmin = ray_right->tmin;
+            s_node.tmax = ray_right->tmax;
+            stack->push(s_node);
+            StackNode c_node;
+            c_node.node = currentNode.node->left;
+            c_node.tmin = ray_left->tmin;
+            c_node.tmax = ray_left->tmax;
+            currentNode = c_node;
+          }
+        }
+        else{
+          if(intersect_left){
+            StackNode c_node;
+            c_node.node = currentNode.node->left;
+            c_node.tmin = ray_left->tmin;
+            c_node.tmax = ray_left->tmax;
+            currentNode = c_node;
+          }
+          else if(intersect_right){
+            StackNode c_node;
+            c_node.node = currentNode.node->right;
+            c_node.tmin = ray_right->tmin;
+            c_node.tmax = ray_right->tmax;
+            currentNode = c_node;
+          }
+          else{
+            if(!stack->empty()){
+              memcpy(&currentNode, &stack->top(), sizeof(StackNode));
+              stack->pop();
+            }
+          }
+        }
+        free(ray_left);
+        free(ray_right);
+      }
+      return traverse(scene, tree, stack, currentNode, ray, intersection);
+    }
+
+  return false;
 }
 
 
@@ -277,6 +376,15 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
     bool hasIntersection = false;
 
     //!\todo call vanilla intersection on non kdtree object, then traverse the tree to compute other intersections
+    if(intersectAabb(ray, tree->root->min, tree->root->max)){
+      std::stack<StackNode> stack;
+      StackNode startNode;
+      startNode.node = tree->root;
+      startNode.tmin = ray->tmin;
+      startNode.tmax = ray->tmax;
+      stack.push(startNode);
+      return traverse(scene, tree, &stack, startNode, ray, intersection);
+    }
 
     return hasIntersection;
 }
