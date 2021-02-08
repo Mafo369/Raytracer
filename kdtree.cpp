@@ -276,7 +276,7 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
         }
         else{
           if(!stack->empty()){
-            memcpy(&currentNode, &stack->top(), sizeof(StackNode));
+            memcpy(&currentNode, &(stack->top()), sizeof(StackNode));
             stack->pop();
             return traverse(scene, tree, stack, currentNode, ray, intersection);
           }
@@ -376,6 +376,11 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
     bool hasIntersection = false;
 
     //!\todo call vanilla intersection on non kdtree object, then traverse the tree to compute other intersections
+    float dist;
+
+    Ray *ray_backup = new Ray();
+    memcpy(ray_backup, ray, sizeof(Ray));
+    
     if(intersectAabb(ray, tree->root->min, tree->root->max)){
       std::stack<StackNode> stack;
       StackNode startNode;
@@ -383,8 +388,39 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
       startNode.tmin = ray->tmin;
       startNode.tmax = ray->tmax;
       stack.push(startNode);
-      return traverse(scene, tree, &stack, startNode, ray, intersection);
+      hasIntersection = traverse(scene, tree, &stack, startNode, ray, intersection);
     }
+    if(hasIntersection){
+      dist = distance(ray->orig, intersection->position);
+      if(dist <= 0){
+        printf("%f %f %f\n", intersection->position.x, intersection->position.y, intersection->position.z);
+      }
+      /*if(ray->tmax <= 0){
+        printf("%f %f %f\n", intersection->mat->diffuseColor.r, intersection->mat->diffuseColor.g, intersection->mat->diffuseColor.b);
+      }*/
+    }
+    else{
+      memcpy(ray, ray_backup, sizeof(Ray));
+      delete ray_backup;
+    }
+    for(size_t i = 0; i < tree->outOfTree.size(); i++){
+      Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
+      if(intersectPlane(ray, temp, scene->objects[tree->outOfTree[i]])){
+        float temp_dist = ray->tmax;
+        if(hasIntersection){
+          if(temp_dist < dist){
+            dist = temp_dist;
+            memcpy(intersection, temp, sizeof(Intersection));
+          }
+        }
+        else{
+          hasIntersection = true;
+          memcpy(intersection, temp, sizeof(Intersection));
+          dist = temp_dist;
+        }
+    }
+    free(temp);
+  }
 
-    return hasIntersection;
+  return hasIntersection;
 }

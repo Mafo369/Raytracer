@@ -146,6 +146,9 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
     if(scene->objects[i]->geom.type == PLANE){
       if(intersectPlane(ray, temp, scene->objects[i])){
         float temp_dist = ray->tmax;
+        /*if(temp_dist <= 0.1){
+          printf("%f\n",temp_dist);
+        }*/
         if(hasIntersection){
           if(temp_dist < dist){
             dist = temp_dist;
@@ -162,6 +165,9 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
     else if(scene->objects[i]->geom.type == SPHERE){
       if(intersectSphere(ray, temp, scene->objects[i])){
         float temp_dist = ray->tmax;
+        if(temp_dist <= 0.f){
+          printf("%f %f %f\n", temp->position.x, temp->position.y, temp->position.z);
+        }
         if(hasIntersection){
           if(temp_dist < dist){
             dist = temp_dist;
