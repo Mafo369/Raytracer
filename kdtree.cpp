@@ -191,7 +191,7 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
     return ;
   }
   
-  int d = (node->depth) % 3;
+  int d = (node->depth) % 3; // Dimension to split
   KdTreeNode *node_left = initNode(false, d, node->depth + 1);
   KdTreeNode *node_right = initNode(false, d, node->depth + 1);
   float split;
@@ -201,15 +201,15 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
   node_right->min = node->min;
   node_right->max = node->max;
   
-  if(d == 0){
+  if(d == 0){ // x split
     split = (node->max.x - node->min.x)/2 + node->min.x;
     node_left->max.x = split;
     node_right->min.x = split;
-  }else if(d == 1){
+  }else if(d == 1){ // y split
     split = (node->max.y - node->min.y)/2 + node->min.y;
     node_left->max.y = split;
     node_right->min.y = split;
-  }else{
+  }else{ // z split
     split = (node->max.z - node->min.z)/2 + node->min.z;
     node_left->max.z = split;
     node_right->min.z = split;
@@ -250,8 +250,9 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
 
     bool hasIntersection = false;
     float dist;
+
     if(!stack->empty()){
-      if(currentNode.node->leaf){
+      if(currentNode.node->leaf){ // Leaf -> Iterate through objects and find Intersection (just like in vanilla)
         for(size_t i = 0; i < currentNode.node->objects.size(); i++){
           Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
           if(intersectSphere(ray, temp, scene->objects[currentNode.node->objects[i]])){
@@ -259,86 +260,86 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
             if(hasIntersection){
               if(temp_dist < dist){
                 dist = temp_dist;
-                memcpy(intersection, temp, sizeof(Intersection));
+                *intersection = *temp;
               }
             }
             else{
               hasIntersection = true;
-              memcpy(intersection, temp, sizeof(Intersection));
+              *intersection = *temp;
               dist = temp_dist;
             }
           }
           free(temp);
         }
-        if(hasIntersection){
+        if(hasIntersection){ // If we find intersection we return true
           return true;
         }
-        else{
+        else{ //Else if no intersection in leaf and stack is not empty, we use stack element as currentNode
           if(!stack->empty()){
-            memcpy(&currentNode, &(stack->top()), sizeof(StackNode));
+            currentNode = stack->top();
             stack->pop();
             return traverse(scene, tree, stack, currentNode, ray, intersection);
           }
         }
       }
-      else{
+      else{ // No leaf -> we traverse both child nodes
         Ray *ray_left = new Ray();
         Ray *ray_right = new Ray();
         rayInit(ray_left, ray->orig, ray->dir);
         rayInit(ray_right, ray->orig, ray->dir);
         bool intersect_left = intersectAabb(ray_left, currentNode.node->left->min, currentNode.node->left->max);
         bool intersect_right = intersectAabb(ray_right, currentNode.node->right->min, currentNode.node->right->max);
-        if(intersect_left && intersect_right){
-          if(ray_right->tmin < ray_left->tmin){
-            StackNode s_node;
+
+        StackNode c_node; //New current node
+        if(intersect_left && intersect_right){ // Both rays found intersection
+          StackNode s_node; // New stack node
+          if(ray_right->tmin < ray_left->tmin){ //Right closer -> right new currentNode and left new stackNode
             s_node.node = currentNode.node->left;
             s_node.tmin = ray_left->tmin;
             s_node.tmax = ray_left->tmax;
             stack->push(s_node);
-            StackNode c_node;
+            
             c_node.node = currentNode.node->right;
             c_node.tmin = ray_right->tmin;
             c_node.tmax = ray_right->tmax;
             currentNode = c_node;
           }
-          else{
-            StackNode s_node;
+          else{ //Left close -> left new currentNode and right new stackNode
             s_node.node = currentNode.node->right;
             s_node.tmin = ray_right->tmin;
             s_node.tmax = ray_right->tmax;
             stack->push(s_node);
-            StackNode c_node;
+            
             c_node.node = currentNode.node->left;
             c_node.tmin = ray_left->tmin;
             c_node.tmax = ray_left->tmax;
             currentNode = c_node;
           }
         }
-        else{
-          if(intersect_left){
-            StackNode c_node;
+        else{ //Only one ray found intersection or no intersection
+          if(intersect_left){ // Left new currentNode
             c_node.node = currentNode.node->left;
             c_node.tmin = ray_left->tmin;
             c_node.tmax = ray_left->tmax;
             currentNode = c_node;
           }
-          else if(intersect_right){
-            StackNode c_node;
+          else if(intersect_right){ // Right new currentNode
             c_node.node = currentNode.node->right;
             c_node.tmin = ray_right->tmin;
             c_node.tmax = ray_right->tmax;
             currentNode = c_node;
           }
-          else{
+          else{ // No intersection -> pop stack to use as currentNode
             if(!stack->empty()){
-              memcpy(&currentNode, &stack->top(), sizeof(StackNode));
+              currentNode = stack->top();
               stack->pop();
             }
           }
         }
-        free(ray_left);
-        free(ray_right);
+        delete ray_left;
+        delete ray_right;
       }
+      // We traverse the tree with new entries
       return traverse(scene, tree, stack, currentNode, ray, intersection);
     }
 
@@ -375,11 +376,11 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
     //!\todo call vanilla intersection on non kdtree object, then traverse the tree to compute other intersections
     float dist;
 
-    Ray *ray_backup = new Ray();
+    Ray *ray_backup = new Ray(); //Ray backup -> we'll use it to find plane intersections
     rayInit(ray_backup, ray->orig, ray->dir);
 
-    if(intersectAabb(ray, tree->root->min, tree->root->max)){
-      std::stack<StackNode> stack;
+    if(intersectAabb(ray, tree->root->min, tree->root->max)){ // If ray hits biggest bbox we traverse tree to find sphere intersections
+      std::stack<StackNode> stack;                            
       StackNode startNode;
       startNode.node = tree->root;
       startNode.tmin = ray->tmin;
@@ -387,22 +388,26 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
       stack.push(startNode);
       hasIntersection = traverse(scene, tree, &stack, startNode, ray, intersection);
     }
-    if(hasIntersection){
+    if(hasIntersection){ // If sphere intersection, use tmax as distance reference
       dist = ray->tmax;
     }
-    for(size_t i = 0; i < tree->outOfTree.size(); i++){
+    for(size_t i = 0; i < tree->outOfTree.size(); i++){ // Iterate through plane objects to find intersection
       Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
       if(intersectPlane(ray_backup, temp, scene->objects[tree->outOfTree[i]])){
         float temp_dist = ray_backup->tmax;
         if(hasIntersection){
           if(temp_dist < dist){
+            ray->tmax = temp_dist;
+            ray->tmin = 0;
             dist = temp_dist;
-            memcpy(intersection, temp, sizeof(Intersection));
+            *intersection = *temp;
           }
         }
         else{
+          ray->tmax = temp_dist;
+          ray->tmin = 0;
           hasIntersection = true;
-          memcpy(intersection, temp, sizeof(Intersection));
+          *intersection = *temp;
           dist = temp_dist;
         }
     }

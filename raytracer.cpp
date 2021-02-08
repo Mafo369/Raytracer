@@ -84,55 +84,6 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj) {
   return false;
 }
 
-bool intersectScene1(const Scene *scene, Ray *ray, Intersection *intersection) {
-  bool hasIntersection = false;
-  size_t objectCount = scene->objects.size();
-
-//!\todo loop on each object of the scene to compute intersection
-
-  float dist;
-
-  for(size_t i = 0; i<objectCount; i++){
-    Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
-    if(scene->objects[i]->geom.type == PLANE){
-      if(intersectPlane(ray, temp, scene->objects[i])){
-        float temp_dist = distance(ray->orig, temp->position);
-        if(hasIntersection){
-          if(temp_dist < dist){
-            dist = temp_dist;
-            memcpy(intersection, temp, sizeof(Intersection));
-          }
-        }
-        else{
-          hasIntersection = true;
-          memcpy(intersection, temp, sizeof(Intersection));
-          dist = temp_dist; 
-        }
-      }
-    }
-    else if(scene->objects[i]->geom.type == SPHERE){
-      if(intersectSphere(ray, temp, scene->objects[i])){
-        float temp_dist = distance(ray->orig, temp->position);
-        if(hasIntersection){
-          if(temp_dist < dist){
-            dist = temp_dist;
-            memcpy(intersection, temp, sizeof(Intersection));
-          }
-        }
-        else{
-          hasIntersection = true;
-          memcpy(intersection, temp, sizeof(Intersection));
-          dist = temp_dist;
-        }
-      }
-    }
-    free(temp);
-  }
-
-
-  return hasIntersection;
-}
-
 bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
   bool hasIntersection = false;
   size_t objectCount = scene->objects.size();
@@ -146,18 +97,15 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
     if(scene->objects[i]->geom.type == PLANE){
       if(intersectPlane(ray, temp, scene->objects[i])){
         float temp_dist = ray->tmax;
-        /*if(temp_dist <= 0.1){
-          printf("%f\n",temp_dist);
-        }*/
         if(hasIntersection){
           if(temp_dist < dist){
             dist = temp_dist;
-            memcpy(intersection, temp, sizeof(Intersection));
+            *intersection = *temp;
           }
         }
         else{
           hasIntersection = true;
-          memcpy(intersection, temp, sizeof(Intersection));
+          *intersection = *temp;
           dist = temp_dist; 
         }
       }
@@ -168,12 +116,12 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
         if(hasIntersection){
           if(temp_dist < dist){
             dist = temp_dist;
-            memcpy(intersection, temp, sizeof(Intersection));
+            *intersection = *temp;
           }
         }
         else{
           hasIntersection = true;
-          memcpy(intersection, temp, sizeof(Intersection));
+          *intersection = *temp;
           dist = temp_dist;
         }
       }
@@ -250,9 +198,6 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR) {
   float rp = ncos_minus2_ti/ncos_plus2_ti;
 
   float f = (rs + rp)/2;
-
-  float term1 = extIOR * cos_t;
-  float term2 = intIOR * LdotH;
 
   return f;
 }
@@ -462,8 +407,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
       ray_ombre->tmin = 0;
 
       Intersection temp_inter;
-      //if(!intersectKdTree(scene, tree, ray_ombre, &temp_inter)){
-      if(!intersectScene(scene, ray_ombre, &temp_inter)){
+      if(!intersectKdTree(scene, tree, ray_ombre, &temp_inter)){
+      //if(!intersectScene(scene, ray_ombre, &temp_inter)){
         ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
       }
       else{
