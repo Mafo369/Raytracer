@@ -165,9 +165,6 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
     else if(scene->objects[i]->geom.type == SPHERE){
       if(intersectSphere(ray, temp, scene->objects[i])){
         float temp_dist = ray->tmax;
-        if(temp_dist <= 0.f){
-          printf("%f %f %f\n", temp->position.x, temp->position.y, temp->position.z);
-        }
         if(hasIntersection){
           if(temp_dist < dist){
             dist = temp_dist;
@@ -465,7 +462,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
       ray_ombre->tmin = 0;
 
       Intersection temp_inter;
-      if(!intersectKdTree(scene, tree, ray_ombre, &temp_inter)){
+      //if(!intersectKdTree(scene, tree, ray_ombre, &temp_inter)){
+      if(!intersectScene(scene, ray_ombre, &temp_inter)){
         ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
       }
       else{

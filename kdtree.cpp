@@ -253,7 +253,6 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
     if(!stack->empty()){
       if(currentNode.node->leaf){
         for(size_t i = 0; i < currentNode.node->objects.size(); i++){
-          //printf("%f %f %f\n",scene->objects[currentNode.node->objects[i]]->geom.sphere.center.x, scene->objects[currentNode.node->objects[i]]->geom.sphere.center.y, scene->objects[currentNode.node->objects[i]]->geom.sphere.center.z);
           Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
           if(intersectSphere(ray, temp, scene->objects[currentNode.node->objects[i]])){
             float temp_dist = ray->tmax;
@@ -285,10 +284,8 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
       else{
         Ray *ray_left = new Ray();
         Ray *ray_right = new Ray();
-        //ray_left = ray;
-        //ray_right = ray;
-        memcpy(ray_left, ray, sizeof(Ray));
-        memcpy(ray_right, ray, sizeof(Ray));
+        rayInit(ray_left, ray->orig, ray->dir);
+        rayInit(ray_right, ray->orig, ray->dir);
         bool intersect_left = intersectAabb(ray_left, currentNode.node->left->min, currentNode.node->left->max);
         bool intersect_right = intersectAabb(ray_right, currentNode.node->right->min, currentNode.node->right->max);
         if(intersect_left && intersect_right){
@@ -379,8 +376,8 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
     float dist;
 
     Ray *ray_backup = new Ray();
-    memcpy(ray_backup, ray, sizeof(Ray));
-    
+    rayInit(ray_backup, ray->orig, ray->dir);
+
     if(intersectAabb(ray, tree->root->min, tree->root->max)){
       std::stack<StackNode> stack;
       StackNode startNode;
@@ -391,22 +388,12 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
       hasIntersection = traverse(scene, tree, &stack, startNode, ray, intersection);
     }
     if(hasIntersection){
-      dist = distance(ray->orig, intersection->position);
-      if(dist <= 0){
-        printf("%f %f %f\n", intersection->position.x, intersection->position.y, intersection->position.z);
-      }
-      /*if(ray->tmax <= 0){
-        printf("%f %f %f\n", intersection->mat->diffuseColor.r, intersection->mat->diffuseColor.g, intersection->mat->diffuseColor.b);
-      }*/
-    }
-    else{
-      memcpy(ray, ray_backup, sizeof(Ray));
-      delete ray_backup;
+      dist = ray->tmax;
     }
     for(size_t i = 0; i < tree->outOfTree.size(); i++){
       Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
-      if(intersectPlane(ray, temp, scene->objects[tree->outOfTree[i]])){
-        float temp_dist = ray->tmax;
+      if(intersectPlane(ray_backup, temp, scene->objects[tree->outOfTree[i]])){
+        float temp_dist = ray_backup->tmax;
         if(hasIntersection){
           if(temp_dist < dist){
             dist = temp_dist;
@@ -421,6 +408,6 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
     }
     free(temp);
   }
-
+  delete ray_backup;
   return hasIntersection;
 }

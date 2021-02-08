@@ -70,7 +70,7 @@ Scene *initScene0() {
   addLight(scene, initLight(point3(4, 10, -2), color3(1, 1, 1)));
 
   //mat.diffuseColor = color3(0.8f, 0.8f, 0.5f);
-  //addObject(scene, initSphere(point3(-0.25, -0.25, -0.25), .25, mat));
+  //addObject(scene, initSphere(point3(1.24f, -0.06f, 0.014f), .1, mat));
 
   //mat.diffuseColor = color3(0.9f, 0.f, 0.5f);
   //addObject(scene, initSphere(point3(1.25, 1.25, 1.25), .25, mat));
