@@ -400,11 +400,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
       vec3 lp = scene->lights[i]->position - intersection.position;
       vec3 l = lp/length(lp);
       
-      Ray *ray_ombre = (Ray *)malloc(sizeof(Ray));
-      ray_ombre->orig = intersection.position + (acne_eps * l);
-      ray_ombre->dir = l;
-      ray_ombre->tmax = distance(ray_ombre->orig, scene->lights[i]->position);
-      ray_ombre->tmin = 0;
+      Ray *ray_ombre = new Ray();
+      rayInit(ray_ombre, intersection.position + (acne_eps * l), l, 0.f, distance(intersection.position + (acne_eps * l), scene->lights[i]->position));
 
       Intersection temp_inter;
       if(!intersectKdTree(scene, tree, ray_ombre, &temp_inter)){
