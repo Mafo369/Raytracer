@@ -272,6 +272,7 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
           free(temp);
         }
         if(hasIntersection){ // If we find intersection we return true
+          /*printf("dist=%f\n",dist);*/
           return true;
         }
         else{ //Else if no intersection in leaf and stack is not empty, we use stack element as currentNode
@@ -285,8 +286,8 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
       else{ // No leaf -> we traverse both child nodes
         Ray *ray_left = new Ray();
         Ray *ray_right = new Ray();
-        rayInit(ray_left, ray->orig, ray->dir);
-        rayInit(ray_right, ray->orig, ray->dir);
+        rayInit(ray_left, ray->orig, ray->dir, currentNode.tmin, currentNode.tmax);
+        rayInit(ray_right, ray->orig, ray->dir, currentNode.tmin, currentNode.tmax);
         bool intersect_left = intersectAabb(ray_left, currentNode.node->left->min, currentNode.node->left->max);
         bool intersect_right = intersectAabb(ray_right, currentNode.node->right->min, currentNode.node->right->max);
 
@@ -304,7 +305,7 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
             c_node.tmax = ray_right->tmax;
             currentNode = c_node;
           }
-          else{ //Left close -> left new currentNode and right new stackNode
+          else{ //Left closer -> left new currentNode and right new stackNode
             s_node.node = currentNode.node->right;
             s_node.tmin = ray_right->tmin;
             s_node.tmax = ray_right->tmax;
@@ -343,7 +344,7 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
       return traverse(scene, tree, stack, currentNode, ray, intersection);
     }
 
-  return hasIntersection;
+  return false;
 }
 
 
@@ -377,7 +378,7 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
   float dist;
 
   Ray *ray_backup = new Ray(); //Ray backup -> we'll use it to find plane intersections
-  rayInit(ray_backup, ray->orig, ray->dir);
+  rayInit(ray_backup, ray->orig, ray->dir, ray->tmin, ray->tmax);
 
   if(intersectAabb(ray, tree->root->min, tree->root->max)){ // If ray hits biggest bbox we traverse tree to find sphere intersections
     std::stack<StackNode> stack;                            
@@ -389,7 +390,8 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
     hasIntersection = traverse(scene, tree, &stack, startNode, ray, intersection);
   }
   if(hasIntersection){ // If sphere intersection, use tmax as distance reference
-    dist = ray->tmax;
+    dist = distance(ray->orig, intersection->position);
+    ray_backup->tmax = dist;
   }
   for(size_t i = 0; i < tree->outOfTree.size(); i++){ // Iterate through plane objects to find intersection
     Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
@@ -397,22 +399,18 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
       float temp_dist = ray_backup->tmax;
       if(hasIntersection){
         if(temp_dist < dist){
-          ray->tmax = temp_dist;
-          ray->tmin = 0;
           dist = temp_dist;
           *intersection = *temp;
         }
       }
       else{
-        ray->tmax = temp_dist;
-        ray->tmin = 0;
         hasIntersection = true;
         *intersection = *temp;
         dist = temp_dist;
       }
     }
-  free(temp);
+    free(temp);
   }
-  //delete ray_backup;
+  delete ray_backup;
   return hasIntersection;
 }

@@ -92,6 +92,8 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
 
   float dist;
 
+  int a = 0;
+
   for(size_t i = 0; i<objectCount; i++){
     Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
     if(scene->objects[i]->geom.type == PLANE){
@@ -117,16 +119,21 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
           if(temp_dist < dist){
             dist = temp_dist;
             *intersection = *temp;
+            a = i;
           }
         }
         else{
           hasIntersection = true;
           *intersection = *temp;
           dist = temp_dist;
+          a = i;
         }
       }
     }
     free(temp);
+  }
+  if(hasIntersection && scene->objects[a]->geom.type == SPHERE){
+    printf("dist=%f\n",dist);
   }
 
   return hasIntersection;
@@ -406,9 +413,11 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
       Intersection temp_inter;
       if(!intersectKdTree(scene, tree, ray_ombre, &temp_inter)){
       //if(!intersectScene(scene, ray_ombre, &temp_inter)){
+        //printf("SHADE\n");
         ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
       }
       else{
+        //printf("ELSE\n");
         ret += color3(0.f);
       }
     
