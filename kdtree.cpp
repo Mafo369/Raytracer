@@ -11,6 +11,8 @@
 #include <limits>
 #include <string.h>
 
+#include <iostream>
+
 typedef struct s_kdtreeNode KdTreeNode;
 
 struct s_kdtreeNode {
@@ -71,35 +73,36 @@ KdTree*  initKdTree(Scene *scene) {
 
   KdTreeNode *root = initNode(false, 0, 0);
     
-  std::vector<float> x_vector;
-  std::vector<float> y_vector;
-  std::vector<float> z_vector;
+  std::vector<float> x_vector_min;
+  std::vector<float> y_vector_min;
+  std::vector<float> z_vector_min;
+  std::vector<float> x_vector_max;
+  std::vector<float> y_vector_max;
+  std::vector<float> z_vector_max;
 
   float rad = scene->objects[0]->geom.sphere.radius;
 
-  for(size_t i = 0; i < scene->objects.size(); i++){
-    float temp_rad = scene->objects[i]->geom.sphere.radius;
-    if(temp_rad > rad){
-      rad = temp_rad;
-    }
-    float x = scene->objects[i]->geom.sphere.center.x;
-    float y = scene->objects[i]->geom.sphere.center.y;
-    float z = scene->objects[i]->geom.sphere.center.z;
+  for(size_t i = 0; i < tree->inTree.size(); i++){
+    float radius = scene->objects[tree->inTree[i]]->geom.sphere.radius;
 
-  
-    x_vector.push_back(x);
-    y_vector.push_back(y);
-    z_vector.push_back(z);   
+    x_vector_min.push_back(scene->objects[tree->inTree[i]]->geom.sphere.center.x - radius);
+    y_vector_min.push_back(scene->objects[tree->inTree[i]]->geom.sphere.center.y - radius);
+    z_vector_min.push_back(scene->objects[tree->inTree[i]]->geom.sphere.center.z - radius);
+
+    x_vector_max.push_back(scene->objects[tree->inTree[i]]->geom.sphere.center.x + radius);
+    y_vector_max.push_back(scene->objects[tree->inTree[i]]->geom.sphere.center.y + radius);
+    z_vector_max.push_back(scene->objects[tree->inTree[i]]->geom.sphere.center.z + radius);
+
   }
-  float xmin = *std::min_element(x_vector.begin(),x_vector.end());
-  float ymin = *std::min_element(y_vector.begin(),y_vector.end());
-  float zmin = *std::min_element(z_vector.begin(),z_vector.end());
-  float xmax = *std::max_element(x_vector.begin(),x_vector.end());
-  float ymax = *std::max_element(y_vector.begin(),y_vector.end());
-  float zmax = *std::max_element(z_vector.begin(),z_vector.end());
+  float xmin = *std::min_element(x_vector_min.begin(),x_vector_min.end());
+  float ymin = *std::min_element(y_vector_min.begin(),y_vector_min.end());
+  float zmin = *std::min_element(z_vector_min.begin(),z_vector_min.end());
+  float xmax = *std::max_element(x_vector_max.begin(),x_vector_max.end());
+  float ymax = *std::max_element(y_vector_max.begin(),y_vector_max.end());
+  float zmax = *std::max_element(z_vector_max.begin(),z_vector_max.end());
 
-  root->min = vec3(xmin, ymin, zmin)-rad;
-  root->max = vec3(xmax, ymax, zmax)+rad; 
+  root->min = vec3(xmin, ymin, zmin);
+  root->max = vec3(xmax, ymax, zmax);
 
   for(size_t i = 0; i < tree->inTree.size();i++){
     root->objects.push_back(tree->inTree[i]);
@@ -164,22 +167,139 @@ void splitBox(int d, vec3 min, vec3 max, float split, vec3 &min_vl, vec3 &max_vl
   }
 }
 
-void sah(int d, float split, vec3 min, vec3 max, int nl, int nr, int np, float &cp){
+std::vector<vec3> sah(float d, float split, vec3 min, vec3 max, int nl, int nr, int np, float &cp){
   cp = INFINITY;
 
   vec3 min_vl, max_vl;
   vec3 min_vr, max_vr;
+
+  std::vector<vec3> res;
+  
   splitBox(d, min, max, split, min_vl, max_vl, min_vr, max_vr);
   float pl, pr;
   pl = prob_hit(min_vl, max_vl, min, max);
   pr = prob_hit(min_vr, max_vr, min, max);
   if(pl == 0 || pr == 0)
-    return ;
+    return res;
   
   float cpl, cpr;
   cpl = cost(nl+np, nr, pl, pr);
   cpr = cost(nl, nr+np, pl, pr);
 
+  if (cpl < cpr){
+    res.push_back(min_vl);
+    res.push_back(max_vl);
+    cp = cpl;
+    return res;
+  }else{
+    res.push_back(min_vr);
+    res.push_back(max_vr);
+    cp = cpr;
+    return res;
+  }
+}
+
+void clipSphereToBox(Scene *scene, int sphere, vec3 min, vec3 max, vec3 &minb, vec3 &maxb){
+  float radius = scene->objects[sphere]->geom.sphere.radius;
+  minb = vec3(scene->objects[sphere]->geom.sphere.center.x - radius, scene->objects[sphere]->geom.sphere.center.y - radius, scene->objects[sphere]->geom.sphere.center.z - radius);
+  maxb = vec3(scene->objects[sphere]->geom.sphere.center.x + radius, scene->objects[sphere]->geom.sphere.center.y + radius, scene->objects[sphere]->geom.sphere.center.z + radius);
+
+  for(int k = 0; k < 3; k++){
+    if(min[k] > minb[k]){
+      minb[k] = min[k];
+    }
+    if(max[k] < maxb[k]){
+      maxb[k] = max[k];
+    }
+  }
+}
+
+bool isPlanar(vec3 min, vec3 max){
+  float dx = max.x - min.x;
+  float dy = max.y - min.y;
+  float dz = max.z - min.z;
+  return dx <= 0.01 || dy <= 0.01 || dz <= 0.01;
+}
+
+void findPlane(Scene *scene, KdTreeNode *node, float &p_est){
+  float c_est = INFINITY;
+  std::vector<float> lying;
+  std::vector<float> starting;
+  std::vector<float> ending;
+
+
+  for(int k = 0; k < 3; k++){
+    for(size_t i = 0; i < node->objects.size(); i++){
+      vec3 minb, maxb;
+      clipSphereToBox(scene, node->objects[i], node->min, node->max, minb, maxb);
+      //printf("min = %f %f %f\n", minb.x, minb.y, minb.z);
+      //printf("max = %f %f %f\n\n", maxb.x, maxb.y, maxb.z);
+      if(isPlanar(minb, maxb)){
+        lying.push_back(minb[k]);
+      }else{
+        starting.push_back(minb[k]);
+        ending.push_back(maxb[k]);
+      }
+    }
+    std::sort(lying.begin(), lying.end());
+    std::sort(starting.begin(), starting.end());
+    std::sort(ending.begin(), ending.end());
+    int nl = 0, np=0, nr = node->objects.size();
+
+    for(size_t i = 0; i < lying.size(); i++){
+      float p = lying[i];
+      int pLying = 0;
+      while(i < lying.size() && lying[i] == p){
+        ++pLying;
+        i++;
+      }
+      np = pLying;
+      nr -= pLying;
+      float c;
+      sah(k,p, node->min, node->max, nl, nr, np, c);
+      if(c < c_est){
+        c_est = c;
+        p_est = p;
+      }
+      nl += pLying;
+      np = 0;
+    }
+
+    for(size_t i = 0; i < ending.size(); i++){
+      float p = ending[i];
+      int pEnding= 0;
+      while(i < ending.size() && ending[i] == p){
+        ++pEnding;
+        i++;
+      }
+      nr -= pEnding;
+      float c;
+      sah(k,p, node->min, node->max, nl, nr, np, c);
+      if(c < c_est){
+        c_est = c;
+        p_est = p;
+      }
+      np=0;
+    }
+
+    for(size_t i = 0; i < starting.size(); i++){
+      float p = starting[i];
+      int pStarting = 0;
+      while(i < starting.size() && starting[i] == p){
+        ++pStarting;
+        i++;
+      }
+      float c;
+      sah(k,p, node->min, node->max, nl, nr, np, c);
+      if(c < c_est){
+        c_est = c;
+        p_est = p;
+      }
+      nl += pStarting;
+      np=0;
+    }
+  }
+  
 }
 
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
@@ -201,6 +321,25 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
   node_right->min = node->min;
   node_right->max = node->max;
   
+  /*if(d == 0){ // x split
+    split = (node->max.x - node->min.x)/2 + node->min.x;
+    node_left->max.x = split;
+    node_right->min.x = split;
+  }else if(d == 1){ // y split
+    split = (node->max.y - node->min.y)/2 + node->min.y;
+    node_left->max.y = split;
+    node_right->min.y = split;
+  }else{ // z split
+    split = (node->max.z - node->min.z)/2 + node->min.z;
+    node_left->max.z = split;
+    node_right->min.z = split;
+  }*/
+
+  float p = 0;
+
+  findPlane(scene, node, p);
+  printf("p=%f\n", p);
+  
   if(d == 0){ // x split
     split = (node->max.x - node->min.x)/2 + node->min.x;
     node_left->max.x = split;
@@ -214,6 +353,8 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
     node_left->max.z = split;
     node_right->min.z = split;
   }
+
+  //printf("split=%f\n", split);
 
   node->split = split;
   node->left = node_left;
