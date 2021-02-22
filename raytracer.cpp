@@ -514,6 +514,8 @@ void renderImage(Image *img, Scene *scene) {
 
   KdTree *tree = initKdTree(scene);
 
+  printf("End building tree\n");
+
 
 //! \todo initialize KdTree
 
