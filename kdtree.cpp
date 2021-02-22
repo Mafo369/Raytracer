@@ -115,7 +115,7 @@ static bool intersectAabb(Ray *theRay,  vec3 min, vec3 max);
   }
   
   tree->root = root;
-  subdivide(scene, tree, tree->root);
+  subdivide(scene, tree, tree->root, 0.f);
   return tree;
 }*/
 
@@ -401,10 +401,10 @@ bool comp_events(Event i, Event j){
   return i.b < j.b;
 }
 
-void findPlane(Scene *scene, KdTreeNode *node, float &p_, float &k_, float c_){
+void findPlane(Scene *scene, KdTreeNode *node, float &p_, float &k_, float &c_){
   c_ = INFINITY;
   p_ = 0;
-  printf("\n\n");
+  //printf("\n\n");
 
   for(int k = 0; k < 3; k++){
     //printf("k=%d\n",k);
@@ -441,7 +441,7 @@ void findPlane(Scene *scene, KdTreeNode *node, float &p_, float &k_, float c_){
     for(size_t i = 0; i < events.size(); i++){
       float p = events[i].b;
       //printf("p=%f\n", p);
-      float k = events[i].k;
+      //float k = events[i].k;
       int pStarting = 0, pEnding = 0, pLying = 0;
 
       while(i < events.size() && events[i].b == p && events[i].type == ENDING){
@@ -463,11 +463,10 @@ void findPlane(Scene *scene, KdTreeNode *node, float &p_, float &k_, float c_){
       //printf("p = %f\n", p);
 
       sah(node->min, node->max, p, nl, nr, np, k,c);
-      if(c < c_){
+      if(c < c_ && !(p == node->min[k]) && !(p == node->max[k])){
         c_ = c;
         p_ = p;
         k_ = k;
-        printf("New c = %f\n", c_);
       }
       nl += pStarting;
       nl += pLying;
@@ -484,8 +483,9 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node, float prev_c) {
 
   //!\todo generate children, compute split position, move objets to children and subdivide if needed.
   
-  //if(node->depth >= tree->depthLimit || node->objects.size() <= 1){
-  if(terminate(prev_c, node->objects.size())){
+  //printf("prev_c=%f size=%lu\n", prev_c, node->objects.size());
+  //if(terminate(prev_c, node->objects.size())){
+  if(node->depth >= tree->depthLimit || node->objects.size() <= 1){
     node->leaf = true;
     return ;
   }
@@ -520,7 +520,12 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node, float prev_c) {
   //findPlane(scene, node, p, node_left, node_right);
   findPlane(scene, node, p, axis, c);
 
-  printf("p=%f\n", p);
+  if(c == INFINITY){
+    node->leaf = true;
+    return ;
+  }
+
+  //printf("c=%f\n", c);
   node->split = p;
   node->axis = axis;
   node_left->max[axis] = p;

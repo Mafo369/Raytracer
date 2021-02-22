@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/mrt",
-            "args": ["test0"],
+            "args": ["test1", "1"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
