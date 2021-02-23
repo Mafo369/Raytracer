@@ -1,7 +1,13 @@
+#define TINYOBJLOADER_IMPLEMENTATION
+
+#include <iostream>
+#include <string>
+
 #include "scene.h"
 #include "scene_types.h"
 #include <string.h>
 #include <algorithm>
+
 
 Object *initSphere(point3 center, float radius, Material mat) {
     Object *ret;
@@ -19,6 +25,17 @@ Object *initPlane(vec3 normal, float d, Material mat) {
     ret->geom.type = PLANE;
     ret->geom.plane.normal = normalize(normal);
     ret->geom.plane.dist = d;
+    memcpy(&(ret->mat), &mat, sizeof(Material));
+    return ret;
+}
+
+Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, Material mat){
+    Object *ret;
+    ret = (Object *)malloc(sizeof(Object));
+    ret->geom.type = TRIANGLE;
+    ret->geom.triangle.p1 = p1;
+    ret->geom.triangle.p2 = p2;
+    ret->geom.triangle.p3 = p3;
     memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
@@ -68,4 +85,21 @@ void addLight(Scene *scene, Light *light) {
 
 void setSkyColor(Scene *scene, color3 c) {
     scene->skyColor = c;
+}
+
+//https://github.com/tinyobjloader/tinyobjloader
+void readObjToTriangleMesh(const char *file, tinyobj::attrib_t &attrib, std::vector<tinyobj::shape_t> &shapes, std::vector<tinyobj::material_t> &materials){
+  std::string inputfile = "../bunny.obj";
+  std::string err;
+
+  bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, inputfile.c_str());
+
+  if(!err.empty()){
+      std::cout << err << std::endl;
+  }
+
+  if(!ret)
+    exit(1);
+
+  std::cout << "Model vertices: " << attrib.vertices.size() << std::endl;
 }

@@ -130,4 +130,5 @@ main.o: main.cpp defines.h glm-master/glm/glm.hpp \
  glm-master/glm/gtc/../ext/scalar_constants.hpp \
  glm-master/glm/gtc/../ext/../detail/setup.hpp \
  glm-master/glm/gtc/../ext/scalar_constants.inl \
- glm-master/glm/gtc/constants.inl image.h ray.h raytracer.h scene.h
+ glm-master/glm/gtc/constants.inl image.h ray.h raytracer.h scene.h \
+ tiny_obj_loader.h

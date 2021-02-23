@@ -13,6 +13,9 @@
 
 #include <iostream>
 
+#define COST_TRAVERSE 1.0
+#define COST_INTERSECT 1.5
+
 #define STARTING 0
 #define LYING 1
 #define ENDING 2
@@ -59,6 +62,13 @@ struct s_kdtree {
     std::vector<int> outOfTree;
     std::vector<int> inTree;
 };
+
+typedef struct event_t{
+  int s;
+  float b;
+  int k;
+  int type;
+}Event;
 
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node, float prev_plane);
 static bool intersectAabb(Ray *theRay,  vec3 min, vec3 max);
@@ -206,9 +216,6 @@ float lambda(int nl, int nr, float pl, float pr){
   return 1.f;
 }
 
-#define COST_TRAVERSE 1.0
-#define COST_INTERSECT 1.5
-
 float cost(int nl, int nr, float pl, float pr){
   return (lambda(nl, nr, pl, pr) * (COST_TRAVERSE + COST_INTERSECT * (pl * nl + pr * nr)));
 }
@@ -275,127 +282,6 @@ bool isPlanar(vec3 min, vec3 max){
   float dz = max.z - min.z;
   return dx <= 0.01 || dy <= 0.01 || dz <= 0.01;
 }
-/*
-bool comp_x(Geometry i, Geometry j){
-  return i.sphere.center.x < i.sphere.center.x;
-}
-
-bool comp_y(Geometry i, Geometry j){
-  return i.sphere.center.y < j.sphere.center.y;
-}
-
-bool comp_z(Geometry i, Geometry j){
-  return i.sphere.center.z < j.sphere.center.z;
-}
-
-void left_aabb(std::vector<Geometry> pos, size_t index, vec3 &min, vec3 &max){
-  std::vector<float> x_vector_min;
-  std::vector<float> y_vector_min;
-  std::vector<float> z_vector_min;
-  std::vector<float> x_vector_max;
-  std::vector<float> y_vector_max;
-  std::vector<float> z_vector_max;
-  
-  for(size_t i = 0; i < index; i++){
-    float radius = pos[i].sphere.radius;
-
-    x_vector_min.push_back(pos[i].sphere.center.x - radius);
-    y_vector_min.push_back(pos[i].sphere.center.y - radius);
-    z_vector_min.push_back(pos[i].sphere.center.z - radius);
-
-    x_vector_max.push_back(pos[i].sphere.center.x + radius);
-    y_vector_max.push_back(pos[i].sphere.center.y + radius);
-    z_vector_max.push_back(pos[i].sphere.center.z + radius);
-
-  }
-  float xmin = *std::min_element(x_vector_min.begin(),x_vector_min.end());
-  float ymin = *std::min_element(y_vector_min.begin(),y_vector_min.end());
-  float zmin = *std::min_element(z_vector_min.begin(),z_vector_min.end());
-  float xmax = *std::max_element(x_vector_max.begin(),x_vector_max.end());
-  float ymax = *std::max_element(y_vector_max.begin(),y_vector_max.end());
-  float zmax = *std::max_element(z_vector_max.begin(),z_vector_max.end());
-
-  min = vec3(xmin, ymin, zmin);
-  max = vec3(xmax, ymax, zmax);
-}
-
-void right_aabb(std::vector<Geometry> pos, size_t index, vec3 &min, vec3 &max){
-  std::vector<float> x_vector_min;
-  std::vector<float> y_vector_min;
-  std::vector<float> z_vector_min;
-  std::vector<float> x_vector_max;
-  std::vector<float> y_vector_max;
-  std::vector<float> z_vector_max;
-  
-  for(size_t i = index; i < pos.size(); i++){
-    float radius = pos[i].sphere.radius;
-
-    x_vector_min.push_back(pos[i].sphere.center.x - radius);
-    y_vector_min.push_back(pos[i].sphere.center.y - radius);
-    z_vector_min.push_back(pos[i].sphere.center.z - radius);
-
-    x_vector_max.push_back(pos[i].sphere.center.x + radius);
-    y_vector_max.push_back(pos[i].sphere.center.y + radius);
-    z_vector_max.push_back(pos[i].sphere.center.z + radius);
-
-  }
-  float xmin = *std::min_element(x_vector_min.begin(),x_vector_min.end());
-  float ymin = *std::min_element(y_vector_min.begin(),y_vector_min.end());
-  float zmin = *std::min_element(z_vector_min.begin(),z_vector_min.end());
-  float xmax = *std::max_element(x_vector_max.begin(),x_vector_max.end());
-  float ymax = *std::max_element(y_vector_max.begin(),y_vector_max.end());
-  float zmax = *std::max_element(z_vector_max.begin(),z_vector_max.end());
-
-  min = vec3(xmin, ymin, zmin);
-  max = vec3(xmax, ymax, zmax);
-}
-
-void findPlane(Scene *scene, KdTreeNode *node, float &p_est, KdTreeNode *node_left, KdTreeNode *node_right){
-  p_est = INFINITY;
-  std::vector<Geometry> pos;
-
-  for(size_t i = 0; i < node->objects.size(); i++){ //Sort spheres by center position on k axis
-    pos.push_back(scene->objects[node->objects[i]]->geom);
-  }
-
-  for(int k = 0; k < 3; k++){
-    if(k == 0){
-      sort(pos.begin(), pos.end(), comp_x);
-    }else if(k == 1){
-      sort(pos.begin(), pos.end(), comp_y);
-    }else{
-      sort(pos.begin(), pos.end(), comp_z);
-    }
-    
-    for(size_t i = 1; i < pos.size(); i++){
-      vec3 minl, maxl, minr, maxr;
-      
-      left_aabb(pos, i, minl, maxl);
-      right_aabb(pos, i, minr, maxr);
-
-      float sah = surfaceArea(minl, maxl)* i + surfaceArea(minr, maxr) * (pos.size()-i);
-
-      if(sah < p_est){
-        node_left->min = minl;
-        node_left->max = maxl;
-        node_right->min = minr;
-        node_right->max = maxr;
-        node->axis = k;
-        node->split = node_left->max[k];
-        p_est = sah;
-      }
-    }
-
-  }
-  
-}*/
-
-typedef struct event_t{
-  int s;
-  float b;
-  int k;
-  int type;
-}Event;
 
 bool comp_events(Event i, Event j){
   return i.b < j.b;
@@ -500,24 +386,9 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node, float prev_c) {
   node_right->min = node->min;
   node_right->max = node->max;
   
-  /*if(d == 0){ // x split
-    split = (node->max.x - node->min.x)/2 + node->min.x;
-    node_left->max.x = split;
-    node_right->min.x = split;
-  }else if(d == 1){ // y split
-    split = (node->max.y - node->min.y)/2 + node->min.y;
-    node_left->max.y = split;
-    node_right->min.y = split;
-  }else{ // z split
-    split = (node->max.z - node->min.z)/2 + node->min.z;
-    node_left->max.z = split;
-    node_right->min.z = split;
-  }*/
-
   float p = 0;
   float axis;
   float c = 0;
-  //findPlane(scene, node, p, node_left, node_right);
   findPlane(scene, node, p, axis, c);
 
   if(c == INFINITY){

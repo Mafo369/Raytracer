@@ -330,6 +330,7 @@ CMakeFiles/unit-test.dir/kdtree.cpp.o: ../ray.h
 CMakeFiles/unit-test.dir/kdtree.cpp.o: ../raytracer.h
 CMakeFiles/unit-test.dir/kdtree.cpp.o: ../scene.h
 CMakeFiles/unit-test.dir/kdtree.cpp.o: ../scene_types.h
+CMakeFiles/unit-test.dir/kdtree.cpp.o: ../tiny_obj_loader.h
 
 CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.o: ../lodepng-master/lodepng.cpp
 CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.o: ../lodepng-master/lodepng.h
@@ -502,6 +503,7 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp
 CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.h
 CMakeFiles/unit-test.dir/raytracer.cpp.o: ../scene.h
 CMakeFiles/unit-test.dir/raytracer.cpp.o: ../scene_types.h
+CMakeFiles/unit-test.dir/raytracer.cpp.o: ../tiny_obj_loader.h
 
 CMakeFiles/unit-test.dir/scene.cpp.o: ../glm-master/glm/./detail/type_mat2x2.hpp
 CMakeFiles/unit-test.dir/scene.cpp.o: ../glm-master/glm/./detail/type_mat2x2.inl
@@ -665,6 +667,7 @@ CMakeFiles/unit-test.dir/scene.cpp.o: ../defines.h
 CMakeFiles/unit-test.dir/scene.cpp.o: ../scene.cpp
 CMakeFiles/unit-test.dir/scene.cpp.o: ../scene.h
 CMakeFiles/unit-test.dir/scene.cpp.o: ../scene_types.h
+CMakeFiles/unit-test.dir/scene.cpp.o: ../tiny_obj_loader.h
 
 CMakeFiles/unit-test.dir/unit-test.cpp.o: ../glm-master/glm/./detail/type_mat2x2.hpp
 CMakeFiles/unit-test.dir/unit-test.cpp.o: ../glm-master/glm/./detail/type_mat2x2.inl
@@ -830,5 +833,6 @@ CMakeFiles/unit-test.dir/unit-test.cpp.o: ../image.h
 CMakeFiles/unit-test.dir/unit-test.cpp.o: ../ray.h
 CMakeFiles/unit-test.dir/unit-test.cpp.o: ../raytracer.h
 CMakeFiles/unit-test.dir/unit-test.cpp.o: ../scene.h
+CMakeFiles/unit-test.dir/unit-test.cpp.o: ../tiny_obj_loader.h
 CMakeFiles/unit-test.dir/unit-test.cpp.o: ../unit-test.cpp
 

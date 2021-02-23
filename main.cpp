@@ -282,43 +282,89 @@ Scene *initScene4() {
 Scene *initScene5() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(3, 0, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
-  setSkyColor(scene, color3(0.2, 0.2, 0.7));
-
+  setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
   Material mat;
-  mat.IOR = 1.12;
-  mat.roughness = 0.2;
-  mat.specularColor = color3(0.4f);
-  mat.diffuseColor = color3(0.6f);
+  mat.IOR = 1.3;
+  mat.roughness = 0.1;
+  mat.specularColor = color3(0.5f);
 
-  for (int i = 0; i < 10; ++i) {
-    mat.diffuseColor = color3(0.301, 0.034, 0.039);
-    mat.specularColor = color3(1.0, 0.992, 0.98);
-    mat.IOR = 1.1382;
-    mat.roughness = 0.0886;
-    mat.roughness = ((float)10 - i) / (10 * 9.f);
-    addObject(scene, initSphere(point3(0, 0, -1.5 + i / 9.f * 3.f), .15, mat));
-  }
-  for (int i = 0; i < 10; ++i) {
-    mat.diffuseColor = color3(0.012, 0.036, 0.106);
-    mat.specularColor = color3(1.0, 0.965, 1.07);
-    mat.IOR = 1.1153;
-    mat.roughness = 0.068;
-    mat.roughness = ((float)i + 1) / 10.f;
-    addObject(scene, initSphere(point3(0, 1, -1.5 + i / 9.f * 3.f), .15, mat));
-  }
-  mat.diffuseColor = color3(0.014, 0.012, 0.012);
-  mat.specularColor = color3(1.0, 0.882, 0.786);
-  mat.IOR = 2.4449;
-  mat.roughness = 0.0681;
-  addObject(scene, initSphere(point3(-3.f, 1.f, 0.f), 2., mat));
+  tinyobj::attrib_t attrib;
+  std::vector<tinyobj::shape_t> shapes;
+  std::vector<tinyobj::material_t> materials;
+  readObjToTriangleMesh("./stanford-bunny.obj", attrib, shapes, materials);
 
-  mat.diffuseColor = color3(0.014, 0.012, 0.012);
+
+  for(size_t s = 0; s < shapes.size(); s++){
+    size_t index_offset = 0;
+    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
+      int fv = shapes[s].mesh.num_face_vertices[f];
+      tinyobj::index_t &idx0 = shapes[s].mesh.indices[index_offset + 0];  // v0
+      tinyobj::index_t &idx1 = shapes[s].mesh.indices[index_offset + 1];  // v1
+      tinyobj::index_t &idx2 = shapes[s].mesh.indices[index_offset + 2];  // v2
+
+      vec3 v0 = vec3(attrib.vertices[3 * idx0.vertex_index + 0],
+                     attrib.vertices[3 * idx0.vertex_index + 1],
+                     attrib.vertices[3 * idx0.vertex_index + 2]);
+      vec3 v1 = vec3(attrib.vertices[3 * idx1.vertex_index + 0],
+                     attrib.vertices[3 * idx1.vertex_index + 1],
+                     attrib.vertices[3 * idx1.vertex_index + 2]);
+      vec3 v2 = vec3(attrib.vertices[3 * idx2.vertex_index + 0],
+                     attrib.vertices[3 * idx2.vertex_index + 1],
+                     attrib.vertices[3 * idx2.vertex_index + 2]);
+
+      // Vertex normals
+      /*vec3 n0 = vec3(attrib.normals[3 * idx0.normal_index + 0],
+                 attrib.normals[3 * idx0.normal_index + 1],
+                 attrib.normals[3 * idx0.normal_index + 2]);
+      vec3 n1 = vec3(attrib.normals[3 * idx1.normal_index + 0],
+                 attrib.normals[3 * idx1.normal_index + 1],
+                 attrib.normals[3 * idx1.normal_index + 2]);
+      vec3 n2 = vec3(attrib.normals[3 * idx2.normal_index + 0],
+                 attrib.normals[3 * idx2.normal_index + 1],
+                 attrib.normals[3 * idx2.normal_index + 2]);
+
+      vec3 normal = vec3(n0, n1, n2);*/
+
+      mat.diffuseColor = color3(1, 0.012, 0.012);
+      mat.specularColor = color3(1.0, 0.882, 0.786);
+      mat.IOR = 1.3;
+      mat.roughness = 0.0681;
+      addObject(scene, initTriangle(v0, v1, v2, mat));
+
+      /*for(size_t v = 0; v < fv; v++){
+        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
+        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
+        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
+        tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
+        tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
+        tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
+        tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+        tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+        // Optional: vertex colors
+        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
+        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
+        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
+        mat.diffuseColor = color3(1, 0.012, 0.012);
+        mat.specularColor = color3(1.0, 0.882, 0.786);
+        mat.IOR = 1.3;
+        mat.roughness = 0.0681;
+        addObject(scene, initTriangle(point3(vx, vy, vz), point3(0, 1, 0), point3(0, 0, 1), mat));
+      }*/
+      index_offset += fv;
+
+      //per-face material
+      shapes[s].mesh.material_ids[f];
+    }
+  }
+
+  /*mat.diffuseColor = color3(0.014, 0.012, 0.012);
   mat.specularColor = color3(0.7, 0.882, 0.786);
   mat.IOR = 6;
   mat.roughness = 0.0181;
-  addObject(scene, initPlane(vec3(0, 1, 0), +1, mat));
+  addObject(scene, initPlane(vec3(0, 1, 0), +1, mat));*/
 
   addLight(scene, initLight(point3(10, 100, 100), color3(50, 50, 50)));
   return scene;

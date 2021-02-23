@@ -330,6 +330,7 @@ CMakeFiles/mrt.dir/kdtree.cpp.o: ../ray.h
 CMakeFiles/mrt.dir/kdtree.cpp.o: ../raytracer.h
 CMakeFiles/mrt.dir/kdtree.cpp.o: ../scene.h
 CMakeFiles/mrt.dir/kdtree.cpp.o: ../scene_types.h
+CMakeFiles/mrt.dir/kdtree.cpp.o: ../tiny_obj_loader.h
 
 CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o: ../lodepng-master/lodepng.cpp
 CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o: ../lodepng-master/lodepng.h
@@ -498,6 +499,7 @@ CMakeFiles/mrt.dir/main.cpp.o: ../main.cpp
 CMakeFiles/mrt.dir/main.cpp.o: ../ray.h
 CMakeFiles/mrt.dir/main.cpp.o: ../raytracer.h
 CMakeFiles/mrt.dir/main.cpp.o: ../scene.h
+CMakeFiles/mrt.dir/main.cpp.o: ../tiny_obj_loader.h
 
 CMakeFiles/mrt.dir/raytracer.cpp.o: ../glm-master/glm/./detail/type_mat2x2.hpp
 CMakeFiles/mrt.dir/raytracer.cpp.o: ../glm-master/glm/./detail/type_mat2x2.inl
@@ -667,6 +669,7 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: ../raytracer.cpp
 CMakeFiles/mrt.dir/raytracer.cpp.o: ../raytracer.h
 CMakeFiles/mrt.dir/raytracer.cpp.o: ../scene.h
 CMakeFiles/mrt.dir/raytracer.cpp.o: ../scene_types.h
+CMakeFiles/mrt.dir/raytracer.cpp.o: ../tiny_obj_loader.h
 
 CMakeFiles/mrt.dir/scene.cpp.o: ../glm-master/glm/./detail/type_mat2x2.hpp
 CMakeFiles/mrt.dir/scene.cpp.o: ../glm-master/glm/./detail/type_mat2x2.inl
@@ -830,4 +833,5 @@ CMakeFiles/mrt.dir/scene.cpp.o: ../defines.h
 CMakeFiles/mrt.dir/scene.cpp.o: ../scene.cpp
 CMakeFiles/mrt.dir/scene.cpp.o: ../scene.h
 CMakeFiles/mrt.dir/scene.cpp.o: ../scene_types.h
+CMakeFiles/mrt.dir/scene.cpp.o: ../tiny_obj_loader.h
 

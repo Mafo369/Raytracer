@@ -84,6 +84,46 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj) {
   return false;
 }
 
+//Moller-Trumbore Ray Triangle Intersection
+bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj){
+  vec3 v1v2 = obj->geom.triangle.p2 - obj->geom.triangle.p1;
+  vec3 v1v3 = obj->geom.triangle.p3 - obj->geom.triangle.p1;
+
+  vec3 cross_rayDir_v1v3 = cross(ray->dir, v1v3);
+
+  float det = dot(v1v2, cross_rayDir_v1v3);
+
+  if(det > -acne_eps && det < acne_eps)
+    return false;
+
+  float inv_det = 1.f/det;
+
+  vec3 o_minus_p1 = ray->orig - obj->geom.triangle.p1;
+
+  float u = dot(o_minus_p1, cross_rayDir_v1v3) * inv_det;
+
+  if(u < 0.f || u > 1.f)
+    return false;
+
+  vec3 cross_oMinusp1_v1v2 = cross(o_minus_p1, v1v2);
+
+  float v = dot(ray->dir, cross_oMinusp1_v1v2) * inv_det;
+
+  if(v < 0.f || u+v > 1.f)
+    return false;
+
+  float t = dot(v1v3, cross_oMinusp1_v1v2) * inv_det;
+  
+  if(t >= ray->tmin && t <= ray->tmax){
+    intersection->position = ray->orig + (t * ray->dir);
+    intersection->mat = &(obj->mat);
+    intersection->normal = normalize(cross(v1v2, v1v3));
+    ray->tmax = t;
+    return true;
+  }
+  return false;
+}
+
 bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
   bool hasIntersection = false;
   size_t objectCount = scene->objects.size();
@@ -114,6 +154,23 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
     }
     else if(scene->objects[i]->geom.type == SPHERE){
       if(intersectSphere(ray, temp, scene->objects[i])){
+        float temp_dist = ray->tmax;
+        if(hasIntersection){
+          if(temp_dist < dist){
+            dist = temp_dist;
+            *intersection = *temp;
+            a = i;
+          }
+        }
+        else{
+          hasIntersection = true;
+          *intersection = *temp;
+          dist = temp_dist;
+          a = i;
+        }
+      }
+    }else if(scene->objects[i]->geom.type == TRIANGLE){
+      if(intersectTriangle(ray, temp, scene->objects[i])){
         float temp_dist = ray->tmax;
         if(hasIntersection){
           if(temp_dist < dist){
@@ -314,7 +371,7 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat) {
 //! if tree is not null, use intersectKdTree to compute the intersection instead
 //! of intersect scene
 
-color3 trace_ray1(Scene *scene, Ray *ray, KdTree *tree) {
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
 
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
@@ -365,7 +422,7 @@ color3 trace_ray1(Scene *scene, Ray *ray, KdTree *tree) {
     ray_ref->tmin = 0;
     ray_ref->tmax = 10000;
 
-    color3 cr = trace_ray1(scene, ray_ref, tree);
+    color3 cr = trace_ray(scene, ray_ref, tree);
     float LdotH = dot(ray_ref->dir,intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
@@ -385,7 +442,7 @@ color3 trace_ray1(Scene *scene, Ray *ray, KdTree *tree) {
   return ret;
 }
 
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
+color3 trace_ray1(Scene *scene, Ray *ray, KdTree *tree) {
 
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
@@ -436,7 +493,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
     ray_ref->tmin = 0;
     ray_ref->tmax = 10000;
 
-    color3 cr = trace_ray(scene, ray_ref, tree);
+    color3 cr = trace_ray1(scene, ray_ref, tree);
     float LdotH = dot(ray_ref->dir,intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 

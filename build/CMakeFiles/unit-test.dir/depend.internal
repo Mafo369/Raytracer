@@ -331,6 +331,7 @@ CMakeFiles/unit-test.dir/kdtree.cpp.o
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/raytracer.h
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.h
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene_types.h
+ /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/tiny_obj_loader.h
 CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.o
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng.cpp
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng.h
@@ -503,6 +504,7 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/raytracer.h
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.h
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene_types.h
+ /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/tiny_obj_loader.h
 CMakeFiles/unit-test.dir/scene.cpp.o
  ../glm-master/glm/./detail/type_mat2x2.hpp
  ../glm-master/glm/./detail/type_mat2x2.inl
@@ -666,6 +668,7 @@ CMakeFiles/unit-test.dir/scene.cpp.o
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.cpp
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.h
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene_types.h
+ /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/tiny_obj_loader.h
 CMakeFiles/unit-test.dir/unit-test.cpp.o
  ../glm-master/glm/./detail/type_mat2x2.hpp
  ../glm-master/glm/./detail/type_mat2x2.inl
@@ -831,4 +834,5 @@ CMakeFiles/unit-test.dir/unit-test.cpp.o
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/ray.h
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/raytracer.h
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.h
+ /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/tiny_obj_loader.h
  /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/unit-test.cpp

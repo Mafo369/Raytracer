@@ -1243,6 +1243,10 @@ ray.h
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/ray.h
 
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.cpp
+iostream
+-
+string
+-
 scene.h
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.h
 scene_types.h
@@ -1255,6 +1259,8 @@ algorithm
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.h
 defines.h
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/defines.h
+tiny_obj_loader.h
+/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/tiny_obj_loader.h
 
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene_types.h
 defines.h
@@ -1262,5 +1268,31 @@ defines.h
 scene.h
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.h
 vector
+-
+
+/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/tiny_obj_loader.h
+map
+-
+string
+-
+vector
+-
+cassert
+-
+cctype
+-
+cmath
+-
+cstddef
+-
+cstdlib
+-
+cstring
+-
+utility
+-
+fstream
+-
+sstream
 -
 
