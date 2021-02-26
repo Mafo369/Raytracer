@@ -29,13 +29,14 @@ Object *initPlane(vec3 normal, float d, Material mat) {
     return ret;
 }
 
-Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, Material mat){
+Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, Material mat){
     Object *ret;
     ret = (Object *)malloc(sizeof(Object));
     ret->geom.type = TRIANGLE;
     ret->geom.triangle.p1 = p1;
     ret->geom.triangle.p2 = p2;
     ret->geom.triangle.p3 = p3;
+    ret->geom.triangle.normal = n;
     memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
@@ -89,7 +90,7 @@ void setSkyColor(Scene *scene, color3 c) {
 
 //https://github.com/tinyobjloader/tinyobjloader
 void readObjToTriangleMesh(const char *file, tinyobj::attrib_t &attrib, std::vector<tinyobj::shape_t> &shapes, std::vector<tinyobj::material_t> &materials){
-  std::string inputfile = "../bunny.obj";
+  std::string inputfile = "./bunny.obj";
   std::string err;
 
   bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, inputfile.c_str());

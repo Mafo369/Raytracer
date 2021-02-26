@@ -371,7 +371,7 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat) {
 //! if tree is not null, use intersectKdTree to compute the intersection instead
 //! of intersect scene
 
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
+color3 trace_ray1(Scene *scene, Ray *ray, KdTree *tree) {
 
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
@@ -422,7 +422,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
     ray_ref->tmin = 0;
     ray_ref->tmax = 10000;
 
-    color3 cr = trace_ray(scene, ray_ref, tree);
+    color3 cr = trace_ray1(scene, ray_ref, tree);
     float LdotH = dot(ray_ref->dir,intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
@@ -442,13 +442,13 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
   return ret;
 }
 
-color3 trace_ray1(Scene *scene, Ray *ray, KdTree *tree) {
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
 
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
 
-  if(ray->depth > 1)
+  if(ray->depth > 10)
     return color3(0.f);
 
 
@@ -493,7 +493,7 @@ color3 trace_ray1(Scene *scene, Ray *ray, KdTree *tree) {
     ray_ref->tmin = 0;
     ray_ref->tmax = 10000;
 
-    color3 cr = trace_ray1(scene, ray_ref, tree);
+    color3 cr = trace_ray(scene, ray_ref, tree);
     float LdotH = dot(ray_ref->dir,intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 

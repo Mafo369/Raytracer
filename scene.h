@@ -23,7 +23,7 @@ enum Etype {SPHERE=1, PLANE, TRIANGLE};
 //! create a new sphere structure
 Object* initSphere(point3 center, float radius, Material mat);
 Object* initPlane(vec3 normal, float d, Material mat);
-Object* initTriangle(vec3 p1, vec3 p2, vec3 p3, Material mat);
+Object* initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, Material mat);
 
 //! release memory for the object obj
 void freeObject(Object *obj);

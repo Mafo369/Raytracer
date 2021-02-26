@@ -25,6 +25,7 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection );
 bool intersectCylinder (Ray *ray, Intersection *intersection, Object *cylinder);
 bool intersectPlane(Ray *ray, Intersection *intersection, Object *plane);
 bool intersectSphere(Ray *ray, Intersection *intersection, Object *sphere);
+bool intersectTriangle(Ray *ray, Intersection *intersection, Object *sphere);
 
 void renderImage(Image *img, Scene *scene);
 

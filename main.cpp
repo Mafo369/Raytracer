@@ -293,7 +293,7 @@ Scene *initScene5() {
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("./stanford-bunny.obj", attrib, shapes, materials);
+  readObjToTriangleMesh("../bunny.obj", attrib, shapes, materials);
 
 
   for(size_t s = 0; s < shapes.size(); s++){
@@ -327,11 +327,16 @@ Scene *initScene5() {
 
       vec3 normal = vec3(n0, n1, n2);*/
 
+      vec3 v1v0 = v1-v0;
+      vec3 v2v0 = v2-v0;
+      vec3 n = normalize(cross(v1v0, v2v0));
+
       mat.diffuseColor = color3(1, 0.012, 0.012);
       mat.specularColor = color3(1.0, 0.882, 0.786);
       mat.IOR = 1.3;
       mat.roughness = 0.0681;
-      addObject(scene, initTriangle(v0, v1, v2, mat));
+
+      addObject(scene, initTriangle(v0, v1, v2, n,mat));
 
       /*for(size_t v = 0; v < fv; v++){
         tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
@@ -360,11 +365,11 @@ Scene *initScene5() {
     }
   }
 
-  /*mat.diffuseColor = color3(0.014, 0.012, 0.012);
+  mat.diffuseColor = color3(0.014, 0.012, 0.012);
   mat.specularColor = color3(0.7, 0.882, 0.786);
   mat.IOR = 6;
   mat.roughness = 0.0181;
-  addObject(scene, initPlane(vec3(0, 1, 0), +1, mat));*/
+  addObject(scene, initPlane(vec3(0, 1, 0), +1, mat));
 
   addLight(scene, initLight(point3(10, 100, 100), color3(50, 50, 50)));
   return scene;
