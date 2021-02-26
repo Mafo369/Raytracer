@@ -90,7 +90,7 @@ void setSkyColor(Scene *scene, color3 c) {
 
 //https://github.com/tinyobjloader/tinyobjloader
 void readObjToTriangleMesh(const char *file, tinyobj::attrib_t &attrib, std::vector<tinyobj::shape_t> &shapes, std::vector<tinyobj::material_t> &materials){
-  std::string inputfile = "./bunny.obj";
+  std::string inputfile = "../bunny.obj";
   std::string err;
 
   bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, inputfile.c_str());
