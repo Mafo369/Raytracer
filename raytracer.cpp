@@ -132,8 +132,6 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
 
   float dist;
 
-  int a = 0;
-
   for(size_t i = 0; i<objectCount; i++){
     Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
     if(scene->objects[i]->geom.type == PLANE){
@@ -159,14 +157,12 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
           if(temp_dist < dist){
             dist = temp_dist;
             *intersection = *temp;
-            a = i;
           }
         }
         else{
           hasIntersection = true;
           *intersection = *temp;
           dist = temp_dist;
-          a = i;
         }
       }
     }else if(scene->objects[i]->geom.type == TRIANGLE){
@@ -176,23 +172,17 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection) {
           if(temp_dist < dist){
             dist = temp_dist;
             *intersection = *temp;
-            a = i;
           }
         }
         else{
           hasIntersection = true;
           *intersection = *temp;
           dist = temp_dist;
-          a = i;
         }
       }
     }
     free(temp);
   }
-  if(hasIntersection && scene->objects[a]->geom.type == SPHERE){
-    printf("dist=%f\n",dist);
-  }
-
   return hasIntersection;
 }
 
@@ -448,11 +438,12 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
   Intersection intersection;
 
 
-  if(ray->depth > 10)
+  if(ray->depth > 1)
     return color3(0.f);
 
 
   if(intersectKdTree(scene, tree, ray, &intersection)){
+  //if(intersectScene(scene, ray, &intersection)){
     //ret = (0.5f * intersection.normal) + 0.5f;
     
     size_t lightsCount = scene->lights.size();
@@ -470,11 +461,9 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
       Intersection temp_inter;
       if(!intersectKdTree(scene, tree, ray_ombre, &temp_inter)){
       //if(!intersectScene(scene, ray_ombre, &temp_inter)){
-        //printf("SHADE\n");
         ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
       }
       else{
-        //printf("ELSE\n");
         ret += color3(0.f);
       }
     
@@ -487,11 +476,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
     
     vec3 r = reflect(ray->dir, intersection.normal);
     Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
-    ray_ref->orig = intersection.position + (acne_eps * r);
-    ray_ref->dir = r; 
-    ray_ref->depth =  ray->depth + 1;
-    ray_ref->tmin = 0;
-    ray_ref->tmax = 10000;
+    rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
     color3 cr = trace_ray(scene, ray_ref, tree);
     float LdotH = dot(ray_ref->dir,intersection.normal);
