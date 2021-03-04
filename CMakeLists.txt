@@ -10,6 +10,7 @@ set(mrt_SRCS
   main.cpp
   raytracer.cpp
   scene.cpp
+  ObjLoader.cpp
   )
 
 add_executable (mrt ${mrt_SRCS})

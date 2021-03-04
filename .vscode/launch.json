@@ -9,7 +9,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/mrt",
-            "args": ["test5", "5"],
+            "args": ["werewolf", "6"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

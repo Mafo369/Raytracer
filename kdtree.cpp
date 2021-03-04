@@ -72,6 +72,16 @@ typedef struct event_t{
 
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node);
 
+vec3 vec3min(const vec3& a, const vec3& b)
+{
+    return vec3(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z));
+}
+
+vec3 vec3max(const vec3&a, const vec3& b)
+{
+    return vec3(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z));
+}
+
 KdTree*  initKdTree(Scene *scene) {
 
   //!\todo compute scene bbox, store object in outOfTree or inTree depending on type
@@ -96,6 +106,8 @@ KdTree*  initKdTree(Scene *scene) {
   std::vector<float> y_vector;
   std::vector<float> z_vector;
 
+  bool first = true;
+
   for(size_t i = 0; i < tree->inTree.size(); i++){
     if(scene->objects[tree->inTree[i]]->geom.type == SPHERE){
       float rad = scene->objects[tree->inTree[i]]->geom.sphere.radius;
@@ -114,6 +126,29 @@ KdTree*  initKdTree(Scene *scene) {
       std::vector<float> px;
       std::vector<float> py;
       std::vector<float> pz;
+
+      /*vec3 v0 = scene->objects[tree->inTree[i]]->geom.triangle.p1;
+      vec3 v1 = scene->objects[tree->inTree[i]]->geom.triangle.p2;
+      vec3 v2 = scene->objects[tree->inTree[i]]->geom.triangle.p3;
+
+      const float minx = std::min(v0.x, std::min(v1.x, v2.x));
+      const float maxx = std::max(v0.x, std::max(v1.x, v2.x));
+      const float miny = std::min(v0.y, std::min(v1.y, v2.y));
+      const float maxy = std::max(v0.y, std::max(v1.y, v2.y));
+      const float minz = std::min(v0.z, std::min(v1.z, v2.z));
+      const float maxz = std::max(v0.z, std::max(v1.z, v2.z));
+
+      vec3 mmin = vec3(minx, miny, minz);
+      vec3 mmax = vec3(maxx, maxy, maxz);
+
+      if(first){
+        root->min = mmin;
+        root->max = mmax;
+        first = false;
+      }else{
+        root->min = vec3min(root->min, mmin);
+        root->max = vec3max(root->max, mmax);
+      }*/
 
       px.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p1.x);
       px.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p2.x);
@@ -512,14 +547,39 @@ bool intersectTriangleAabb1(vec3 p1, vec3 p2, vec3 p3, vec3 normal, vec3 aabbMin
   return true;
 }
 
+bool intersectsAABB(vec3 min, vec3 max, vec3 aabbMax, vec3 aabbMin){
+  return !((min.x > aabbMax.x)      // trop à droite
+                || (max.x < aabbMin.x)    // trop à gauche
+                || (min.y > aabbMax.y)    // trop en bas
+                || (max.y < aabbMin.y)    // trop en haut
+                || (min.z > aabbMax.z)    // derrière
+                || (max.z < aabbMin.z));  // devant
+}
+
 bool intersectTriangleAabb(vec3 p1, vec3 p2, vec3 p3, vec3 normal, vec3 aabbMin, vec3 aabbMax){
-  if(aabbMin.x <= p1.x && aabbMin.y <= p1.y && aabbMin.z <= p1.z && aabbMax.x >= p1.x && aabbMax.y >= p1.y && aabbMax.z >= p1.z)
+  /*if(aabbMin.x <= p1.x && aabbMin.y <= p1.y && aabbMin.z <= p1.z && aabbMax.x >= p1.x && aabbMax.y >= p1.y && aabbMax.z >= p1.z)
     return true;
   if(aabbMin.x <= p2.x && aabbMin.y <= p2.y && aabbMin.z <= p2.z && aabbMax.x >= p2.x && aabbMax.y >= p2.y && aabbMax.z >= p2.z)
     return true;
   if(aabbMin.x <= p3.x && aabbMin.y <= p3.y && aabbMin.z <= p3.z && aabbMax.x >= p3.x && aabbMax.y >= p3.y && aabbMax.z >= p3.z)
     return true;
-  return false;
+  return false;*/
+  vec3 v0 = p1;
+  vec3 v1 = p2;
+  vec3 v2 = p3;
+
+  const float minx = min(v0.x, min(v1.x, v2.x));
+  const float maxx = max(v0.x, max(v1.x, v2.x));
+  const float miny = min(v0.y, min(v1.y, v2.y));
+  const float maxy = max(v0.y, max(v1.y, v2.y));
+  const float minz = min(v0.z, min(v1.z, v2.z));
+  const float maxz = max(v0.z, max(v1.z, v2.z));
+
+  vec3 min_ = vec3(minx, miny, minz);
+  vec3 max_ = vec3(maxx, maxy, maxz);
+
+  return intersectsAABB(min_, max_, aabbMax, aabbMin);
+
 }
 
 //from http://blog.nuclex-games.com/tutorials/collision-detection/static-sphere-vs-aabb/
@@ -602,7 +662,7 @@ void clipSphereToBox(Scene *scene, int sphere, vec3 min, vec3 max, vec3 &minb, v
 }
 
 void clipTriangleToBox(Scene *scene, int triangle, vec3 min, vec3 max, vec3 &minb, vec3 &maxb){
-  vec3 p1 = scene->objects[triangle]->geom.triangle.p1;
+  /*vec3 p1 = scene->objects[triangle]->geom.triangle.p1;
   vec3 p2 = scene->objects[triangle]->geom.triangle.p2;
   vec3 p3 = scene->objects[triangle]->geom.triangle.p3;
 
@@ -615,15 +675,28 @@ void clipTriangleToBox(Scene *scene, int triangle, vec3 min, vec3 max, vec3 &min
   float zmax = fmax(p1.z, fmax(p2.z, p3.z));
   
   minb = vec3(xmin, ymin, zmin);
-  maxb = vec3(xmax, ymax, zmax);
+  maxb = vec3(xmax, ymax, zmax);*/
+  vec3 v0 = scene->objects[triangle]->geom.triangle.p1;
+  vec3 v1 = scene->objects[triangle]->geom.triangle.p2;
+  vec3 v2 = scene->objects[triangle]->geom.triangle.p3;
+
+  const float minx = std::min(v0.x, std::min(v1.x, v2.x));
+  const float maxx = std::max(v0.x, std::max(v1.x, v2.x));
+  const float miny = std::min(v0.y, std::min(v1.y, v2.y));
+  const float maxy = std::max(v0.y, std::max(v1.y, v2.y));
+  const float minz = std::min(v0.z, std::min(v1.z, v2.z));
+  const float maxz = std::max(v0.z, std::max(v1.z, v2.z));
+
+  minb = vec3(minx, miny, minz);
+  maxb = vec3(maxx, maxy, maxz);
 
   for(int k = 0; k < 3; k++){
-    if(min[k] > minb[k]){
+    /*if(min[k] > minb[k]){
       minb[k] = min[k];
     }
     if(max[k] < maxb[k]){
       maxb[k] = max[k];
-    }
+    }*/
   }
 }
 
@@ -631,7 +704,7 @@ bool isPlanar(vec3 min, vec3 max){
   float dx = max.x - min.x;
   float dy = max.y - min.y;
   float dz = max.z - min.z;
-  return dx <= 0.01 || dy <= 0.01 || dz <= 0.01;
+  return dx <= 0.001 || dy <= 0.001 || dz <= 0.001;
   //return dx <= 0.f || dy <= 0.f || dz <= 0.f;
 }
 

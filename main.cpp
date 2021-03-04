@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "ObjLoader.hpp"
 
 #define WIDTH 800
 #define HEIGHT 600
@@ -326,9 +327,15 @@ Scene *initScene5() {
 Scene *initScene6() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(0, 3, 7), vec3(0, 1, 0), vec3(0, 3, 0), 60,
+            float(WIDTH) / float(HEIGHT));
+  setSkyColor(scene, color3(0.2, 0.2, 0.7));
+  /*setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
-  setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
+  setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));*/
+
+  addLight(scene, initLight(point3(10, 6, 10), .5f * color3(5, 5, 5)));
+  addLight(scene, initLight(point3(-10, 15, 10), .5f * color3(5, 5, 5)));
   Material mat;
   mat.IOR = 1.3;
   mat.roughness = 0.1;
@@ -337,7 +344,7 @@ Scene *initScene6() {
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("../cube.obj", attrib, shapes, materials);
+  readObjToTriangleMesh("./werewolf.obj", attrib, shapes, materials);
 
 
   for(size_t s = 0; s < shapes.size(); s++){
@@ -389,6 +396,15 @@ Scene *initScene6() {
       addObject(scene, initTriangle(v0, v1, v2, n,mat));
     }
   }
+
+  /*ObjLoader loader;
+  loader.load("./werewolf.obj");
+  const std::vector<Object *> &objs = loader.getObjects();
+  printf("%ld triangles loaded, adding them to the scene..\n", objs.size());
+  for (Object *obj : objs)
+  {
+    addObject(scene, obj);
+  }*/
 
   addLight(scene, initLight(point3(10, 100, 100), color3(50, 50, 50)));
   return scene;

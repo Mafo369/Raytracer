@@ -5,6 +5,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/mrt.dir/main.cpp.o"
   "CMakeFiles/mrt.dir/raytracer.cpp.o"
   "CMakeFiles/mrt.dir/scene.cpp.o"
+  "CMakeFiles/mrt.dir/ObjLoader.cpp.o"
   "mrt.pdb"
   "mrt"
 )
