@@ -482,11 +482,6 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree) {
     float LdotH = dot(ray_ref->dir,intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
-
-    if(cr.r > 1.f && cr.g > 1.f && cr.b > 1.f){
-      //printf("r=%f g=%f b=%f\n",cr.r,cr.g,cr.b);
-    }
-
     ret +=  (f * cr * intersection.mat->specularColor);
 
     free(ray_ref);

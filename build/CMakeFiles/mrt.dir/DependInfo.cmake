@@ -4,7 +4,6 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/ObjLoader.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/ObjLoader.cpp.o"
   "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/image.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/image.cpp.o"
   "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/kdtree.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/kdtree.cpp.o"
   "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o"

@@ -136,33 +136,6 @@ unit-test/fast:
 	$(MAKE) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/build
 .PHONY : unit-test/fast
 
-ObjLoader.o: ObjLoader.cpp.o
-
-.PHONY : ObjLoader.o
-
-# target to build an object file
-ObjLoader.cpp.o:
-	$(MAKE) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/ObjLoader.cpp.o
-.PHONY : ObjLoader.cpp.o
-
-ObjLoader.i: ObjLoader.cpp.i
-
-.PHONY : ObjLoader.i
-
-# target to preprocess a source file
-ObjLoader.cpp.i:
-	$(MAKE) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/ObjLoader.cpp.i
-.PHONY : ObjLoader.cpp.i
-
-ObjLoader.s: ObjLoader.cpp.s
-
-.PHONY : ObjLoader.s
-
-# target to generate assembly for a file
-ObjLoader.cpp.s:
-	$(MAKE) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/ObjLoader.cpp.s
-.PHONY : ObjLoader.cpp.s
-
 image.o: image.cpp.o
 
 .PHONY : image.o
@@ -377,9 +350,6 @@ help:
 	@echo "... edit_cache"
 	@echo "... mrt"
 	@echo "... unit-test"
-	@echo "... ObjLoader.o"
-	@echo "... ObjLoader.i"
-	@echo "... ObjLoader.s"
 	@echo "... image.o"
 	@echo "... image.i"
 	@echo "... image.s"

@@ -72,16 +72,6 @@ typedef struct event_t{
 
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node);
 
-vec3 vec3min(const vec3& a, const vec3& b)
-{
-    return vec3(min(a.x, b.x), min(a.y, b.y), min(a.z, b.z));
-}
-
-vec3 vec3max(const vec3&a, const vec3& b)
-{
-    return vec3(max(a.x, b.x), max(a.y, b.y), max(a.z, b.z));
-}
-
 KdTree*  initKdTree(Scene *scene) {
 
   //!\todo compute scene bbox, store object in outOfTree or inTree depending on type
@@ -97,7 +87,7 @@ KdTree*  initKdTree(Scene *scene) {
     }
   }
 
-  tree->depthLimit = 30;
+  tree->depthLimit = 40;
   tree->objLimit = scene->objects.size() * sizeof(Object);
 
   KdTreeNode *root = initNode(false, 0, 0);
@@ -105,8 +95,6 @@ KdTree*  initKdTree(Scene *scene) {
   std::vector<float> x_vector;
   std::vector<float> y_vector;
   std::vector<float> z_vector;
-
-  bool first = true;
 
   for(size_t i = 0; i < tree->inTree.size(); i++){
     if(scene->objects[tree->inTree[i]]->geom.type == SPHERE){
@@ -126,29 +114,6 @@ KdTree*  initKdTree(Scene *scene) {
       std::vector<float> px;
       std::vector<float> py;
       std::vector<float> pz;
-
-      /*vec3 v0 = scene->objects[tree->inTree[i]]->geom.triangle.p1;
-      vec3 v1 = scene->objects[tree->inTree[i]]->geom.triangle.p2;
-      vec3 v2 = scene->objects[tree->inTree[i]]->geom.triangle.p3;
-
-      const float minx = std::min(v0.x, std::min(v1.x, v2.x));
-      const float maxx = std::max(v0.x, std::max(v1.x, v2.x));
-      const float miny = std::min(v0.y, std::min(v1.y, v2.y));
-      const float maxy = std::max(v0.y, std::max(v1.y, v2.y));
-      const float minz = std::min(v0.z, std::min(v1.z, v2.z));
-      const float maxz = std::max(v0.z, std::max(v1.z, v2.z));
-
-      vec3 mmin = vec3(minx, miny, minz);
-      vec3 mmax = vec3(maxx, maxy, maxz);
-
-      if(first){
-        root->min = mmin;
-        root->max = mmax;
-        first = false;
-      }else{
-        root->min = vec3min(root->min, mmin);
-        root->max = vec3max(root->max, mmax);
-      }*/
 
       px.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p1.x);
       px.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p2.x);
@@ -189,397 +154,22 @@ KdTree*  initKdTree(Scene *scene) {
   return tree;
 }
 
-#define axistest_x01(a, b, fa, fb)			   \
-	p0_ = a*v0.y - b*v0.z;			       	   \
-	p2_ = a*v2.y - b*v2.z;			       	   \
-        if(p0_<p2_) {min=p0_; max=p2_;} else {min=p2_; max=p0_;} \
-	rad = fa * boxhalfsize.y + fb * boxhalfsize.z;   \
-	if(min>rad || max<-rad) return 0;
-
-#define axistest_x2(a, b, fa, fb)			   \
-	p0_ = a*v0.y - b*v0.z;			           \
-	p1_ = a*v1.y - b*v1.z;			       	   \
-        if(p0_<p1_) {min=p0_; max=p1_;} else {min=p1_; max=p0_;} \
-	rad = fa * boxhalfsize.y + fb * boxhalfsize.z;   \
-	if(min>rad || max<-rad) return 0;
-
-#define axistest_y02(a, b, fa, fb)			   \
-	p0_ = -a*v0.x + b*v0.z;		      	   \
-	p2_ = -a*v2.x + b*v2.z;	       	       	   \
-        if(p0_<p2_) {min=p0_; max=p2_;} else {min=p2_; max=p0_;} \
-	rad = fa * boxhalfsize.x + fb * boxhalfsize.z;   \
-	if(min>rad || max<-rad) return 0;
-
-#define axistest_y1(a, b, fa, fb)			   \
-	p0_ = -a*v0.x + b*v0.z;		      	   \
-	p1_ = -a*v1.x + b*v1.z;	     	       	   \
-        if(p0_<p1_) {min=p0_; max=p1_;} else {min=p1_; max=p0_;} \
-	rad = fa * boxhalfsize.x + fb * boxhalfsize.z;   \
-	if(min>rad || max<-rad) return 0;
-
-#define axistest_z12(a, b, fa, fb)			   \
-	p1_ = a*v1.x - b*v1.y;			           \
-	p2_ = a*v2.x - b*v2.y;			       	   \
-        if(p2_<p1_) {min=p2_; max=p1_;} else {min=p1_; max=p2_;} \
-	rad = fa * boxhalfsize.x + fb * boxhalfsize.y;   \
-	if(min>rad || max<-rad) return 0;
-
-#define axistest_z0(a, b, fa, fb)			   \
-	p0_ = a*v0.x - b*v0.y;				   \
-	p1_ = a*v1.x - b*v1.y;			           \
-        if(p0_<p1_) {min=p0_; max=p1_;} else {min=p1_; max=p0_;} \
-	rad = fa * boxhalfsize.x + fb * boxhalfsize.y;   \
-	if(min>rad || max<-rad) return 0;
-
-#define findminmax(x0,x1,x2,min,max) \
-  min = max = x0;   \
-  if(x1<min) min=x1;\
-  if(x1>max) max=x1;\
-  if(x2<min) min=x2;\
-  if(x2>max) max=x2;
-
-int planeBoxOverlap(vec3 normal, vec3 vert, vec3 maxbox){
-  int q;
-  vec3 vmin,vmax;
-  float v;
-  for(q=0;q<=2;q++){
-    v=vert[q];					
-    if(normal[q]>0.0f){
-      vmin[q]=-maxbox[q] - v;	
-      vmax[q]= maxbox[q] - v;	
-    }else{
-      vmin[q]= maxbox[q] - v;	
-      vmax[q]=-maxbox[q] - v;	
-    }
-  }
-  if(dot(normal,vmin)>0.0f) return 0;
-  if(dot(normal,vmax)>=0.0f) return 1;
-  return 0;
-}
-
-bool intersectTriangleAabb2(vec3 p1, vec3 p2, vec3 p3, vec3 normal, vec3 aabbMin, vec3 aabbMax){
-  float min,max,p0_,p1_,p2_,rad,fex,fey,fez;
-
-  vec3 boxcenter = aabbMin + (aabbMax * 0.5f);
-  vec3 boxhalfsize = (aabbMax - aabbMin) * 0.5f;
-  vec3 v0 = p1 - boxcenter ;
-  vec3 v1 = p2 - boxcenter;
-  vec3 v2 = p3 - boxcenter;
-
-  vec3 e0 = v1-v0;
-  vec3 e1 = v2-v1;
-  vec3 e2 = v0-v2;
-
-  fex = fabsf(e0.x);
-  fey = fabsf(e0.y);
-  fez = fabsf(e0.z);
-
-  axistest_x01(e0.z, e0.y, fez, fey);
-  axistest_y02(e0.z, e0.x, fez, fex);
-  axistest_z12(e0.y, e0.x, fey, fex);
-
-  fex = fabsf(e1.x);
-  fey = fabsf(e1.y);
-  fez = fabsf(e1.z);
-
-  axistest_x01(e1.z, e1.y, fez, fey);
-  axistest_y02(e1.z, e1.x, fez, fex);
-  axistest_z0(e1.y, e1.x, fey, fex);
-
-  fex = fabsf(e2.x);
-  fey = fabsf(e2.y);
-  fez = fabsf(e2.z);
-
-  axistest_x2(e2.z, e2.y, fez, fey);
-
-  axistest_y1(e2.z, e2.x, fez, fex);
-
-  axistest_z12(e2.y, e2.x, fey, fex);
-
-  findminmax(v0.x,v1.x,v2.x,min,max);
-
-  if(min>boxhalfsize.x || max<-boxhalfsize.x) return 0;
-
-  findminmax(v0.y,v1.y,v2.y,min,max);
-
-  if(min>boxhalfsize.y || max<-boxhalfsize.y) return 0;
-
-  findminmax(v0.z,v1.z,v2.z,min,max);
-
-  if(min>boxhalfsize.z || max<-boxhalfsize.z) return 0;
-
-  /* Bullet 2: */
-
-   /*  test if the box intersects the plane of the triangle */
-
-   /*  compute plane equation of triangle: normal*x+d=0 */
-
-   vec3 n = cross(e0,e1);
-
-   // -NJMP- (line removed here)
-
-   if(!planeBoxOverlap(n,v0,boxhalfsize)) return 0;	// -NJMP-
-
-
-   return 1;   /* box and triangle overlaps */
-
-}
-
-//SAT (Seperating Axis Therom)
-bool intersectTriangleAabb1(vec3 p1, vec3 p2, vec3 p3, vec3 normal, vec3 aabbMin, vec3 aabbMax){
-  vec3 v0 = p1;
-  vec3 v1 = p2;
-  vec3 v2 = p3;
-
-  if(aabbMin.x <= v0.x && aabbMin.y <= v0.y && aabbMin.z <= v0.z && aabbMax.x >= v0.x && aabbMax.y >= v0.y && aabbMax.z >= v0.z){
-    if(aabbMin.x <= v1.x && aabbMin.y <= v1.y && aabbMin.z <= v1.z && aabbMax.x >= v1.x && aabbMax.y >= v1.y && aabbMax.z >= v1.z){
-      if(aabbMin.x <= v2.x && aabbMin.y <= v2.y && aabbMin.z <= v2.z && aabbMax.x >= v2.x && aabbMax.y >= v2.y && aabbMax.z >= v2.z){
-        return true;
-      }
-    }
-  }
-
-  vec3 c = aabbMin + (aabbMax * 0.5f);
-  vec3 e = aabbMax - c;
-
-  v0 -= c;
-  v1 -= c;
-  v2 -= c;
-
-  vec3 f0 = normalize(v1 -v0);
-  vec3 f1 = normalize(v2 - v1);
-  vec3 f2 = normalize(v0 - v2);
-
-  vec3 u0 = vec3(1.f, 0.f, 0.f);
-  vec3 u1 = vec3(0.f, 1.f ,0.f);
-  vec3 u2 = vec3(0.f, 0.f, 1.f);
-
-  vec3 axis_u0_f0 = normalize(cross(u0, f0));
-  vec3 axis_u0_f1 = normalize(cross(u0, f1));
-  vec3 axis_u0_f2 = normalize(cross(u0, f2));
-
-  vec3 axis_u1_f0 = normalize(cross(u1, f0));
-  vec3 axis_u1_f1 = normalize(cross(u1, f1));
-  vec3 axis_u1_f2 = normalize(cross(u1, f2));
-
-  vec3 axis_u2_f0 = normalize(cross(u2, f0));
-  vec3 axis_u2_f1 = normalize(cross(u2, f1));
-  vec3 axis_u2_f2 = normalize(cross(u2, f2));
-
-  // Testing axis: axis_u0_f0
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  float p0_ = dot(v0, axis_u0_f0);
-  float p1_ = dot(v1, axis_u0_f0);
-  float p2_ = dot(v2, axis_u0_f0);
-
-  float r = e.x * abs(dot(u0, axis_u0_f0)) +
-            e.y * abs(dot(u1, axis_u0_f0)) + 
-            e.z * abs(dot(u2, axis_u0_f0));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r){
-    printf("u0f0\n");
-    return false;
-  }
-
-  // Testing axis: axis_u0_f1
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, axis_u0_f1);
-  p1_ = dot(v1, axis_u0_f1);
-  p2_ = dot(v2, axis_u0_f1);
-
-  r = e.x * abs(dot(u0, axis_u0_f1)) +
-      e.y * abs(dot(u1, axis_u0_f1)) + 
-      e.z * abs(dot(u2, axis_u0_f1));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r){
-    printf("u0f1\n");
-    return false;
-  }
-
-  // Testing axis: axis_u0_f2
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, axis_u0_f2);
-  p1_ = dot(v1, axis_u0_f2);
-  p2_ = dot(v2, axis_u0_f2);
-
-  r = e.x * abs(dot(u0, axis_u0_f2)) +
-      e.y * abs(dot(u1, axis_u0_f2)) + 
-      e.z * abs(dot(u2, axis_u0_f2));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r){
-    printf("u0f2\n");
-    return false;
-  }
-
-  // Testing axis: axis_u1_f0
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, axis_u1_f0);
-  p1_ = dot(v1, axis_u1_f0);
-  p2_ = dot(v2, axis_u1_f0);
-
-  r = e.x * abs(dot(u0, axis_u1_f0)) +
-      e.y * abs(dot(u1, axis_u1_f0)) + 
-      e.z * abs(dot(u2, axis_u1_f0));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-  // Testing axis: axis_u1_f1
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, axis_u1_f1);
-  p1_ = dot(v1, axis_u1_f1);
-  p2_ = dot(v2, axis_u1_f1);
-
-  r = e.x * abs(dot(u0, axis_u1_f1)) +
-      e.y * abs(dot(u1, axis_u1_f1)) + 
-      e.z * abs(dot(u2, axis_u1_f1));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-  // Testing axis: axis_u1_f2
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, axis_u1_f2);
-  p1_ = dot(v1, axis_u1_f2);
-  p2_ = dot(v2, axis_u1_f2);
-
-  r = e.x * abs(dot(u0, axis_u1_f2)) +
-      e.y * abs(dot(u1, axis_u1_f2)) + 
-      e.z * abs(dot(u2, axis_u1_f2));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-
-  // Testing axis: axis_u2_f0
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, axis_u2_f0);
-  p1_ = dot(v1, axis_u2_f0);
-  p2_ = dot(v2, axis_u2_f0);
-
-  r = e.x * abs(dot(u0, axis_u2_f0)) +
-      e.y * abs(dot(u1, axis_u2_f0)) + 
-      e.z * abs(dot(u2, axis_u2_f0));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-
-  // Testing axis: axis_u2_f1
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, axis_u2_f1);
-  p1_ = dot(v1, axis_u2_f1);
-  p2_ = dot(v2, axis_u2_f1);
-
-  r = e.x * abs(dot(u0, axis_u2_f1)) +
-      e.y * abs(dot(u1, axis_u2_f1)) + 
-      e.z * abs(dot(u2, axis_u2_f1));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-  // Testing axis: axis_u2_f2
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, axis_u2_f2);
-  p1_ = dot(v1, axis_u2_f2);
-  p2_ = dot(v2, axis_u2_f2);
-
-  r = e.x * abs(dot(u0, axis_u2_f2)) +
-      e.y * abs(dot(u1, axis_u2_f2)) + 
-      e.z * abs(dot(u2, axis_u2_f2));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-  // Testing axis: u0
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, u0);
-  p1_ = dot(v1, u0);
-  p2_ = dot(v2, u0);
-
-  r = e.x * abs(dot(u0, u0)) +
-      e.y * abs(dot(u1, u0)) + 
-      e.z * abs(dot(u2, u0));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-  // Testing axis: u1
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, u1);
-  p1_ = dot(v1, u1);
-  p2_ = dot(v2, u1);
-
-  r = e.x * abs(dot(u0, u1)) +
-      e.y * abs(dot(u1, u1)) + 
-      e.z * abs(dot(u2, u1));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-  // Testing axis: u2
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, u2);
-  p1_ = dot(v1, u2);
-  p2_ = dot(v2, u2);
-
-  r = e.x * abs(dot(u0, u2)) +
-      e.y * abs(dot(u1, u2)) + 
-      e.z * abs(dot(u2, u2));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-  vec3 triangleNormal = cross(f0, f1);
-  // Testing axis: triangleNormal
-  // Project all 3 vertices of the triangle onto the Seperating axis
-  p0_ = dot(v0, triangleNormal);
-  p1_ = dot(v1, triangleNormal);
-  p2_ = dot(v2, triangleNormal);
-
-  r = e.x * abs(dot(u0, triangleNormal)) +
-      e.y * abs(dot(u1, triangleNormal)) + 
-      e.z * abs(dot(u2, triangleNormal));
-
-  if(std::max(-std::max({p0_, p1_, p2_}), std::min({p0_, p1_, p2_})) > r)
-    return false;
-
-  return true;
-}
-
-bool intersectsAABB(vec3 min, vec3 max, vec3 aabbMax, vec3 aabbMin){
-  return !((min.x > aabbMax.x)      // trop à droite
-                || (max.x < aabbMin.x)    // trop à gauche
-                || (min.y > aabbMax.y)    // trop en bas
-                || (max.y < aabbMin.y)    // trop en haut
-                || (min.z > aabbMax.z)    // derrière
-                || (max.z < aabbMin.z));  // devant
-}
-
 bool intersectTriangleAabb(vec3 p1, vec3 p2, vec3 p3, vec3 normal, vec3 aabbMin, vec3 aabbMax){
-  /*if(aabbMin.x <= p1.x && aabbMin.y <= p1.y && aabbMin.z <= p1.z && aabbMax.x >= p1.x && aabbMax.y >= p1.y && aabbMax.z >= p1.z)
-    return true;
-  if(aabbMin.x <= p2.x && aabbMin.y <= p2.y && aabbMin.z <= p2.z && aabbMax.x >= p2.x && aabbMax.y >= p2.y && aabbMax.z >= p2.z)
-    return true;
-  if(aabbMin.x <= p3.x && aabbMin.y <= p3.y && aabbMin.z <= p3.z && aabbMax.x >= p3.x && aabbMax.y >= p3.y && aabbMax.z >= p3.z)
-    return true;
-  return false;*/
   vec3 v0 = p1;
   vec3 v1 = p2;
   vec3 v2 = p3;
 
-  const float minx = min(v0.x, min(v1.x, v2.x));
-  const float maxx = max(v0.x, max(v1.x, v2.x));
-  const float miny = min(v0.y, min(v1.y, v2.y));
-  const float maxy = max(v0.y, max(v1.y, v2.y));
-  const float minz = min(v0.z, min(v1.z, v2.z));
-  const float maxz = max(v0.z, max(v1.z, v2.z));
+  float minx = min(v0.x, min(v1.x, v2.x));
+  float miny = min(v0.y, min(v1.y, v2.y));
+  float minz = min(v0.z, min(v1.z, v2.z));
+  float maxx = max(v0.x, max(v1.x, v2.x));
+  float maxy = max(v0.y, max(v1.y, v2.y));
+  float maxz = max(v0.z, max(v1.z, v2.z));
 
-  vec3 min_ = vec3(minx, miny, minz);
-  vec3 max_ = vec3(maxx, maxy, maxz);
+  vec3 min = vec3(minx, miny, minz);
+  vec3 max = vec3(maxx, maxy, maxz);
 
-  return intersectsAABB(min_, max_, aabbMax, aabbMin);
-
+  return !((min.x > aabbMax.x) || (max.x < aabbMin.x) || (min.y > aabbMax.y) || (max.y < aabbMin.y) || (min.z > aabbMax.z) || (max.z < aabbMin.z));
 }
 
 //from http://blog.nuclex-games.com/tutorials/collision-detection/static-sphere-vs-aabb/
@@ -662,20 +252,6 @@ void clipSphereToBox(Scene *scene, int sphere, vec3 min, vec3 max, vec3 &minb, v
 }
 
 void clipTriangleToBox(Scene *scene, int triangle, vec3 min, vec3 max, vec3 &minb, vec3 &maxb){
-  /*vec3 p1 = scene->objects[triangle]->geom.triangle.p1;
-  vec3 p2 = scene->objects[triangle]->geom.triangle.p2;
-  vec3 p3 = scene->objects[triangle]->geom.triangle.p3;
-
-  float xmin = fmin(p1.x, fmin(p2.x, p3.x));
-  float ymin = fmin(p1.y, fmin(p2.y, p3.y));
-  float zmin = fmin(p1.z, fmin(p2.z, p3.z));
-
-  float xmax = fmax(p1.x, fmax(p2.x, p3.x));
-  float ymax = fmax(p1.y, fmax(p2.y, p3.y));
-  float zmax = fmax(p1.z, fmax(p2.z, p3.z));
-  
-  minb = vec3(xmin, ymin, zmin);
-  maxb = vec3(xmax, ymax, zmax);*/
   vec3 v0 = scene->objects[triangle]->geom.triangle.p1;
   vec3 v1 = scene->objects[triangle]->geom.triangle.p2;
   vec3 v2 = scene->objects[triangle]->geom.triangle.p3;
@@ -827,41 +403,29 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node) {
   node->left = node_left;
   node->right = node_right;
   
-  size_t check = 0;
   for(size_t i = 0; i < node->objects.size(); i++){
     if(scene->objects[node->objects[i]]->geom.type == SPHERE){
-      if(intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius,node_left->min, node_left->max)){
+      bool left = intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius,node_left->min, node_left->max);
+      bool right = intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius,node_right->min, node_right->max);
+      assert(left || right);
+      if(left){
         node_left->objects.push_back(node->objects[i]);
-        check++;
       }
-      if(intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius,node_right->min, node_right->max)){
+      if(right){
         node_right->objects.push_back(node->objects[i]);
-        check++;
       }
     }
     else if(scene->objects[node->objects[i]]->geom.type == TRIANGLE){
-      if(intersectTriangleAabb(scene->objects[node->objects[i]]->geom.triangle.p1, scene->objects[node->objects[i]]->geom.triangle.p2, scene->objects[node->objects[i]]->geom.triangle.p3, scene->objects[node->objects[i]]->geom.triangle.normal,node_left->min, node_left->max)){
+      bool left = intersectTriangleAabb(scene->objects[node->objects[i]]->geom.triangle.p1, scene->objects[node->objects[i]]->geom.triangle.p2, scene->objects[node->objects[i]]->geom.triangle.p3, scene->objects[node->objects[i]]->geom.triangle.normal,node_left->min, node_left->max);
+      bool right = intersectTriangleAabb(scene->objects[node->objects[i]]->geom.triangle.p1, scene->objects[node->objects[i]]->geom.triangle.p2, scene->objects[node->objects[i]]->geom.triangle.p3, scene->objects[node->objects[i]]->geom.triangle.normal,node_right->min, node_right->max);
+      assert(left || right);
+      if(left){
         node_left->objects.push_back(node->objects[i]);
-        check++;
       }
-      if(intersectTriangleAabb(scene->objects[node->objects[i]]->geom.triangle.p1, scene->objects[node->objects[i]]->geom.triangle.p2, scene->objects[node->objects[i]]->geom.triangle.p3, scene->objects[node->objects[i]]->geom.triangle.normal,node_right->min, node_right->max)){
+      if(right){
         node_right->objects.push_back(node->objects[i]);
-        check++;
       }
     }
-    
-    if(check < i || check == 0){
-      /*printf("wrong check: node.x=%f node.y=%f node.z=%f\n", scene->objects[node->objects[i]]->geom.sphere.center.x, scene->objects[node->objects[i]]->geom.sphere.center.y,
-          scene->objects[node->objects[i]]->geom.sphere.center.z);*/
-      printf("wrong check: p1(%f, %f, %f) p2(%f, %f , %f) p3(%f, %f, %f)\n", scene->objects[node->objects[i]]->geom.triangle.p1.x, scene->objects[node->objects[i]]->geom.triangle.p1.y,
-          scene->objects[node->objects[i]]->geom.triangle.p1.z, scene->objects[node->objects[i]]->geom.triangle.p2.x, scene->objects[node->objects[i]]->geom.triangle.p2.y, scene->objects[node->objects[i]]->geom.triangle.p2.z,
-          scene->objects[node->objects[i]]->geom.triangle.p3.x, scene->objects[node->objects[i]]->geom.triangle.p3.y, scene->objects[node->objects[i]]->geom.triangle.p3.z);
-      //printf("Wrong check\n");
-    }
-  }
-  if(check < node->objects.size()-1){
-    printf("CHECK WRONG: check=%lu size=%lu\n", check, node->objects.size()-1);
-    return ;
   }
   node->objects.clear();
    
@@ -917,7 +481,7 @@ bool traverse(Scene * scene, KdTree * tree, std::stack<StackNode> *stack, StackN
           }
         }
       }
-      // Leaf found -> Find intersection with objects
+      // Leaf found -> Find intersection with objects in node
       for(size_t i = 0; i < currentNode.node->objects.size(); i++){
         Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
         if(scene->objects[currentNode.node->objects[i]]->geom.type == SPHERE){

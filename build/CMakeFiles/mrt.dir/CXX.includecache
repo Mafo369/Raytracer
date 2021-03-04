@@ -1112,40 +1112,6 @@ iostream
 lodepng.h
 ../lodepng-master/lodepng.h
 
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/ObjLoader.cpp
-ObjLoader.hpp
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/ObjLoader.hpp
-fstream
--
-iostream
--
-sstream
--
-SplittableString.hpp
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/SplittableString.hpp
-color_msg.h
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/color_msg.h
-lodepng-master/lodepng_util.h
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng_util.h
-
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/ObjLoader.hpp
-string
--
-map
--
-scene_types.h
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene_types.h
-
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/SplittableString.hpp
-string
--
-vector
--
-iostream
--
-
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/color_msg.h
-
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/defines.h
 stdbool.h
 -
@@ -1224,14 +1190,6 @@ iostream
 lodepng.h
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng.h
 
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng_util.h
-string
--
-vector
--
-lodepng.h
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng.h
-
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/main.cpp
 defines.h
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/defines.h
@@ -1249,8 +1207,6 @@ stdlib.h
 -
 string.h
 -
-ObjLoader.hpp
-/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/ObjLoader.hpp
 
 /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/ray.h
 defines.h
