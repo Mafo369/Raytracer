@@ -300,12 +300,14 @@ void clipTriangleToBox(Scene *scene, int triangle, vec3 min, vec3 max, vec3 &min
 
   for (int k = 0; k < 3; k++)
   {
-    /*if(min[k] > minb[k]){
+    if (min[k] > minb[k])
+    {
       minb[k] = min[k];
     }
-    if(max[k] < maxb[k]){
+    if (max[k] < maxb[k])
+    {
       maxb[k] = max[k];
-    }*/
+    }
   }
 }
 
@@ -428,7 +430,7 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
     return;
   }
 
-  int d = (node->depth) % 3; // Dimension to split
+  int d = (node->depth) % 3; // Dimension to split (random value to initialize nodes, axis will be chosen in findPlane)
   KdTreeNode *node_left = initNode(false, d, node->depth + 1);
   KdTreeNode *node_right = initNode(false, d, node->depth + 1);
 
@@ -493,71 +495,7 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
   subdivide(scene, tree, node_right);
 }
 
-bool intersectsRay(Ray *ray, vec3 min, vec3 max)
-{
-  //const auto &[mini, maxi, orig, dir] = std::make_tuple(min, max, ray->orig, ray->dir);
-  const auto &mini = min;
-  const auto &maxi = max;
-  const auto &orig = ray->orig;
-  const auto &dir = ray->dir;
-  float t[8];
-  t[0] = (mini.x - orig.x) / dir.x;
-  t[1] = (maxi.x - orig.x) / dir.x;
-  t[2] = (mini.y - orig.y) / dir.y;
-  t[3] = (maxi.y - orig.y) / dir.y;
-  t[4] = (mini.z - orig.z) / dir.z;
-  t[5] = (maxi.z - orig.z) / dir.z;
-  t[6] = fmax(fmax(fmin(t[0], t[1]), fmin(t[2], t[3])), fmin(t[4], t[5]));
-  t[7] = fmin(fmin(fmax(t[0], t[1]), fmax(t[2], t[3])), fmax(t[4], t[5]));
-
-  return (t[7] >= 0) && (t[6] <= t[7]);
-}
-
-bool computeRayIntersections(Ray *ray, Intersection *intersection, KdTreeNode *currentNode, Scene *scene)
-{
-  if (intersectsRay(ray, currentNode->min, currentNode->max))
-  {
-    if (currentNode->leaf)
-    {
-      bool result = false;
-      for (const auto &object : currentNode->objects)
-      {
-        switch (scene->objects[object]->geom.type)
-        {
-        case SPHERE:
-          result = intersectSphere(ray, intersection, scene->objects[object]) || result;
-          break;
-
-        case PLANE:
-          result = intersectPlane(ray, intersection, scene->objects[object]) || result;
-          break;
-
-        case TRIANGLE:
-          result = intersectTriangle(ray, intersection, scene->objects[object]) || result;
-          break;
-
-        default:
-          printf("Unhandled ray/object intersection !\n");
-          exit(3);
-        }
-      }
-
-      return result;
-    }
-    else
-    {
-      // assert(left->intersectsRay(ray) || right->intersectsRay(ray));
-
-      bool result = computeRayIntersections(ray, intersection, currentNode->left, scene);
-      result = computeRayIntersections(ray, intersection, currentNode->right, scene) || result;
-
-      return result;
-    }
-  }
-
-  return false;
-}
-
+//Reference [6] : Vlastimil Havran. Heuristic Ray Shooting Algorithms
 bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNode currentNode, Ray *ray, Intersection *intersection)
 {
   //printf("TRAVERSE\n");
@@ -670,7 +608,6 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
     if (hasIntersection)
     { // If we find intersection we return true
       ray->tmax = dist;
-      //printf("dist=%f\n", dist);
       return true;
     }
   }
@@ -727,12 +664,9 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
     startNode.tmax = ray->tmax;
     stack.push(startNode);
     hasIntersection = traverse(scene, tree, &stack, startNode, ray, intersection);
-    //hasIntersection = computeRayIntersections(ray, intersection, tree->root, scene);
   }
   if (hasIntersection)
   { // If object intersection, use tmax as distance reference
-    //dist = distance(ray->orig, intersection->position);
-    //assert(dist == ray->tmax);
     ray_backup->tmax = ray->tmax;
     dist = ray->tmax;
   }
