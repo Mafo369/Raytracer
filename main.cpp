@@ -320,15 +320,22 @@ Scene *initScene5() {
 Scene *initScene6() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(0, 1, 5), vec3(0, 1, 0), vec3(0, 3, 0), 60,
-            float(WIDTH) / float(HEIGHT));
-  setSkyColor(scene, color3(0.2, 0.2, 0.7));
-  /*setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(-3, 1.5, -2), vec3(0, 1, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
-  setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));*/
+  setSkyColor(scene, color3(0.6f, 0.3f, 0.5f));
+  
+  //addLight(scene, initLight(point3(100, 1, 1), color3(50, 50, 50)));
+  //addLight(scene, initLight(point3(1, 0.1, 0.5), color3(5, 5, 5)));
+  //addLight(scene, initLight(point3(0, 0, 0), color3(5, 5, 5)));
+  addLight(scene, initLight(point3(-6, 3, 7), color3(3, 3, 3)));
 
-  addLight(scene, initLight(point3(10, 6, 10), .5f * color3(5, 5, 5)));
-  addLight(scene, initLight(point3(-10, 15, 10), .5f * color3(5, 5, 5)));
+  addLight(scene, initLight(point3(6, 3, -7), color3(3, 3, 3)));
+
+  addLight(scene, initLight(point3(-6, 4, 0), color3(3, 3, 3)));
+  addLight(scene, initLight(point3(4, 10, 10), color3(1, 1, 1)));
+
+
+
   Material mat;
   mat.IOR = 1.3;
   mat.roughness = 0.1;
@@ -337,7 +344,7 @@ Scene *initScene6() {
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("./werewolf.obj", attrib, shapes, materials);
+  readObjToTriangleMesh("../bunny.obj", attrib, shapes, materials);
 
   for(size_t s = 0; s < shapes.size(); s++){
     size_t index_offset = 0;
@@ -379,7 +386,85 @@ Scene *initScene6() {
       vec3 v2v0 = v2-v0;
       vec3 n = normalize(cross(v1v0, v2v0));
 
-      mat.diffuseColor = color3(1, 0.012, 0.012);
+      mat = mat_lib[0];
+      addObject(scene, initTriangle(v0, v1, v2, n,mat));
+    }
+  }
+  mat.diffuseColor = color3(0.7, 0, 0);
+  mat.specularColor = color3(1, 0, 0);
+  mat.IOR = 1.5;
+  mat.roughness = 0.0681;
+  addObject(scene, initPlane(vec3(0, 1, 0), 0.01, mat));
+
+  mat.diffuseColor = color3(0, 0.8, 0);
+  mat.specularColor = color3(0.6, 0.6, 0);
+  mat.IOR = 1.5;
+  mat.roughness = 0.0681;
+  addObject(scene, initPlane(vec3(0, 0, 1), +10, mat));
+
+  
+  return scene;
+}
+
+Scene *initScene7() {
+
+  Scene *scene = initScene();
+  setCamera(scene, point3(3, 3, 0), vec3(0, 3, -2), vec3(0, 1, 0), 60,
+            float(WIDTH) / float(HEIGHT));
+  setSkyColor(scene, color3(0.2, 0.2, 0.7)); 
+
+
+  Material mat;
+  mat.IOR = 1.3;
+  mat.roughness = 0.1;
+  mat.specularColor = color3(0.5f);
+
+  tinyobj::attrib_t attrib;
+  std::vector<tinyobj::shape_t> shapes;
+  std::vector<tinyobj::material_t> materials;
+  readObjToTriangleMesh("../werewolf.obj", attrib, shapes, materials);
+
+  for(size_t s = 0; s < shapes.size(); s++){
+    size_t index_offset = 0;
+    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
+      int fv = shapes[s].mesh.num_face_vertices[f];
+
+      std::vector<point3> vector;
+      
+      // Loop over vertices in the face.
+      for (int v = 0; v < fv; v++) {
+        // access to vertex
+        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
+        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
+        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
+        tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
+        tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
+        tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
+        tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+        tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+        // Optional: vertex colors
+        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
+        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
+        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
+        vec3 v0 = point3(vx, vy, vz);
+        vector.push_back(v0);
+      }
+
+      index_offset += fv;
+
+      vec3 v0 = vector[0];
+      vec3 v1 = vector[1];
+      vec3 v2 = vector[2];
+
+      //per-face material
+      shapes[s].mesh.material_ids[f];
+
+      vec3 v1v0 = v1-v0;
+      vec3 v2v0 = v2-v0;
+      vec3 n = normalize(cross(v1v0, v2v0));
+
+      mat.diffuseColor = color3(0.05, 0.012, 0.6);
       mat.specularColor = color3(1.0, 0.882, 0.786);
       mat.IOR = 1.3;
       mat.roughness = 0.0681;
@@ -388,7 +473,17 @@ Scene *initScene6() {
     }
   }
 
-  addLight(scene, initLight(point3(10, 100, 100), color3(50, 50, 50)));
+  mat.diffuseColor = color3(.4, 0.8, .4);
+  mat.specularColor = color3(.4, 0.6, .2);
+  mat.IOR = 1.382;
+  mat.roughness = 0.05886;
+  addObject(scene, initPlane(vec3(100, 1, 0), +100, mat));
+  
+
+  addLight(scene, initLight(point3(10, 10, 10), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(4, 10, -2), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(10, 10, 10), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(0, 40, 0), color3(1, 1, 1)));
   return scene;
 }
 
@@ -434,6 +529,9 @@ int main(int argc, char *argv[]) {
     break;
   case 6:
     scene = initScene6();
+    break;
+  case 7:
+    scene = initScene7();
     break;
 
   default:
