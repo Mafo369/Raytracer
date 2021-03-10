@@ -344,7 +344,7 @@ Scene *initScene6() {
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("../bunny.obj", attrib, shapes, materials);
+  readObjToTriangleMesh("../assets/bunny.obj", attrib, shapes, materials);
 
   for(size_t s = 0; s < shapes.size(); s++){
     size_t index_offset = 0;
@@ -422,7 +422,7 @@ Scene *initScene7() {
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("../werewolf.obj", attrib, shapes, materials);
+  readObjToTriangleMesh("../assets/werewolf.obj", attrib, shapes, materials);
 
   for(size_t s = 0; s < shapes.size(); s++){
     size_t index_offset = 0;
@@ -487,6 +487,148 @@ Scene *initScene7() {
   return scene;
 }
 
+Scene *initScene8() {
+
+  Scene *scene = initScene();
+  setCamera(scene, point3(0, 1, 3.1), vec3(0, 1, 0), vec3(0, 1, 0), 60,
+            (float)WIDTH / (float)HEIGHT);
+  setSkyColor(scene, color3(0.1, 0.1, 0.2));
+  
+  addLight(scene, initLight(point3(-0.24,1.83,0.16), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(-0.24,1.83,-0.22), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(0.23,1.83,-0.22), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(0.23,1.83,0.16), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(0.4,1.6,0.16), color3(1, 1, 1)));
+ 
+ 
+  Material mat;
+  mat.IOR = 1.3;
+  mat.roughness = 0.1;
+  mat.specularColor = color3(0.5f);
+
+  tinyobj::attrib_t attrib;
+  std::vector<tinyobj::shape_t> shapes;
+  std::vector<tinyobj::material_t> materials;
+  readObjToTriangleMesh("../assets/CornellBox-Empty-CO.obj", attrib, shapes, materials);
+
+  for(size_t s = 0; s < shapes.size(); s++){
+    size_t index_offset = 0;
+    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
+      int fv = shapes[s].mesh.num_face_vertices[f];
+
+      std::vector<point3> vector;
+      
+      // Loop over vertices in the face.
+      for (int v = 0; v < fv; v++) {
+        // access to vertex
+        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
+        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
+        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
+        tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
+        tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
+        tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
+        tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+        tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+        // Optional: vertex colors
+        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
+        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
+        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
+        vec3 v0 = point3(vx, vy, vz);
+        vector.push_back(v0);
+      }
+
+      index_offset += fv;
+
+      vec3 v0 = vector[0];
+      vec3 v1 = vector[1];
+      vec3 v2 = vector[2];
+
+      //per-face material
+      shapes[s].mesh.material_ids[f];
+
+      vec3 v1v0 = v1-v0;
+      vec3 v2v0 = v2-v0;
+      vec3 n = normalize(cross(v1v0, v2v0));
+
+      mat = mat_lib[7];
+      addObject(scene, initTriangle(v0, v1, v2, n,mat));
+    }
+  }
+
+  
+  return scene;
+}
+
+Scene *initScene9() {
+
+  Scene *scene = initScene();
+  setCamera(scene, point3(5, 3, 5), vec3(0, 1, 0), vec3(0, 3, 0), 60,
+            float(WIDTH) / float(HEIGHT));
+  setSkyColor(scene, color3(0.2, 0.2, 0.7));
+  Material mat;
+  mat.diffuseColor = color3(0.301, 0.034, 0.039);
+  mat.specularColor = color3(1.0, 0.992, 0.98);
+  mat.IOR = 1.1382;
+  mat.roughness = 0.0886;
+
+  addLight(scene, initLight(point3(5, 3, 3), .5f * color3(5, 5, 5)));
+  addLight(scene, initLight(point3(-6, 3, 3), .5f * color3(5, 5, 5)));
+
+  tinyobj::attrib_t attrib;
+  std::vector<tinyobj::shape_t> shapes;
+  std::vector<tinyobj::material_t> materials;
+  readObjToTriangleMesh("../assets/scene5.obj", attrib, shapes, materials);
+
+  for(size_t s = 0; s < shapes.size(); s++){
+    size_t index_offset = 0;
+    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
+      int fv = shapes[s].mesh.num_face_vertices[f];
+
+      std::vector<point3> vector;
+      
+      // Loop over vertices in the face.
+      for (int v = 0; v < fv; v++) {
+        // access to vertex
+        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
+        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
+        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
+        tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
+        tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
+        tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
+        tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+        tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+        // Optional: vertex colors
+        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
+        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
+        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
+        vec3 v0 = point3(vx, vy, vz);
+        vector.push_back(v0);
+      }
+
+      index_offset += fv;
+
+      vec3 v0 = vector[0];
+      vec3 v1 = vector[1];
+      vec3 v2 = vector[2];
+
+      //per-face material
+      shapes[s].mesh.material_ids[f];
+
+      vec3 v1v0 = v1-v0;
+      vec3 v2v0 = v2-v0;
+      vec3 n = normalize(cross(v1v0, v2v0));
+
+      mat = mat_lib[7];
+      addObject(scene, initTriangle(v0, v1, v2, n,mat));
+    }
+  }
+
+  
+  return scene;
+}
+
 int main(int argc, char *argv[]) {
   printf("Welcome to the L3 IGTAI RayTracer project\n");
 
@@ -532,6 +674,12 @@ int main(int argc, char *argv[]) {
     break;
   case 7:
     scene = initScene7();
+    break;
+  case 8:
+    scene = initScene8();
+    break;
+  case 9:
+    scene = initScene9();
     break;
 
   default:

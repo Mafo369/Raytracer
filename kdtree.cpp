@@ -242,8 +242,9 @@ void sah(vec3 min, vec3 max, float p, int nl, int nr, int np, int k, float &c)
   vec3 min_vl, max_vl;
   vec3 min_vr, max_vr;
 
-  splitBox(k, min, max, p, min_vl, max_vl, min_vr, max_vr);
-  float pl, pr;
+  splitBox(k, min, max, p, min_vl, max_vl, min_vr, max_vr); // Split box in axis k with plane p
+
+  float pl, pr; 
   pl = p_VSub_V(min_vl, max_vl, min, max);
   pr = p_VSub_V(min_vr, max_vr, min, max);
   if (pl == 0 || pr == 0)
@@ -317,7 +318,6 @@ bool isPlanar(vec3 min, vec3 max)
   float dy = max.y - min.y;
   float dz = max.z - min.z;
   return dx <= 0.001 || dy <= 0.001 || dz <= 0.001;
-  //return dx <= 0.f || dy <= 0.f || dz <= 0.f;
 }
 
 bool comp_events(Event i, Event j)
@@ -410,11 +410,6 @@ void findPlane(Scene *scene, KdTreeNode *node, float &p_, float &k_, float &c_)
       np = 0;
     }
   }
-}
-
-bool terminate(float c, size_t n)
-{
-  return (c > COST_INTERSECT * n);
 }
 
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)

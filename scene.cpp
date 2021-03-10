@@ -93,7 +93,7 @@ void readObjToTriangleMesh(const char *file, tinyobj::attrib_t &attrib, std::vec
   std::string inputfile = file;
   std::string err;
 
-  bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, inputfile.c_str());
+  bool ret = tinyobj::LoadObj(&attrib, &shapes, &materials, &err, inputfile.c_str(), "../assets/");
 
   if(!err.empty()){
       std::cout << err << std::endl;
