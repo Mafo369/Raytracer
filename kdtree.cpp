@@ -173,16 +173,12 @@ KdTree *initKdTree(Scene *scene)
 
 bool intersectTriangleAabb(vec3 p1, vec3 p2, vec3 p3, vec3 normal, vec3 aabbMin, vec3 aabbMax)
 {
-  vec3 v0 = p1;
-  vec3 v1 = p2;
-  vec3 v2 = p3;
-
-  float minx = min(v0.x, min(v1.x, v2.x));
-  float miny = min(v0.y, min(v1.y, v2.y));
-  float minz = min(v0.z, min(v1.z, v2.z));
-  float maxx = max(v0.x, max(v1.x, v2.x));
-  float maxy = max(v0.y, max(v1.y, v2.y));
-  float maxz = max(v0.z, max(v1.z, v2.z));
+  float minx = min(p1.x, min(p2.x, p3.x));
+  float miny = min(p1.y, min(p2.y, p3.y));
+  float minz = min(p1.z, min(p2.z, p3.z));
+  float maxx = max(p1.x, max(p2.x, p3.x));
+  float maxy = max(p1.y, max(p2.y, p3.y));
+  float maxz = max(p1.z, max(p2.z, p3.z));
 
   vec3 min = vec3(minx, miny, minz);
   vec3 max = vec3(maxx, maxy, maxz);
@@ -216,14 +212,17 @@ float p_VSub_V(vec3 min1, vec3 max1, vec3 min2, vec3 max2)
 
 float lambda(int nl, int nr, float pl, float pr)
 {
-  if ((nl == 0 || nr == 0))
+  if (nl == 0 || nr == 0)
     return 0.8f;
   return 1.f;
 }
 
 float cost(int nl, int nr, float pl, float pr)
 {
-  return (lambda(nl, nr, pl, pr) * (COST_TRAVERSE + COST_INTERSECT * (pl * nl + pr * nr)));
+  float Kt = COST_TRAVERSE;
+  float Ki = COST_INTERSECT;
+  float lambda_p = lambda(nl, nr, pl, pr);
+  return (lambda_p * (Kt + Ki * (pl*nl + pr*nr)));
 }
 
 void splitBox(int d, vec3 min, vec3 max, float split, vec3 &min_vl, vec3 &max_vl, vec3 &min_vr, vec3 &max_vr)
@@ -247,13 +246,9 @@ void sah(vec3 min, vec3 max, float p, int nl, int nr, int np, int k, float &c)
   float pl, pr; 
   pl = p_VSub_V(min_vl, max_vl, min, max);
   pr = p_VSub_V(min_vr, max_vr, min, max);
-  if (pl == 0 || pr == 0)
-    return;
-
   float cpl, cpr;
   cpl = cost(nl + np, nr, pl, pr);
   cpr = cost(nl, nr + np, pl, pr);
-
   if (cpl < cpr)
   {
     c = cpl;
@@ -414,16 +409,7 @@ void findPlane(Scene *scene, KdTreeNode *node, float &p_, float &k_, float &c_)
 
 void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
 {
-  //printf("SUBDIVIDE\n");
   //!\todo generate children, compute split position, move objets to children and subdivide if needed.
-
-  //printf("prev_c=%f size=%lu\n", prev_c, node->objects.size());
-  //if(terminate(prev_c, node->objects.size())){
-  if (node->depth >= tree->depthLimit || node->objects.size() <= 1)
-  {
-    node->leaf = true;
-    return;
-  }
 
   int d = (node->depth) % 3; // Dimension to split (random value to initialize nodes, axis will be chosen in findPlane)
   KdTreeNode *node_left = initNode(false, d, node->depth + 1);
@@ -439,7 +425,7 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
   float c = 0;
   findPlane(scene, node, p, axis, c);
 
-  if (c == INFINITY || c > COST_INTERSECT * node->objects.size())
+  if (c == INFINITY || c > COST_INTERSECT * node->objects.size()) // if Terminate()
   {
     node->leaf = true;
     return;
@@ -493,7 +479,6 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
 //Reference [6] : Vlastimil Havran. Heuristic Ray Shooting Algorithms
 bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNode currentNode, Ray *ray, Intersection *intersection)
 {
-  //printf("TRAVERSE\n");
   //! \todo traverse kdtree to find intersection
 
   float a, b;

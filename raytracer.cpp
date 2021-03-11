@@ -17,7 +17,6 @@ const float acne_eps = 1e-4;
 
 bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
 {
-
   //! \todo : compute intersection of the ray and the plane object
 
   vec3 n = obj->geom.plane.normal;
@@ -273,7 +272,7 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR)
 
   float n1_n2 = (extIOR / intIOR) * (extIOR / intIOR);
   float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
-  if (sin2_t > 1.0f)
+  if (sin2_t >= 1.0f)
   {
     return 1.f;
   }
@@ -404,7 +403,6 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
 
 color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 {
-
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
@@ -413,14 +411,9 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 
   if (intersectKdTree(scene, tree, ray, &intersection))
   {
-    //if(intersectScene(scene, ray, &intersection)){
-    //ret = (0.5f * intersection.normal) + 0.5f;
-
     size_t lightsCount = scene->lights.size();
-
     for (size_t i = 0; i < lightsCount; i++)
     {
-
       vec3 v = ray->dir * -1.0f;
       vec3 lp = scene->lights[i]->position - intersection.position;
       vec3 l = lp / length(lp);
@@ -431,7 +424,6 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       Intersection temp_inter;
       if (!intersectKdTree(scene, tree, ray_ombre, &temp_inter))
       {
-        //if(!intersectScene(scene, ray_ombre, &temp_inter)){
         ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
       }
       else
@@ -465,54 +457,26 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   return ret;
 }
 
-color3 trace_ray_multisampling(Scene *scene, KdTree *tree, vec3 dx, vec3 dy, vec3 ray_dir)
-{
+color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx, 
+    vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y){
+  
+  color3 pixelColor = color3(0.f);
 
-  Ray rx;
-  rayInit(&rx, scene->cam.position, normalize(ray_dir));
-  color3 c = trace_ray(scene, &rx, tree);
-
-  Ray rx1;
-  vec3 ray_dir1 = ray_dir + dx * 0.5f;
-  rayInit(&rx1, scene->cam.position, normalize(ray_dir1));
-  color3 c1 = trace_ray(scene, &rx1, tree);
-
-  Ray rx2;
-  vec3 ray_dir2 = ray_dir - dx * 0.5f;
-  rayInit(&rx2, scene->cam.position, normalize(ray_dir2));
-  color3 c2 = trace_ray(scene, &rx2, tree);
-
-  Ray rx3;
-  vec3 ray_dir3 = ray_dir + dy * 0.5f;
-  rayInit(&rx3, scene->cam.position, normalize(ray_dir3));
-  color3 c3 = trace_ray(scene, &rx3, tree);
-
-  Ray rx4;
-  vec3 ray_dir4 = ray_dir - dy * 0.5f;
-  rayInit(&rx4, scene->cam.position, normalize(ray_dir4));
-  color3 c4 = trace_ray(scene, &rx4, tree);
-
-  Ray rx5;
-  vec3 ray_dir5 = ray_dir + dx * 0.5f + dy * 0.5f;
-  rayInit(&rx5, scene->cam.position, normalize(ray_dir5));
-  color3 c5 = trace_ray(scene, &rx5, tree);
-
-  Ray rx6;
-  vec3 ray_dir6 = ray_dir + dx * 0.5f - dy * 0.5f;
-  rayInit(&rx6, scene->cam.position, normalize(ray_dir6));
-  color3 c6 = trace_ray(scene, &rx6, tree);
-
-  Ray rx7;
-  vec3 ray_dir7 = ray_dir - dx * 0.5f + dy * 0.5f;
-  rayInit(&rx7, scene->cam.position, normalize(ray_dir7));
-  color3 c7 = trace_ray(scene, &rx7, tree);
-
-  Ray rx8;
-  vec3 ray_dir8 = ray_dir - dx * 0.5f - dy * 0.5f;
-  rayInit(&rx8, scene->cam.position, normalize(ray_dir8));
-  color3 c8 = trace_ray(scene, &rx8, tree);
-
-  return ((c + c1 + c2 + c3 + c4 + c5 + c6 + c7 + c8) * (1.f / 9.f));
+  // We use the same process as for one ray:
+  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+                     float(i) * dx + float(j) * dy*/
+  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays 
+  // from which we will use the average. 
+  for(int i = 0; i < 3; i++){
+    for(int j = 0; j < 3; j++){
+      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+                     (indexI + float(i)/3.f) * dx + (indexJ + float(j)/3.f) * dy;
+      Ray rx;
+      rayInit(&rx, scene->cam.position, normalize(ray_dir));
+      pixelColor += trace_ray(scene, &rx, tree);
+    }
+  }
+  return (pixelColor/9.f);
 }
 
 void renderImage(Image *img, Scene *scene)
@@ -554,16 +518,7 @@ void renderImage(Image *img, Scene *scene)
     for (size_t i = 0; i < img->width; i++)
     {
       color3 *ptr = getPixelPtr(img, i, j);
-
-      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     float(i) * dx + float(j) * dy;
-
-      /*Ray rx;
-      rayInit(&rx, scene->cam.position, normalize(ray_dir));*/
-
-      *ptr = trace_ray_multisampling(scene, tree, dx, dy, ray_dir);
-
-      //*ptr = trace_ray(scene, &rx, tree);
+      *ptr = trace_ray_multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
     }
   }
 }
