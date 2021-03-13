@@ -9,6 +9,8 @@ typedef struct image_s {
     color3 *data;
 } Image;
 
+Image *loadPng(const char *filename);
+
 color3 *getPixelPtr(Image *img, size_t x, size_t y);
 Image *initImage(size_t width, size_t height);
 void freeImage(Image *img);

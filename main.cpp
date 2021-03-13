@@ -296,7 +296,8 @@ Scene *initScene5() {
   mat.specularColor = color3(0.7, 0.882, 0.786);
   mat.IOR = 6;
   mat.roughness = 0.0181;
-  addObject(scene, initTriangle(v0, v1, v2, n,mat));
+  vec2 textures[3];
+  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat));
 
   v0 = vec3(1,0,0);
   v1 = vec3(0,1,0);
@@ -305,7 +306,7 @@ Scene *initScene5() {
   v1v0 = v1-v0;
   v2v0 = v2-v0;
   n = normalize(cross(v1v0, v2v0));
-  addObject(scene, initTriangle(v0, v1, v2, n,mat));
+  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat));
   
   mat.diffuseColor = color3(0.016, 0.073, 0.04);
   mat.specularColor = color3(1.0, 1.056, 1.146);
@@ -315,6 +316,81 @@ Scene *initScene5() {
 
   addLight(scene, initLight(point3(10, 100, 100), color3(50, 50, 50)));
   return scene;
+}
+
+void addObjectsFromFile(const char *filename, Scene *scene, Material default_mat){
+  tinyobj::attrib_t attrib;
+  std::vector<tinyobj::shape_t> shapes;
+  std::vector<tinyobj::material_t> materials;
+  Material mat;
+
+  readObjToTriangleMesh(filename, attrib, shapes, materials);
+
+  for(size_t s = 0; s < shapes.size(); s++){
+    size_t index_offset = 0;
+    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
+      int fv = shapes[s].mesh.num_face_vertices[f];
+
+      std::vector<point3> vector;
+      vec2 textures[fv];
+
+      // Loop over vertices in the face.
+      for (int v = 0; v < fv; v++) {
+        // access to vertex
+        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
+        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
+        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
+        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
+        //tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
+        //tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
+        //tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
+        if(!attrib.texcoords.empty()){
+          tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
+          tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
+          textures[v] = vec2(tx, ty);
+        }
+        // Optional: vertex colors
+        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
+        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
+        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
+        vec3 v0 = point3(vx, vy, vz);
+        vector.push_back(v0);
+      }
+
+      index_offset += fv;
+
+      vec3 v0 = vector[0];
+      vec3 v1 = vector[1];
+      vec3 v2 = vector[2];
+
+      vec3 v1v0 = v1-v0;
+      vec3 v2v0 = v2-v0;
+      vec3 n = normalize(cross(v1v0, v2v0));
+
+      if(!materials.empty()){
+        int matIndex = shapes[s].mesh.material_ids[f];
+        mat.IOR = materials[matIndex].ior;
+        mat.roughness = materials[matIndex].ior;
+        mat.diffuseColor.r = materials[matIndex].diffuse[0];
+        mat.diffuseColor.g = materials[matIndex].diffuse[1];
+        mat.diffuseColor.b = materials[matIndex].diffuse[2];
+        if(materials[matIndex].specular[0] == 0 && materials[matIndex].specular[1] == 0 && materials[matIndex].specular[1] == 0){
+          mat.specularColor.r = materials[matIndex].diffuse[0];
+          mat.specularColor.g = materials[matIndex].diffuse[1];
+          mat.specularColor.b = materials[matIndex].diffuse[2];
+        }
+        else{
+          mat.specularColor.r = materials[matIndex].specular[0];
+          mat.specularColor.g = materials[matIndex].specular[1];
+          mat.specularColor.b = materials[matIndex].specular[2];
+        }
+      }
+      else{
+        mat = default_mat;
+      }
+      addObject(scene, initTriangle(v0, v1, v2, n,textures,mat));
+    }
+  }
 }
 
 Scene *initScene6() {
@@ -337,59 +413,9 @@ Scene *initScene6() {
 
 
   Material mat;
-  mat.IOR = 1.3;
-  mat.roughness = 0.1;
-  mat.specularColor = color3(0.5f);
 
-  tinyobj::attrib_t attrib;
-  std::vector<tinyobj::shape_t> shapes;
-  std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("../assets/bunny.obj", attrib, shapes, materials);
+  addObjectsFromFile("../assets/bunny.obj", scene, mat_lib[0]);
 
-  for(size_t s = 0; s < shapes.size(); s++){
-    size_t index_offset = 0;
-    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
-      int fv = shapes[s].mesh.num_face_vertices[f];
-
-      std::vector<point3> vector;
-      
-      // Loop over vertices in the face.
-      for (int v = 0; v < fv; v++) {
-        // access to vertex
-        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
-        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
-        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
-        tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
-        tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
-        tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
-        tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
-        tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
-        // Optional: vertex colors
-        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
-        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
-        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
-        vec3 v0 = point3(vx, vy, vz);
-        vector.push_back(v0);
-      }
-
-      index_offset += fv;
-
-      vec3 v0 = vector[0];
-      vec3 v1 = vector[1];
-      vec3 v2 = vector[2];
-
-      //per-face material
-      shapes[s].mesh.material_ids[f];
-
-      vec3 v1v0 = v1-v0;
-      vec3 v2v0 = v2-v0;
-      vec3 n = normalize(cross(v1v0, v2v0));
-
-      mat = mat_lib[0];
-      addObject(scene, initTriangle(v0, v1, v2, n,mat));
-    }
-  }
   mat.diffuseColor = color3(0.7, 0, 0);
   mat.specularColor = color3(1, 0, 0);
   mat.IOR = 1.5;
@@ -415,64 +441,13 @@ Scene *initScene7() {
 
 
   Material mat;
+  mat.diffuseColor = color3(0.05, 0.012, 0.6);
+  mat.specularColor = color3(1.0, 0.882, 0.786);
   mat.IOR = 1.3;
-  mat.roughness = 0.1;
-  mat.specularColor = color3(0.5f);
+  mat.roughness = 0.0681;
 
-  tinyobj::attrib_t attrib;
-  std::vector<tinyobj::shape_t> shapes;
-  std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("../assets/werewolf.obj", attrib, shapes, materials);
-
-  for(size_t s = 0; s < shapes.size(); s++){
-    size_t index_offset = 0;
-    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
-      int fv = shapes[s].mesh.num_face_vertices[f];
-
-      std::vector<point3> vector;
-      
-      // Loop over vertices in the face.
-      for (int v = 0; v < fv; v++) {
-        // access to vertex
-        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
-        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
-        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
-        tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
-        tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
-        tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
-        tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
-        tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
-        // Optional: vertex colors
-        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
-        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
-        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
-        vec3 v0 = point3(vx, vy, vz);
-        vector.push_back(v0);
-      }
-
-      index_offset += fv;
-
-      vec3 v0 = vector[0];
-      vec3 v1 = vector[1];
-      vec3 v2 = vector[2];
-
-      //per-face material
-      shapes[s].mesh.material_ids[f];
-
-      vec3 v1v0 = v1-v0;
-      vec3 v2v0 = v2-v0;
-      vec3 n = normalize(cross(v1v0, v2v0));
-
-      mat.diffuseColor = color3(0.05, 0.012, 0.6);
-      mat.specularColor = color3(1.0, 0.882, 0.786);
-      mat.IOR = 1.3;
-      mat.roughness = 0.0681;
-
-      addObject(scene, initTriangle(v0, v1, v2, n,mat));
-    }
-  }
-
+  addObjectsFromFile("../assets/werewolf.obj", scene, mat);
+  
   mat.diffuseColor = color3(.4, 0.8, .4);
   mat.specularColor = color3(.4, 0.6, .2);
   mat.IOR = 1.382;
@@ -490,142 +465,87 @@ Scene *initScene7() {
 Scene *initScene8() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(0, 1, 3.1), vec3(0, 1, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(0, 1, 2.8), vec3(0, 1, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.1, 0.1, 0.2));
   
-  addLight(scene, initLight(point3(-0.24,1.83,0.16), color3(1, 1, 1)));
-  addLight(scene, initLight(point3(-0.24,1.83,-0.22), color3(1, 1, 1)));
-  addLight(scene, initLight(point3(0.23,1.83,-0.22), color3(1, 1, 1)));
-  addLight(scene, initLight(point3(0.23,1.83,0.16), color3(1, 1, 1)));
-  addLight(scene, initLight(point3(0.4,1.6,0.16), color3(1, 1, 1)));
- 
- 
+  addLight(scene, initLight(point3(-0.24,1.60,-0.22), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(0.24,1.60,-0.22), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(0, 1.6, 0.22), color3(1,1,1)));
+  addLight(scene, initLight(point3(-0.5, 1, 3.1), color3(1,1,1)));
+  addLight(scene, initLight(point3(-0.2, 1.8, 1), color3(1,1,1)));
+  addLight(scene, initLight(point3(0, 1, 2.8), color3(1,1,1)));
+  addLight(scene, initLight(point3(0.22, 1, 2.8), color3(1,1,1)));
+  addLight(scene, initLight(point3(-0.22, 1, 2.8), color3(1,1,1)));
+  addLight(scene, initLight(point3(0.22, 1.4, 2.8), color3(1,1,1)));
+  addLight(scene, initLight(point3(-0.22, 1.4, 2.8), color3(1,1,1)));
+  addLight(scene, initLight(point3(0.22, 0.2, 2.8), color3(1,1,1)));
+  addLight(scene, initLight(point3(-0.22, 0.2, 2.8), color3(1,1,1)));
+
+  addLight(scene, initLight(point3(0, 1.7, 1), .5f * color3(3, 3, 3)));
+  addLight(scene, initLight(point3(3, 2, 3), .5f * color3(4, 4, 4)));
+  addLight(scene, initLight(point3(4, 3, -1), .5f * color3(5, 5, 5)));
   Material mat;
-  mat.IOR = 1.3;
-  mat.roughness = 0.1;
-  mat.specularColor = color3(0.5f);
+  mat.diffuseColor = color3(.2, 0.4, .3);
+  mat.specularColor = color3(.2, 0.2, .2);
+  mat.IOR = 1.382;
+  mat.roughness = 0.05886;
 
-  tinyobj::attrib_t attrib;
-  std::vector<tinyobj::shape_t> shapes;
-  std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("../assets/CornellBox-Empty-CO.obj", attrib, shapes, materials);
+  addObjectsFromFile("../assets/CornellBox-Original.obj", scene, mat);
 
-  for(size_t s = 0; s < shapes.size(); s++){
-    size_t index_offset = 0;
-    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
-      int fv = shapes[s].mesh.num_face_vertices[f];
-
-      std::vector<point3> vector;
-      
-      // Loop over vertices in the face.
-      for (int v = 0; v < fv; v++) {
-        // access to vertex
-        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
-        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
-        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
-        tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
-        tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
-        tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
-        tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
-        tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
-        // Optional: vertex colors
-        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
-        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
-        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
-        vec3 v0 = point3(vx, vy, vz);
-        vector.push_back(v0);
-      }
-
-      index_offset += fv;
-
-      vec3 v0 = vector[0];
-      vec3 v1 = vector[1];
-      vec3 v2 = vector[2];
-
-      //per-face material
-      shapes[s].mesh.material_ids[f];
-
-      vec3 v1v0 = v1-v0;
-      vec3 v2v0 = v2-v0;
-      vec3 n = normalize(cross(v1v0, v2v0));
-
-      mat = mat_lib[7];
-      addObject(scene, initTriangle(v0, v1, v2, n,mat));
-    }
-  }
-
-  
   return scene;
 }
 
 Scene *initScene9() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(5, 3, 5), vec3(0, 1, 0), vec3(0, 3, 0), 60,
-            float(WIDTH) / float(HEIGHT));
+  setCamera(scene, point3(3.9,4,4), vec3(0,1,0), vec3(0,3,0), 60,
+    float(WIDTH) / float(HEIGHT));
   setSkyColor(scene, color3(0.2, 0.2, 0.7));
-  Material mat;
+
+  addLight(scene, initLight(point3(2.9,2.9,2.9), .5f * color3(5, 5, 5)));
+  addLight(scene, initLight(point3(-3,4, 5), .5f * color3(5, 5, 5)));
+
+
+  Material mat = {1.1481, 0.0625, {0.016, 0.073, 0.04}, {1.0, 1.056, 1.146}};
   mat.diffuseColor = color3(0.301, 0.034, 0.039);
   mat.specularColor = color3(1.0, 0.992, 0.98);
-  mat.IOR = 1.1382;
+  mat.IOR = 20;
   mat.roughness = 0.0886;
 
-  addLight(scene, initLight(point3(5, 3, 3), .5f * color3(5, 5, 5)));
-  addLight(scene, initLight(point3(-6, 3, 3), .5f * color3(5, 5, 5)));
+  addObject(scene, initPlane(vec3(0,1,0), -0.05f, mat));
 
-  tinyobj::attrib_t attrib;
-  std::vector<tinyobj::shape_t> shapes;
-  std::vector<tinyobj::material_t> materials;
-  readObjToTriangleMesh("../assets/scene5.obj", attrib, shapes, materials);
-
-  for(size_t s = 0; s < shapes.size(); s++){
-    size_t index_offset = 0;
-    for(size_t f = 0; f < shapes[s].mesh.num_face_vertices.size();f++){
-      int fv = shapes[s].mesh.num_face_vertices[f];
-
-      std::vector<point3> vector;
-      
-      // Loop over vertices in the face.
-      for (int v = 0; v < fv; v++) {
-        // access to vertex
-        tinyobj::index_t idx = shapes[s].mesh.indices[index_offset + v];
-        tinyobj::real_t vx = attrib.vertices[3*idx.vertex_index+0];
-        tinyobj::real_t vy = attrib.vertices[3*idx.vertex_index+1];
-        tinyobj::real_t vz = attrib.vertices[3*idx.vertex_index+2];
-        tinyobj::real_t nx = attrib.normals[3*idx.normal_index+0];
-        tinyobj::real_t ny = attrib.normals[3*idx.normal_index+1];
-        tinyobj::real_t nz = attrib.normals[3*idx.normal_index+2];
-        tinyobj::real_t tx = attrib.texcoords[2*idx.texcoord_index+0];
-        tinyobj::real_t ty = attrib.texcoords[2*idx.texcoord_index+1];
-        // Optional: vertex colors
-        // tinyobj::real_t red = attrib.colors[3*idx.vertex_index+0];
-        // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
-        // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
-        vec3 v0 = point3(vx, vy, vz);
-        vector.push_back(v0);
-      }
-
-      index_offset += fv;
-
-      vec3 v0 = vector[0];
-      vec3 v1 = vector[1];
-      vec3 v2 = vector[2];
-
-      //per-face material
-      shapes[s].mesh.material_ids[f];
-
-      vec3 v1v0 = v1-v0;
-      vec3 v2v0 = v2-v0;
-      vec3 n = normalize(cross(v1v0, v2v0));
-
-      mat = mat_lib[7];
-      addObject(scene, initTriangle(v0, v1, v2, n,mat));
-    }
-  }
-
+  addObjectsFromFile("../assets/diamondblock.obj", scene, mat);
   
+  return scene;
+}
+
+Scene *initScene10() {
+  Scene *scene = initScene();
+  setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+            (float)WIDTH / (float)HEIGHT);
+  setSkyColor(scene, color3(0, 0, 0));
+  Material mat;
+  mat.IOR = 20;
+  mat.roughness = 0.001;
+  mat.specularColor = color3(0.9f);
+
+  mat.diffuseColor = color3(0.9f, 0.9f, 0.9f);
+
+  addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
+  addObject(scene, initPlane(vec3(0.5, 0, -0.5), 0, mat));
+  addObject(scene, initPlane(vec3(-0.5, 0, -0.5), 0, mat));
+
+  addObject(scene, initPlane(vec3(0.5, 0, -0.5), -2.2, mat));
+  addObject(scene, initPlane(vec3(-0.5, 0, -0.5), +2.2, mat));
+
+  mat = mat_lib[0];
+  addObject(scene, initSphere(point3(1, 0.5, 0), .25, mat));
+  
+  addLight(scene, initLight(point3(1, 3, 0), color3(1, 1, 1)));
+  addLight(scene, initLight(point3(1.1, 3, 0), color3(1, 1, 1)));
+  //addLight(scene, initLight(point3(0.9, 1, 0), color3(1, 1, 1)));
+
   return scene;
 }
 
@@ -680,6 +600,9 @@ int main(int argc, char *argv[]) {
     break;
   case 9:
     scene = initScene9();
+    break;
+  case 10:
+    scene = initScene10();
     break;
 
   default:

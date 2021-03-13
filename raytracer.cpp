@@ -17,6 +17,7 @@ const float acne_eps = 1e-4;
 
 bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
 {
+
   //! \todo : compute intersection of the ray and the plane object
 
   vec3 n = obj->geom.plane.normal;

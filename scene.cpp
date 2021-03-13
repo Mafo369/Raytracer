@@ -29,7 +29,7 @@ Object *initPlane(vec3 normal, float d, Material mat) {
     return ret;
 }
 
-Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, Material mat){
+Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat){
     Object *ret;
     ret = (Object *)malloc(sizeof(Object));
     ret->geom.type = TRIANGLE;
@@ -37,6 +37,9 @@ Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, Material mat){
     ret->geom.triangle.p2 = p2;
     ret->geom.triangle.p3 = p3;
     ret->geom.triangle.normal = n;
+    ret->geom.triangle.tex[0] = t[0];
+    ret->geom.triangle.tex[1] = t[1];
+    ret->geom.triangle.tex[2] = t[2];
     memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
