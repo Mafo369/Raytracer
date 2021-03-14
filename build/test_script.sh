@@ -1,4 +1,4 @@
-#!/usr/bin/env zsh
+#!/bin/sh
 
 ./mrt test0 
 ./mrt test1 1
