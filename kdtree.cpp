@@ -222,7 +222,7 @@ float cost(int nl, int nr, float pl, float pr)
   float Kt = COST_TRAVERSE;
   float Ki = COST_INTERSECT;
   float lambda_p = lambda(nl, nr, pl, pr);
-  return (lambda_p * (Kt + Ki * (pl*nl + pr*nr)));
+  return (lambda_p * (Kt + Ki * (pl * nl + pr * nr)));
 }
 
 void splitBox(int d, vec3 min, vec3 max, float split, vec3 &min_vl, vec3 &max_vl, vec3 &min_vr, vec3 &max_vr)
@@ -243,7 +243,7 @@ void sah(vec3 min, vec3 max, float p, int nl, int nr, int np, int k, float &c)
 
   splitBox(k, min, max, p, min_vl, max_vl, min_vr, max_vr); // Split box in axis k with plane p
 
-  float pl, pr; 
+  float pl, pr;
   pl = p_VSub_V(min_vl, max_vl, min, max);
   pr = p_VSub_V(min_vr, max_vr, min, max);
   float cpl, cpr;
@@ -312,7 +312,7 @@ bool isPlanar(vec3 min, vec3 max)
   float dx = max.x - min.x;
   float dy = max.y - min.y;
   float dz = max.z - min.z;
-  return dx <= 0.001 || dy <= 0.001 || dz <= 0.001;
+  return dx <= 0.001 || dy <= 0.001 || dz <= 0.001; //Best results
 }
 
 bool comp_events(Event i, Event j)
@@ -411,7 +411,7 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
 {
   //!\todo generate children, compute split position, move objets to children and subdivide if needed.
 
-  int d = (node->depth) % 3; // Dimension to split (random value to initialize nodes, axis will be chosen in findPlane)
+  int d = (node->depth) % 3; // Dimension to split (temp value to initialize nodes, axis will be chosen in findPlane)
   KdTreeNode *node_left = initNode(false, d, node->depth + 1);
   KdTreeNode *node_right = initNode(false, d, node->depth + 1);
 
@@ -646,7 +646,7 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
     hasIntersection = traverse(scene, tree, &stack, startNode, ray, intersection);
   }
   if (hasIntersection)
-  { // If object intersection, use tmax as distance reference
+  { // If object intersection in kdtree, use tmax as distance reference
     ray_backup->tmax = ray->tmax;
     dist = ray->tmax;
   }

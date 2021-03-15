@@ -5,7 +5,7 @@
 
 #define SAVE_PNG
 
-Image *loadPng(const char *filename){
+Image *loadPng(const char *filename){ //Not used -> tried to implement textures
     unsigned char *image;
     unsigned int *w = (unsigned int *)malloc(sizeof(unsigned int));
     unsigned int *h = (unsigned int *)malloc(sizeof(unsigned int));;

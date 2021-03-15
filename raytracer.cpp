@@ -407,7 +407,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 10)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -435,7 +435,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       free(ray_ombre);
     }
 
-    if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0)
+    if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
       return color3(1.f);
 
     vec3 r = reflect(ray->dir, intersection.normal);
@@ -458,26 +458,29 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   return ret;
 }
 
-color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx, 
-    vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y){
-  
+color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
+                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
+{
+
   color3 pixelColor = color3(0.f);
 
   // We use the same process as for one ray:
   /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
                      float(i) * dx + float(j) * dy*/
-  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays 
-  // from which we will use the average. 
-  for(int i = 0; i < 3; i++){
-    for(int j = 0; j < 3; j++){
+  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
+  // from which we will use the average.
+  for (int i = 0; i < 3; i++)
+  {
+    for (int j = 0; j < 3; j++)
+    {
       vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     (indexI + float(i)/3.f) * dx + (indexJ + float(j)/3.f) * dy;
+                     (indexI + float(i) / 3.f) * dx + (indexJ + float(j) / 3.f) * dy;
       Ray rx;
       rayInit(&rx, scene->cam.position, normalize(ray_dir));
       pixelColor += trace_ray(scene, &rx, tree);
     }
   }
-  return (pixelColor/9.f);
+  return (pixelColor / 9.f);
 }
 
 void renderImage(Image *img, Scene *scene)

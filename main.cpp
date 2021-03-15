@@ -463,64 +463,6 @@ Scene *initScene7() {
 }
 
 Scene *initScene8() {
-
-  Scene *scene = initScene();
-  setCamera(scene, point3(0, 1, 2.8), vec3(0, 1, 0), vec3(0, 1, 0), 60,
-            (float)WIDTH / (float)HEIGHT);
-  setSkyColor(scene, color3(0.1, 0.1, 0.2));
-  
-  addLight(scene, initLight(point3(-0.24,1.60,-0.22), color3(1, 1, 1)));
-  addLight(scene, initLight(point3(0.24,1.60,-0.22), color3(1, 1, 1)));
-  addLight(scene, initLight(point3(0, 1.6, 0.22), color3(1,1,1)));
-  addLight(scene, initLight(point3(-0.5, 1, 3.1), color3(1,1,1)));
-  addLight(scene, initLight(point3(-0.2, 1.8, 1), color3(1,1,1)));
-  addLight(scene, initLight(point3(0, 1, 2.8), color3(1,1,1)));
-  addLight(scene, initLight(point3(0.22, 1, 2.8), color3(1,1,1)));
-  addLight(scene, initLight(point3(-0.22, 1, 2.8), color3(1,1,1)));
-  addLight(scene, initLight(point3(0.22, 1.4, 2.8), color3(1,1,1)));
-  addLight(scene, initLight(point3(-0.22, 1.4, 2.8), color3(1,1,1)));
-  addLight(scene, initLight(point3(0.22, 0.2, 2.8), color3(1,1,1)));
-  addLight(scene, initLight(point3(-0.22, 0.2, 2.8), color3(1,1,1)));
-
-  addLight(scene, initLight(point3(0, 1.7, 1), .5f * color3(3, 3, 3)));
-  addLight(scene, initLight(point3(3, 2, 3), .5f * color3(4, 4, 4)));
-  addLight(scene, initLight(point3(4, 3, -1), .5f * color3(5, 5, 5)));
-  Material mat;
-  mat.diffuseColor = color3(.2, 0.4, .3);
-  mat.specularColor = color3(.2, 0.2, .2);
-  mat.IOR = 1.382;
-  mat.roughness = 0.05886;
-
-  addObjectsFromFile("../assets/CornellBox-Original.obj", scene, mat);
-
-  return scene;
-}
-
-Scene *initScene9() {
-
-  Scene *scene = initScene();
-  setCamera(scene, point3(3.9,4,4), vec3(0,1,0), vec3(0,3,0), 60,
-    float(WIDTH) / float(HEIGHT));
-  setSkyColor(scene, color3(0.2, 0.2, 0.7));
-
-  addLight(scene, initLight(point3(2.9,2.9,2.9), .5f * color3(5, 5, 5)));
-  addLight(scene, initLight(point3(-3,4, 5), .5f * color3(5, 5, 5)));
-
-
-  Material mat = {1.1481, 0.0625, {0.016, 0.073, 0.04}, {1.0, 1.056, 1.146}};
-  mat.diffuseColor = color3(0.301, 0.034, 0.039);
-  mat.specularColor = color3(1.0, 0.992, 0.98);
-  mat.IOR = 20;
-  mat.roughness = 0.0886;
-
-  addObject(scene, initPlane(vec3(0,1,0), -0.05f, mat));
-
-  addObjectsFromFile("../assets/diamondblock.obj", scene, mat);
-  
-  return scene;
-}
-
-Scene *initScene10() {
   Scene *scene = initScene();
   setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
@@ -597,12 +539,6 @@ int main(int argc, char *argv[]) {
     break;
   case 8:
     scene = initScene8();
-    break;
-  case 9:
-    scene = initScene9();
-    break;
-  case 10:
-    scene = initScene10();
     break;
 
   default:
