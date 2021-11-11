@@ -1,22 +1,19 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
 # The set of languages for which implicit dependencies are needed:
 set(CMAKE_DEPENDS_LANGUAGES
-  "CXX"
   )
-# The set of files for implicit dependencies of each language:
-set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/image.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/unit-test.dir/image.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/kdtree.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/unit-test.dir/kdtree.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/raytracer.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/unit-test.dir/raytracer.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/unit-test.dir/scene.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/unit-test.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/unit-test.dir/unit-test.cpp.o"
-  )
-set(CMAKE_CXX_COMPILER_ID "GNU")
 
-# The include file search paths:
-set(CMAKE_CXX_TARGET_INCLUDE_PATH
-  "../glm-master"
-  "../lodepng-master"
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/mafo/dev/Raytracer/image.cpp" "CMakeFiles/unit-test.dir/image.cpp.o" "gcc" "CMakeFiles/unit-test.dir/image.cpp.o.d"
+  "/home/mafo/dev/Raytracer/kdtree.cpp" "CMakeFiles/unit-test.dir/kdtree.cpp.o" "gcc" "CMakeFiles/unit-test.dir/kdtree.cpp.o.d"
+  "/home/mafo/dev/Raytracer/lodepng-master/lodepng.cpp" "CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.o" "gcc" "CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.o.d"
+  "/home/mafo/dev/Raytracer/raytracer.cpp" "CMakeFiles/unit-test.dir/raytracer.cpp.o" "gcc" "CMakeFiles/unit-test.dir/raytracer.cpp.o.d"
+  "/home/mafo/dev/Raytracer/scene.cpp" "CMakeFiles/unit-test.dir/scene.cpp.o" "gcc" "CMakeFiles/unit-test.dir/scene.cpp.o.d"
+  "/home/mafo/dev/Raytracer/unit-test.cpp" "CMakeFiles/unit-test.dir/unit-test.cpp.o" "gcc" "CMakeFiles/unit-test.dir/unit-test.cpp.o.d"
   )
 
 # Targets to which this target links.
