@@ -1,4 +1,6 @@
 
+#include "glm/fwd.hpp"
+#include "glm/geometric.hpp"
 #include "image.h"
 #include "kdtree.h"
 #include "ray.h"
@@ -10,10 +12,71 @@
 
 #include <glm/gtc/epsilon.hpp>
 
+#include <cstdlib>
+#include <limits>
+
+#include <iostream>
+
+#include "camera.h"
+
 /// acne_eps is a small constant used to prevent acne when computing
 /// intersection
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
+
+inline double random_double() {
+    // Returns a random real in [0,1).
+    return rand() / (RAND_MAX + 1.0);
+}
+
+inline double random_double(double min, double max) {
+    // Returns a random real in [min,max).
+    return min + (max-min)*random_double();
+}
+
+inline vec3 unit_vector(vec3 v) {
+    int l = v.length();
+    return vec3(v.x / l, v.y / l, v.z / l);
+}
+        
+inline vec3 random(double min, double max) {
+    return vec3(random_double(min,max), random_double(min,max), random_double(min,max));
+}
+        
+double length_squared(vec3 e) {
+  return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
+}
+
+vec3 random_in_unit_sphere() {
+    while (true) {
+        auto p = random(-1,1);
+        if (length_squared(p) >= 1) continue;
+        return p;
+    }
+}
+
+vec3 random_unit_vector() {
+    return unit_vector(random_in_unit_sphere());
+}
+        
+bool near_zero(vec3 e) {
+  // Return true if the vector is close to zero in all dimensions.
+  const auto s = 1e-8;
+  return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+}
+        
+bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
+  auto scatter_direction = rec.normal + random_unit_vector();
+            
+  // Catch degenerate scatter direction
+  if (near_zero(scatter_direction))
+    scatter_direction = rec.normal;
+
+  rayInit(scattered, rec.position, normalize(scatter_direction), 0, 10000, r_in->depth+1);
+  attenuation = rec.mat->diffuseColor;
+  return true;
+}
+
 
 bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
 {
@@ -42,6 +105,39 @@ bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
   }
 
   return false;
+}
+    
+
+inline void set_face_normal(Ray *r, const vec3& outward_normal, Intersection *rec) {
+    bool front_face = dot(r->dir, outward_normal) < 0;
+    rec->normal = front_face ? outward_normal :-outward_normal;
+}
+
+bool hit(Ray *r, double t_min, double t_max,Intersection *rec, Object *obj) {
+    vec3 oc = r->orig - obj->geom.sphere.center;
+    auto a = length_squared(r->dir);
+    auto half_b = dot(oc, r->dir);
+    auto c = length_squared(oc) - obj->geom.sphere.radius*obj->geom.sphere.radius;
+
+    auto discriminant = half_b*half_b - a*c;
+    if (discriminant < 0) return false;
+    auto sqrtd = sqrt(discriminant);
+
+    // Find the nearest root that lies in the acceptable range.
+    auto root = (-half_b - sqrtd) / a;
+    if (root < r->tmin || r->tmax < root) {
+        root = (-half_b + sqrtd) / a;
+        if (root < r->tmin || r->tmax < root)
+            return false;
+    }
+
+    r->tmax = root;
+    rec->position = r->orig + (r->tmax * r->dir);
+    vec3 outward_normal = (rec->position - obj->geom.sphere.center) / obj->geom.sphere.radius;
+    set_face_normal(r, outward_normal, rec);
+    rec->mat = &(obj->mat);
+    
+    return true;
 }
 
 bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj)
@@ -180,7 +276,7 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
     }
     else if (scene->objects[i]->geom.type == SPHERE)
     {
-      if (intersectSphere(ray, temp, scene->objects[i]))
+      if (hit(ray, 0.001, std::numeric_limits<double>::infinity(),temp, scene->objects[i]))
       {
         float temp_dist = ray->tmax;
         if (hasIntersection)
@@ -402,7 +498,7 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
 //! if tree is not null, use intersectKdTree to compute the intersection instead
 //! of intersect scene
 
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
+color3 ray_color(Scene *scene, Ray *ray, KdTree *tree)
 {
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
@@ -442,7 +538,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
     rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
-    color3 cr = trace_ray(scene, ray_ref, tree);
+    color3 cr = ray_color(scene, ray_ref, tree);
     float LdotH = dot(ray_ref->dir, intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
@@ -458,6 +554,27 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   return ret;
 }
 
+
+color3 trace_ray(Scene *scene, Ray *r, KdTree *tree) {
+
+  Intersection rec;
+
+  if(r->depth > 2)
+    return color3(0,0,0);
+
+  if (intersectKdTree(scene, tree, r, &rec)){
+  //if(intersectScene(scene, r, &rec)){
+    Ray *scattered = (Ray *)malloc(sizeof(Ray));
+    color3 attenuation;
+    if (scatter(r, rec, attenuation, scattered))
+      return attenuation * trace_ray(scene, scattered, tree);
+    return color3(0,0,0);
+  }
+  vec3 unit_direction = r->dir;
+  auto t = 0.5*(unit_direction.y + 1.0);
+  return color3((1.0-t)*1.0, (1.0-t)*1.0, (1.0-t)*1.0) + color3(t*0.5, t*0.7, t*1.0);
+}
+
 color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
                                vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
 {
@@ -469,18 +586,39 @@ color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int index
                      float(i) * dx + float(j) * dy*/
   // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
   // from which we will use the average.
-  for (int i = 0; i < 3; i++)
+  for (int i = 0; i < 9; i++)
   {
-    for (int j = 0; j < 3; j++)
+    for (int j = 0; j < 9; j++)
     {
       vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     (indexI + float(i) / 3.f) * dx + (indexJ + float(j) / 3.f) * dy;
+                     (indexI + float(i) / 9.f) * dx + (indexJ + float(j) / 9.f) * dy;
       Ray rx;
       rayInit(&rx, scene->cam.position, normalize(ray_dir));
       pixelColor += trace_ray(scene, &rx, tree);
     }
   }
   return (pixelColor / 9.f);
+}
+  
+
+// Utility Functions
+
+inline double degrees_to_radians(double degrees) {
+  return degrees * M_PI / 180.0;
+}
+
+vec3 random_in_unit_disk() {
+    while (true) {
+        auto p = vec3(random_double(-1,1), random_double(-1,1), 0);
+        if (length_squared(p) >= 1) continue;
+        return p;
+    }
+}
+        
+inline double clamp(double x, double min, double max) {
+    if (x < min) return min;
+    if (x > max) return max;
+    return x;
 }
 
 void renderImage(Image *img, Scene *scene)
@@ -489,6 +627,19 @@ void renderImage(Image *img, Scene *scene)
   //! This function is already operational, you might modify it for antialiasing
   //! and kdtree initializaion
   float aspect = 1.f / scene->cam.aspect;
+  
+  auto samples_per_pixel = 100;
+  
+  //double aspect_ratio = scene->cam.aspect; 
+  //point3 lookfrom = scene->cam.position;
+  //point3 lookat = scene->cam.lookat;
+  //vec3 vup = scene->cam.up;
+  
+
+  auto dist_to_focus = (scene->cam.position-scene->cam.lookat).length();
+  auto aperture = 0.005;
+  
+  camera cam(scene->cam.position, scene->cam.lookat, scene->cam.up, scene->cam.fov, scene->cam.aspect, aperture, dist_to_focus);
 
   KdTree *tree = initKdTree(scene);
 
@@ -521,8 +672,30 @@ void renderImage(Image *img, Scene *scene)
 #pragma omp parallel for
     for (size_t i = 0; i < img->width; i++)
     {
+      color3 pixel_color(0,0,0);
+      for (int s = 0; s < samples_per_pixel; ++s) {
+        auto u = (i + random_double()) / (img->width-1);
+        auto v = (j + random_double()) / (img->height-1);
+        Ray r;
+        cam.get_ray(u, v, &r);
+        //get_ray(u1, v1, &r, lens_radius, u, v, origin, lower_left_corner, horizontal, vertical);
+        pixel_color += trace_ray(scene, &r, tree);
+      }
+      auto r = pixel_color.x;
+      auto g = pixel_color.y;
+      auto b = pixel_color.z;
+
+      // Divide the color by the number of samples and gamma-correct for gamma=2.0.
+      auto scale = 1.0 / samples_per_pixel;
+      r = sqrt(scale * r);
+      g = sqrt(scale * g);
+      b = sqrt(scale * b);
+
+      color3 def_color(clamp(r, 0.0, 0.999),clamp(g, 0.0, 0.999),clamp(b, 0.0, 0.999)); 
       color3 *ptr = getPixelPtr(img, i, j);
-      *ptr = trace_ray_multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
+      *ptr = def_color;
+      //color3 *ptr = getPixelPtr(img, i, j);
+      //*ptr = trace_ray_multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
     }
   }
 }

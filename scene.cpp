@@ -73,6 +73,8 @@ void setCamera(Scene *scene, point3 position, point3 at, vec3 up, float fov, flo
     scene->cam.fov = fov;
     scene->cam.aspect = aspect;
     scene->cam.position = position;
+    scene->cam.lookat = at;
+    scene->cam.up = up;
     scene->cam.zdir = normalize(at-position);
     scene->cam.xdir = normalize(cross(up, scene->cam.zdir));
     scene->cam.ydir = normalize(cross(scene->cam.zdir, scene->cam.xdir));

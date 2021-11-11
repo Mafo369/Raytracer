@@ -19,6 +19,8 @@ typedef struct camera_s {
     point3 center; //! center of the image plane
   float fov;  //! field of view
   float aspect; //! aspect ratio (typically use WIDTH/HEIGHT of the computed image
+  point3 lookat;
+  vec3 up;
 } Camera;
 
 
