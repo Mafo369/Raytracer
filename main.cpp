@@ -50,8 +50,8 @@ Scene *initScene0() {
   mat.IOR = 1.3;
   mat.roughness = 0.1;
   mat.specularColor = color3(0.5f);
-
   mat.diffuseColor = color3(.5f);
+
   addObject(scene, initSphere(point3(0, 0, 0), 0.25, mat));
 
   mat.diffuseColor = color3(0.5f, 0.f, 0.f);
