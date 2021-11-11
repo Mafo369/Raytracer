@@ -574,33 +574,7 @@ color3 trace_ray(Scene *scene, Ray *r, KdTree *tree) {
   auto t = 0.5*(unit_direction.y + 1.0);
   return color3((1.0-t)*1.0, (1.0-t)*1.0, (1.0-t)*1.0) + color3(t*0.5, t*0.7, t*1.0);
 }
-
-color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
-                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
-{
-
-  color3 pixelColor = color3(0.f);
-
-  // We use the same process as for one ray:
-  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     float(i) * dx + float(j) * dy*/
-  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
-  // from which we will use the average.
-  for (int i = 0; i < 9; i++)
-  {
-    for (int j = 0; j < 9; j++)
-    {
-      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     (indexI + float(i) / 9.f) * dx + (indexJ + float(j) / 9.f) * dy;
-      Ray rx;
-      rayInit(&rx, scene->cam.position, normalize(ray_dir));
-      pixelColor += trace_ray(scene, &rx, tree);
-    }
-  }
-  return (pixelColor / 9.f);
-}
   
-
 // Utility Functions
 
 inline double degrees_to_radians(double degrees) {
@@ -626,16 +600,9 @@ void renderImage(Image *img, Scene *scene)
 
   //! This function is already operational, you might modify it for antialiasing
   //! and kdtree initializaion
-  float aspect = 1.f / scene->cam.aspect;
   
   auto samples_per_pixel = 100;
   
-  //double aspect_ratio = scene->cam.aspect; 
-  //point3 lookfrom = scene->cam.position;
-  //point3 lookat = scene->cam.lookat;
-  //vec3 vup = scene->cam.up;
-  
-
   auto dist_to_focus = (scene->cam.position-scene->cam.lookat).length();
   auto aperture = 0.005;
   
@@ -646,16 +613,6 @@ void renderImage(Image *img, Scene *scene)
   printf("End building tree\n");
 
   //! \todo initialize KdTree
-
-  float delta_y = 1.f / (img->height * 0.5f);   //! one pixel size
-  vec3 dy = delta_y * aspect * scene->cam.ydir; //! one pixel step
-  vec3 ray_delta_y = (0.5f - img->height * 0.5f) / (img->height * 0.5f) *
-                     aspect * scene->cam.ydir;
-
-  float delta_x = 1.f / (img->width * 0.5f);
-  vec3 dx = delta_x * scene->cam.xdir;
-  vec3 ray_delta_x =
-      (0.5f - img->width * 0.5f) / (img->width * 0.5f) * scene->cam.xdir;
 
   for (size_t j = 0; j < img->height; j++)
   {

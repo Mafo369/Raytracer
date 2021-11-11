@@ -421,13 +421,13 @@ Scene *initScene6() {
   mat.specularColor = color3(1, 0, 0);
   mat.IOR = 1.5;
   mat.roughness = 0.0681;
-  addObject(scene, initPlane(vec3(0, 1, 0), 0.01, mat));
+  //addObject(scene, initPlane(vec3(0, 1, 0), 0.01, mat));
 
   mat.diffuseColor = color3(0, 0.8, 0);
   mat.specularColor = color3(0.6, 0.6, 0);
   mat.IOR = 1.5;
   mat.roughness = 0.0681;
-  addObject(scene, initPlane(vec3(0, 0, 1), +10, mat));
+  //addObject(scene, initPlane(vec3(0, 0, 1), +10, mat));
 
   
   return scene;
