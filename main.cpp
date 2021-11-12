@@ -12,34 +12,34 @@
 
 Material mat_lib[] = {
     /* nickel */
-    {2.4449, 0.0681, {1.0, 0.882, 0.786}, {0.014, 0.012, 0.012}},
+    {2.4449, 0.0681, {1.0, 0.882, 0.786}, {0.014, 0.012, 0.012}, LAMBERTIAN},
 
     /* specular black phenolic */
-    {1.072, 0.0588, {1.0, 0.824, 0.945}, {0.002, 0.002, 0.003}},
+    {1.072, 0.0588, {1.0, 0.824, 0.945}, {0.002, 0.002, 0.003}, LAMBERTIAN},
 
     /* specular blue phenolic */
-    {1.1051, 0.0568, {0.005, 0.013, 0.032}, {1.0, 0.748, 0.718}},
+    {1.1051, 0.0568, {0.005, 0.013, 0.032}, {1.0, 0.748, 0.718}, LAMBERTIAN},
 
     /* specular green phenolic */
-    {1.1051, 0.0567, {0.006, 0.026, 0.022}, {1.0, 0.739, 0.721}},
+    {1.1051, 0.0567, {0.006, 0.026, 0.022}, {1.0, 0.739, 0.721}, LAMBERTIAN},
 
     /* specular white phenolic */
-    {1.1022, 0.0579, {0.286, 0.235, 0.128}, {1.0, 0.766, 0.762}},
+    {1.1022, 0.0579, {0.286, 0.235, 0.128}, {1.0, 0.766, 0.762}, LAMBERTIAN},
 
     /* marron plastic */
-    {1.0893, 0.0604, {0.202, 0.035, 0.033}, {1.0, 0.857, 0.866}},
+    {1.0893, 0.0604, {0.202, 0.035, 0.033}, {1.0, 0.857, 0.866}, LAMBERTIAN},
 
     /* purple paint */
-    {1.1382, 0.0886, {0.301, 0.034, 0.039}, {1.0, 0.992, 0.98}},
+    {1.1382, 0.0886, {0.301, 0.034, 0.039}, {1.0, 0.992, 0.98}, LAMBERTIAN},
 
     /* red specular plastic */
-    {1.0771, 0.0589, {0.26, 0.036, 0.014}, {1.0, 0.852, 1.172}},
+    {1.0771, 0.0589, {0.26, 0.036, 0.014}, {1.0, 0.852, 1.172}, LAMBERTIAN},
 
     /* green acrylic */
-    {1.1481, 0.0625, {0.016, 0.073, 0.04}, {1.0, 1.056, 1.146}},
+    {1.1481, 0.0625, {0.016, 0.073, 0.04}, {1.0, 1.056, 1.146}, LAMBERTIAN},
 
     /* blue acrylic */
-    {1.1153, 0.068, {0.012, 0.036, 0.106}, {1.0, 0.965, 1.07}}};
+    {1.1153, 0.068, {0.012, 0.036, 0.106}, {1.0, 0.965, 1.07}, LAMBERTIAN}};
 
 Scene *initScene0() {
   Scene *scene = initScene();
@@ -51,19 +51,22 @@ Scene *initScene0() {
   mat.roughness = 0.1;
   mat.specularColor = color3(0.5f);
 
-  mat.diffuseColor = color3(.5f);
+  mat.type = METAL;
+  mat.diffuseColor = color3(.8f);
+  mat.fuzz = 0.1;
   addObject(scene, initSphere(point3(0, 0.25, 0), 0.25, mat));
 
+  mat.type = LAMBERTIAN;
   mat.diffuseColor = color3(0.5f, 0.f, 0.f);
-  addObject(scene, initSphere(point3(1, 0, 0), .25, mat));
+  addObject(scene, initSphere(point3(0.50, 0.25, 0), .25, mat));
 
   mat.diffuseColor = color3(0.f, 0.5f, 0.5f);
   addObject(scene, initSphere(point3(0, 1, 0), .25, mat));
 
   mat.diffuseColor = color3(0.f, 0.f, 0.5f);
-  addObject(scene, initSphere(point3(0, 0, 1), .25, mat));
+  addObject(scene, initSphere(point3(0, 0.25, 0.50), .25, mat));
 
-  mat.diffuseColor = color3(0.6f);
+  mat.diffuseColor = color3(0.8f, 0.8f, 0.0f);
   addObject(scene, initSphere(point3(0.f, -10.f, 0.f), 10.f, mat));
   //addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
@@ -85,6 +88,7 @@ Scene *initScene1() {
   mat.roughness = 0.2;
   mat.specularColor = color3(0.4f);
   mat.diffuseColor = color3(0.6f);
+  mat.type = LAMBERTIAN;
 
   for (int i = 0; i < 10; ++i) {
     mat.diffuseColor = color3(0.301, 0.034, 0.039);
@@ -129,6 +133,7 @@ Scene *initScene2() {
   mat.specularColor = color3(1.0, 0.882, 0.786);
   mat.IOR = 2.4449;
   mat.roughness = 0.0681;
+  mat.type = LAMBERTIAN;
 
   mat.diffuseColor = color3(0.05, 0.05, 0.05);
   mat.specularColor = color3(0.95);
@@ -165,6 +170,7 @@ Scene *initScene3() {
   mat.specularColor = color3(1.0, 0.992, 0.98);
   mat.IOR = 1.1382;
   mat.roughness = 0.0886;
+  mat.type = LAMBERTIAN;
 
   addLight(scene, initLight(point3(0, 1.7, 1), .5f * color3(3, 3, 3)));
   addLight(scene, initLight(point3(3, 2, 3), .5f * color3(4, 4, 4)));
@@ -229,7 +235,7 @@ Scene *initScene3() {
 
 Scene *initScene4() {
   Scene *scene = initScene();
-  setCamera(scene, point3(6, 4, 4), vec3(0, 1, 0), vec3(0, 1, 0), 40,
+  setCamera(scene, point3(6, 4, 4), vec3(0, 1, 0), vec3(0, 1, 0), 90,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.2, 0.2, 0.7));
   Material mat;
@@ -237,6 +243,7 @@ Scene *initScene4() {
   mat.specularColor = color3(1.0, 0.992, 0.98);
   mat.IOR = 1.1382;
   mat.roughness = 0.0886;
+  mat.type = LAMBERTIAN;
 
   addLight(scene, initLight(point3(10, 10.7, 1), .5f * color3(3, 3, 3)));
   addLight(scene, initLight(point3(8, 20, 3), .5f * color3(4, 4, 4)));
@@ -280,6 +287,7 @@ Scene *initScene5() {
   mat.specularColor = color3(1.0, 0.992, 0.98);
   mat.IOR = 1.1382;
   mat.roughness = 0.0886;
+  mat.type = LAMBERTIAN;
   addLight(scene, initLight(point3(0, 1.7, 1), .5f * color3(3, 3, 3)));
   addLight(scene, initLight(point3(3, 2, 3), .5f * color3(4, 4, 4)));
   addLight(scene, initLight(point3(4, 3, -1), .5f * color3(5, 5, 5)));
@@ -414,14 +422,17 @@ Scene *initScene6() {
 
 
   Material mat;
+  mat.type = METAL;
+  mat.fuzz = 0.1;
+  mat.diffuseColor = color3(.8f);
 
-  addObjectsFromFile("../assets/bunny.obj", scene, mat_lib[0]);
+  addObjectsFromFile("../assets/bunny.obj", scene, mat);
 
   mat.diffuseColor = color3(0.7, 0, 0);
   mat.specularColor = color3(1, 0, 0);
   mat.IOR = 1.5;
   mat.roughness = 0.0681;
-  //addObject(scene, initPlane(vec3(0, 1, 0), 0.01, mat));
+  addObject(scene, initPlane(vec3(0, 1, 0), 0.01, mat));
 
   mat.diffuseColor = color3(0, 0.8, 0);
   mat.specularColor = color3(0.6, 0.6, 0);
@@ -446,6 +457,7 @@ Scene *initScene7() {
   mat.specularColor = color3(1.0, 0.882, 0.786);
   mat.IOR = 1.3;
   mat.roughness = 0.0681;
+  mat.type = LAMBERTIAN;
 
   addObjectsFromFile("../assets/werewolf.obj", scene, mat);
   
@@ -472,6 +484,7 @@ Scene *initScene8() {
   mat.IOR = 20;
   mat.roughness = 0.001;
   mat.specularColor = color3(0.9f);
+  mat.type = LAMBERTIAN;
 
   mat.diffuseColor = color3(0.9f, 0.9f, 0.9f);
 

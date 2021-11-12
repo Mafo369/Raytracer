@@ -1,6 +1,4 @@
 
-#include "glm/fwd.hpp"
-#include "glm/geometric.hpp"
 #include "image.h"
 #include "kdtree.h"
 #include "ray.h"
@@ -66,14 +64,23 @@ bool near_zero(vec3 e) {
 }
         
 bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
-  auto scatter_direction = rec.normal + random_unit_vector();
+  
+  if(rec.mat->type == LAMBERTIAN){
+    auto scatter_direction = rec.normal + random_unit_vector();
             
-  // Catch degenerate scatter direction
-  if (near_zero(scatter_direction))
-    scatter_direction = rec.normal;
+    // Catch degenerate scatter direction
+    if (near_zero(scatter_direction))
+      scatter_direction = rec.normal;
 
-  rayInit(scattered, rec.position, normalize(scatter_direction), 0, 10000, r_in->depth+1);
-  attenuation = rec.mat->diffuseColor;
+    rayInit(scattered, rec.position, normalize(scatter_direction), 0, 10000, r_in->depth+1);
+    attenuation = rec.mat->diffuseColor;
+  } else if (rec.mat->type == METAL){
+      vec3 reflected = reflect(unit_vector(r_in->dir), rec.normal);
+      rayInit(scattered, rec.position, reflected + rec.mat->fuzz*random_in_unit_sphere(), 0, 10000, r_in->depth+1);
+      attenuation = rec.mat->diffuseColor;
+      return (dot(scattered->dir, rec.normal) > 0);
+  }
+  
   return true;
 }
 
@@ -601,7 +608,7 @@ void renderImage(Image *img, Scene *scene)
   //! This function is already operational, you might modify it for antialiasing
   //! and kdtree initializaion
   
-  auto samples_per_pixel = 100;
+  auto samples_per_pixel = 150;
   
   auto dist_to_focus = (scene->cam.position-scene->cam.lookat).length();
   auto aperture = 0.005;

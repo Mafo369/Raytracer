@@ -10,15 +10,18 @@ typedef struct object_s Object;
 typedef struct light_s Light;
 typedef struct camera_s Camera;
 
+enum matType {LAMBERTIAN=1, METAL};
+
 typedef struct material_s {
   float IOR;	//! Index of refraction (for dielectric)
   float roughness; //! 0.001 - 0.01 : very smooth finish with slight imperfections. 0.1 : relatively rough. 0.3-0.7 extremely rough 
   color3 specularColor;	//! Specular "albedo"
   color3 diffuseColor;	//! Base color
+  matType type;
+  float fuzz;
 } Material;
 
 enum Etype {SPHERE=1, PLANE, TRIANGLE};
-
 
 //! create a new sphere structure
 Object* initSphere(point3 center, float radius, Material mat);

@@ -908,10 +908,12 @@ CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.o: ../lodepng-master/lodepng
 
 CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   /usr/include/stdc-predef.h \
-  ../glm-master/glm/fwd.hpp \
-  ../glm-master/glm/detail/qualifier.hpp \
-  ../glm-master/glm/detail/setup.hpp \
-  /usr/include/c++/9/cassert \
+  ../image.h \
+  ../defines.h \
+  /usr/lib/gcc/x86_64-linux-gnu/9/include/stdbool.h \
+  ../glm-master/glm/glm.hpp \
+  ../glm-master/glm/detail/_fixes.hpp \
+  /usr/include/c++/9/cmath \
   /usr/include/x86_64-linux-gnu/c++/9/bits/c++config.h \
   /usr/include/x86_64-linux-gnu/c++/9/bits/os_defines.h \
   /usr/include/features.h \
@@ -921,39 +923,14 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   /usr/include/x86_64-linux-gnu/gnu/stubs.h \
   /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
   /usr/include/x86_64-linux-gnu/c++/9/bits/cpu_defines.h \
-  /usr/include/assert.h \
-  /usr/include/c++/9/cstddef \
-  /usr/lib/gcc/x86_64-linux-gnu/9/include/stddef.h \
-  ../glm-master/glm/simd/platform.h \
-  /usr/include/c++/9/cstdint \
-  /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h \
-  /usr/include/stdint.h \
+  /usr/include/c++/9/bits/cpp_type_traits.h \
+  /usr/include/c++/9/ext/type_traits.h \
+  /usr/include/math.h \
   /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
   /usr/include/x86_64-linux-gnu/bits/types.h \
   /usr/include/x86_64-linux-gnu/bits/timesize.h \
   /usr/include/x86_64-linux-gnu/bits/typesizes.h \
   /usr/include/x86_64-linux-gnu/bits/time64.h \
-  /usr/include/x86_64-linux-gnu/bits/wchar.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
-  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
-  /usr/include/c++/9/type_traits \
-  ../glm-master/glm/geometric.hpp \
-  ../glm-master/glm/detail/type_vec3.hpp \
-  ../glm-master/glm/detail/type_vec3.inl \
-  ../glm-master/glm/detail/compute_vector_relational.hpp \
-  /usr/include/c++/9/limits \
-  ../glm-master/glm/detail/func_geometric.inl \
-  ../glm-master/glm/exponential.hpp \
-  ../glm-master/glm/detail/type_vec1.hpp \
-  ../glm-master/glm/detail/type_vec1.inl \
-  ../glm-master/glm/detail/type_vec2.hpp \
-  ../glm-master/glm/detail/type_vec2.inl \
-  ../glm-master/glm/detail/type_vec4.hpp \
-  ../glm-master/glm/detail/type_vec4.inl \
-  /usr/include/c++/9/cmath \
-  /usr/include/c++/9/bits/cpp_type_traits.h \
-  /usr/include/c++/9/ext/type_traits.h \
-  /usr/include/math.h \
   /usr/include/x86_64-linux-gnu/bits/math-vector.h \
   /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
   /usr/include/x86_64-linux-gnu/bits/floatn.h \
@@ -968,6 +945,7 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   /usr/include/x86_64-linux-gnu/bits/mathinline.h \
   /usr/include/c++/9/bits/std_abs.h \
   /usr/include/stdlib.h \
+  /usr/lib/gcc/x86_64-linux-gnu/9/include/stddef.h \
   /usr/include/x86_64-linux-gnu/bits/waitflags.h \
   /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
   /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
@@ -977,6 +955,7 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
   /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
   /usr/include/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endian.h \
   /usr/include/x86_64-linux-gnu/bits/endianness.h \
@@ -998,22 +977,17 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
   /usr/include/x86_64-linux-gnu/bits/stdlib.h \
-  ../glm-master/glm/detail/func_exponential.inl \
-  ../glm-master/glm/vector_relational.hpp \
   ../glm-master/glm/detail/setup.hpp \
-  ../glm-master/glm/detail/func_vector_relational.inl \
-  ../glm-master/glm/detail/_vectorize.hpp \
-  ../glm-master/glm/common.hpp \
-  ../glm-master/glm/detail/_fixes.hpp \
-  ../glm-master/glm/detail/func_common.inl \
-  ../glm-master/glm/detail/compute_common.hpp \
-  ../glm-master/glm/detail/setup.hpp \
-  ../image.h \
-  ../defines.h \
-  /usr/lib/gcc/x86_64-linux-gnu/9/include/stdbool.h \
-  ../glm-master/glm/glm.hpp \
-  ../glm-master/glm/detail/_fixes.hpp \
-  ../glm-master/glm/detail/setup.hpp \
+  /usr/include/c++/9/cassert \
+  /usr/include/assert.h \
+  /usr/include/c++/9/cstddef \
+  ../glm-master/glm/simd/platform.h \
+  /usr/include/c++/9/cstdint \
+  /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h \
+  /usr/include/stdint.h \
+  /usr/include/x86_64-linux-gnu/bits/wchar.h \
+  /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+  /usr/include/c++/9/type_traits \
   /usr/include/c++/9/climits \
   /usr/lib/gcc/x86_64-linux-gnu/9/include/limits.h \
   /usr/lib/gcc/x86_64-linux-gnu/9/include/syslimits.h \
@@ -1026,8 +1000,16 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   /usr/include/x86_64-linux-gnu/bits/uio_lim.h \
   /usr/include/c++/9/cfloat \
   /usr/lib/gcc/x86_64-linux-gnu/9/include/float.h \
+  /usr/include/c++/9/limits \
+  ../glm-master/glm/fwd.hpp \
+  ../glm-master/glm/detail/qualifier.hpp \
+  ../glm-master/glm/detail/setup.hpp \
   ../glm-master/glm/vec2.hpp \
   ../glm-master/glm/ext/vector_bool2.hpp \
+  ../glm-master/glm/detail/type_vec2.hpp \
+  ../glm-master/glm/detail/type_vec2.inl \
+  ../glm-master/glm/detail/compute_vector_relational.hpp \
+  ../glm-master/glm/detail/setup.hpp \
   ../glm-master/glm/ext/vector_bool2_precision.hpp \
   ../glm-master/glm/ext/vector_float2.hpp \
   ../glm-master/glm/ext/vector_float2_precision.hpp \
@@ -1039,6 +1021,8 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   ../glm-master/glm/ext/vector_uint2_precision.hpp \
   ../glm-master/glm/vec3.hpp \
   ../glm-master/glm/ext/vector_bool3.hpp \
+  ../glm-master/glm/detail/type_vec3.hpp \
+  ../glm-master/glm/detail/type_vec3.inl \
   ../glm-master/glm/ext/vector_bool3_precision.hpp \
   ../glm-master/glm/ext/vector_float3.hpp \
   ../glm-master/glm/ext/vector_float3_precision.hpp \
@@ -1050,6 +1034,8 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   ../glm-master/glm/ext/vector_uint3_precision.hpp \
   ../glm-master/glm/vec4.hpp \
   ../glm-master/glm/ext/vector_bool4.hpp \
+  ../glm-master/glm/detail/type_vec4.hpp \
+  ../glm-master/glm/detail/type_vec4.inl \
   ../glm-master/glm/ext/vector_bool4_precision.hpp \
   ../glm-master/glm/ext/vector_float4.hpp \
   ../glm-master/glm/ext/vector_float4_precision.hpp \
@@ -1123,6 +1109,21 @@ CMakeFiles/unit-test.dir/raytracer.cpp.o: ../raytracer.cpp \
   ../glm-master/glm/ext/matrix_float4x4.hpp \
   ../glm-master/glm/ext/matrix_float4x4_precision.hpp \
   ../glm-master/glm/detail/func_matrix.inl \
+  ../glm-master/glm/geometric.hpp \
+  ../glm-master/glm/detail/func_geometric.inl \
+  ../glm-master/glm/exponential.hpp \
+  ../glm-master/glm/detail/type_vec1.hpp \
+  ../glm-master/glm/detail/type_vec1.inl \
+  ../glm-master/glm/detail/func_exponential.inl \
+  ../glm-master/glm/vector_relational.hpp \
+  ../glm-master/glm/detail/setup.hpp \
+  ../glm-master/glm/detail/func_vector_relational.inl \
+  ../glm-master/glm/detail/_vectorize.hpp \
+  ../glm-master/glm/common.hpp \
+  ../glm-master/glm/detail/_fixes.hpp \
+  ../glm-master/glm/detail/func_common.inl \
+  ../glm-master/glm/detail/compute_common.hpp \
+  ../glm-master/glm/detail/setup.hpp \
   ../glm-master/glm/ext/matrix_double2x2_precision.hpp \
   ../glm-master/glm/ext/matrix_float2x2.hpp \
   ../glm-master/glm/ext/matrix_float2x2_precision.hpp \

@@ -1,9 +1,10 @@
 CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /home/mafo/dev/Raytracer/raytracer.cpp /usr/include/stdc-predef.h \
- /home/mafo/dev/Raytracer/glm-master/glm/fwd.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/qualifier.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/setup.hpp \
- /usr/include/c++/9/cassert \
+ /home/mafo/dev/Raytracer/image.h /home/mafo/dev/Raytracer/defines.h \
+ /usr/lib/gcc/x86_64-linux-gnu/9/include/stdbool.h \
+ /home/mafo/dev/Raytracer/glm-master/glm/glm.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/detail/_fixes.hpp \
+ /usr/include/c++/9/cmath \
  /usr/include/x86_64-linux-gnu/c++/9/bits/c++config.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/os_defines.h \
  /usr/include/features.h /usr/include/x86_64-linux-gnu/sys/cdefs.h \
@@ -12,35 +13,13 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /usr/include/x86_64-linux-gnu/gnu/stubs.h \
  /usr/include/x86_64-linux-gnu/gnu/stubs-64.h \
  /usr/include/x86_64-linux-gnu/c++/9/bits/cpu_defines.h \
- /usr/include/assert.h /usr/include/c++/9/cstddef \
- /usr/lib/gcc/x86_64-linux-gnu/9/include/stddef.h \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../simd/platform.h \
- /usr/include/c++/9/cstdint \
- /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h /usr/include/stdint.h \
+ /usr/include/c++/9/bits/cpp_type_traits.h \
+ /usr/include/c++/9/ext/type_traits.h /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/libc-header-start.h \
  /usr/include/x86_64-linux-gnu/bits/types.h \
  /usr/include/x86_64-linux-gnu/bits/timesize.h \
  /usr/include/x86_64-linux-gnu/bits/typesizes.h \
  /usr/include/x86_64-linux-gnu/bits/time64.h \
- /usr/include/x86_64-linux-gnu/bits/wchar.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-intn.h \
- /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
- /usr/include/c++/9/type_traits \
- /home/mafo/dev/Raytracer/glm-master/glm/geometric.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/type_vec3.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/type_vec3.inl \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/compute_vector_relational.hpp \
- /usr/include/c++/9/limits \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/func_geometric.inl \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../exponential.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/type_vec1.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/type_vec1.inl \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/type_vec2.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/type_vec2.inl \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/type_vec4.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/type_vec4.inl \
- /usr/include/c++/9/cmath /usr/include/c++/9/bits/cpp_type_traits.h \
- /usr/include/c++/9/ext/type_traits.h /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
  /usr/include/x86_64-linux-gnu/bits/libm-simd-decl-stubs.h \
  /usr/include/x86_64-linux-gnu/bits/floatn.h \
@@ -54,6 +33,7 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/iscanonical.h \
  /usr/include/x86_64-linux-gnu/bits/mathinline.h \
  /usr/include/c++/9/bits/std_abs.h /usr/include/stdlib.h \
+ /usr/lib/gcc/x86_64-linux-gnu/9/include/stddef.h \
  /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h \
  /usr/include/x86_64-linux-gnu/bits/types/locale_t.h \
@@ -62,7 +42,8 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/types/clock_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/clockid_t.h \
  /usr/include/x86_64-linux-gnu/bits/types/time_t.h \
- /usr/include/x86_64-linux-gnu/bits/types/timer_t.h /usr/include/endian.h \
+ /usr/include/x86_64-linux-gnu/bits/types/timer_t.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-intn.h /usr/include/endian.h \
  /usr/include/x86_64-linux-gnu/bits/endian.h \
  /usr/include/x86_64-linux-gnu/bits/endianness.h \
  /usr/include/x86_64-linux-gnu/bits/byteswap.h \
@@ -82,22 +63,15 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/stdlib-bsearch.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib.h \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/func_exponential.inl \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/../vector_relational.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/../detail/setup.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/../detail/func_vector_relational.inl \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/_vectorize.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../common.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/_fixes.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/func_common.inl \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/compute_common.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/../detail/setup.hpp \
- /home/mafo/dev/Raytracer/image.h /home/mafo/dev/Raytracer/defines.h \
- /usr/lib/gcc/x86_64-linux-gnu/9/include/stdbool.h \
- /home/mafo/dev/Raytracer/glm-master/glm/glm.hpp \
- /home/mafo/dev/Raytracer/glm-master/glm/detail/_fixes.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/detail/setup.hpp \
- /usr/include/c++/9/climits \
+ /usr/include/c++/9/cassert /usr/include/assert.h \
+ /usr/include/c++/9/cstddef \
+ /home/mafo/dev/Raytracer/glm-master/glm/detail/../simd/platform.h \
+ /usr/include/c++/9/cstdint \
+ /usr/lib/gcc/x86_64-linux-gnu/9/include/stdint.h /usr/include/stdint.h \
+ /usr/include/x86_64-linux-gnu/bits/wchar.h \
+ /usr/include/x86_64-linux-gnu/bits/stdint-uintn.h \
+ /usr/include/c++/9/type_traits /usr/include/c++/9/climits \
  /usr/lib/gcc/x86_64-linux-gnu/9/include/limits.h \
  /usr/lib/gcc/x86_64-linux-gnu/9/include/syslimits.h \
  /usr/include/limits.h /usr/include/x86_64-linux-gnu/bits/posix1_lim.h \
@@ -107,8 +81,16 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /usr/include/x86_64-linux-gnu/bits/xopen_lim.h \
  /usr/include/x86_64-linux-gnu/bits/uio_lim.h /usr/include/c++/9/cfloat \
  /usr/lib/gcc/x86_64-linux-gnu/9/include/float.h \
+ /usr/include/c++/9/limits \
+ /home/mafo/dev/Raytracer/glm-master/glm/fwd.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/detail/qualifier.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/detail/setup.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/vec2.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_bool2.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/type_vec2.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/type_vec2.inl \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/./compute_vector_relational.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/./setup.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_bool2_precision.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_float2.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_float2_precision.hpp \
@@ -120,6 +102,8 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_uint2_precision.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/vec3.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_bool3.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/type_vec3.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/type_vec3.inl \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_bool3_precision.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_float3.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_float3_precision.hpp \
@@ -131,6 +115,8 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_uint3_precision.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/vec4.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_bool4.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/type_vec4.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/type_vec4.inl \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_bool4_precision.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_float4.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/vector_float4_precision.hpp \
@@ -204,6 +190,21 @@ CMakeFiles/mrt.dir/raytracer.cpp.o: \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/.././ext/matrix_float4x4.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/.././ext/matrix_float4x4_precision.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/func_matrix.inl \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../geometric.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/func_geometric.inl \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../exponential.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/type_vec1.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/type_vec1.inl \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/func_exponential.inl \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/../vector_relational.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/../detail/setup.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/../detail/func_vector_relational.inl \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/_vectorize.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../common.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/_fixes.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/func_common.inl \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/compute_common.hpp \
+ /home/mafo/dev/Raytracer/glm-master/glm/./ext/../detail/../detail/../detail/../detail/setup.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/matrix_double2x2_precision.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/matrix_float2x2.hpp \
  /home/mafo/dev/Raytracer/glm-master/glm/./ext/matrix_float2x2_precision.hpp \
