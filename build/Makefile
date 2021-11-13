@@ -129,26 +129,12 @@ mrt/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/build
 .PHONY : mrt/fast
 
-#=============================================================================
-# Target rules for targets named unit-test
-
-# Build rule for target.
-unit-test: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 unit-test
-.PHONY : unit-test
-
-# fast build rule for target.
-unit-test/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/build
-.PHONY : unit-test/fast
-
 image.o: image.cpp.o
 .PHONY : image.o
 
 # target to build an object file
 image.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/image.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/image.cpp.o
 .PHONY : image.cpp.o
 
 image.i: image.cpp.i
@@ -157,7 +143,6 @@ image.i: image.cpp.i
 # target to preprocess a source file
 image.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/image.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/image.cpp.i
 .PHONY : image.cpp.i
 
 image.s: image.cpp.s
@@ -166,7 +151,6 @@ image.s: image.cpp.s
 # target to generate assembly for a file
 image.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/image.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/image.cpp.s
 .PHONY : image.cpp.s
 
 kdtree.o: kdtree.cpp.o
@@ -175,7 +159,6 @@ kdtree.o: kdtree.cpp.o
 # target to build an object file
 kdtree.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/kdtree.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/kdtree.cpp.o
 .PHONY : kdtree.cpp.o
 
 kdtree.i: kdtree.cpp.i
@@ -184,7 +167,6 @@ kdtree.i: kdtree.cpp.i
 # target to preprocess a source file
 kdtree.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/kdtree.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/kdtree.cpp.i
 .PHONY : kdtree.cpp.i
 
 kdtree.s: kdtree.cpp.s
@@ -193,7 +175,6 @@ kdtree.s: kdtree.cpp.s
 # target to generate assembly for a file
 kdtree.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/kdtree.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/kdtree.cpp.s
 .PHONY : kdtree.cpp.s
 
 lodepng-master/lodepng.o: lodepng-master/lodepng.cpp.o
@@ -202,7 +183,6 @@ lodepng-master/lodepng.o: lodepng-master/lodepng.cpp.o
 # target to build an object file
 lodepng-master/lodepng.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.o
 .PHONY : lodepng-master/lodepng.cpp.o
 
 lodepng-master/lodepng.i: lodepng-master/lodepng.cpp.i
@@ -211,7 +191,6 @@ lodepng-master/lodepng.i: lodepng-master/lodepng.cpp.i
 # target to preprocess a source file
 lodepng-master/lodepng.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.i
 .PHONY : lodepng-master/lodepng.cpp.i
 
 lodepng-master/lodepng.s: lodepng-master/lodepng.cpp.s
@@ -220,7 +199,6 @@ lodepng-master/lodepng.s: lodepng-master/lodepng.cpp.s
 # target to generate assembly for a file
 lodepng-master/lodepng.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/lodepng-master/lodepng.cpp.s
 .PHONY : lodepng-master/lodepng.cpp.s
 
 main.o: main.cpp.o
@@ -253,7 +231,6 @@ raytracer.o: raytracer.cpp.o
 # target to build an object file
 raytracer.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/raytracer.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/raytracer.cpp.o
 .PHONY : raytracer.cpp.o
 
 raytracer.i: raytracer.cpp.i
@@ -262,7 +239,6 @@ raytracer.i: raytracer.cpp.i
 # target to preprocess a source file
 raytracer.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/raytracer.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/raytracer.cpp.i
 .PHONY : raytracer.cpp.i
 
 raytracer.s: raytracer.cpp.s
@@ -271,7 +247,6 @@ raytracer.s: raytracer.cpp.s
 # target to generate assembly for a file
 raytracer.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/raytracer.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/raytracer.cpp.s
 .PHONY : raytracer.cpp.s
 
 scene.o: scene.cpp.o
@@ -280,7 +255,6 @@ scene.o: scene.cpp.o
 # target to build an object file
 scene.cpp.o:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/scene.cpp.o
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/scene.cpp.o
 .PHONY : scene.cpp.o
 
 scene.i: scene.cpp.i
@@ -289,7 +263,6 @@ scene.i: scene.cpp.i
 # target to preprocess a source file
 scene.cpp.i:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/scene.cpp.i
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/scene.cpp.i
 .PHONY : scene.cpp.i
 
 scene.s: scene.cpp.s
@@ -298,32 +271,7 @@ scene.s: scene.cpp.s
 # target to generate assembly for a file
 scene.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/mrt.dir/build.make CMakeFiles/mrt.dir/scene.cpp.s
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/scene.cpp.s
 .PHONY : scene.cpp.s
-
-unit-test.o: unit-test.cpp.o
-.PHONY : unit-test.o
-
-# target to build an object file
-unit-test.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/unit-test.cpp.o
-.PHONY : unit-test.cpp.o
-
-unit-test.i: unit-test.cpp.i
-.PHONY : unit-test.i
-
-# target to preprocess a source file
-unit-test.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/unit-test.cpp.i
-.PHONY : unit-test.cpp.i
-
-unit-test.s: unit-test.cpp.s
-.PHONY : unit-test.s
-
-# target to generate assembly for a file
-unit-test.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/unit-test.dir/build.make CMakeFiles/unit-test.dir/unit-test.cpp.s
-.PHONY : unit-test.cpp.s
 
 # Help Target
 help:
@@ -334,7 +282,6 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... mrt"
-	@echo "... unit-test"
 	@echo "... image.o"
 	@echo "... image.i"
 	@echo "... image.s"
@@ -353,9 +300,6 @@ help:
 	@echo "... scene.o"
 	@echo "... scene.i"
 	@echo "... scene.s"
-	@echo "... unit-test.o"
-	@echo "... unit-test.i"
-	@echo "... unit-test.s"
 .PHONY : help
 
 

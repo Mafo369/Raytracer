@@ -119,5 +119,4 @@ set(CMAKE_MAKEFILE_PRODUCTS
 # Dependency information for all targets:
 set(CMAKE_DEPEND_INFO_FILES
   "CMakeFiles/mrt.dir/DependInfo.cmake"
-  "CMakeFiles/unit-test.dir/DependInfo.cmake"
   )

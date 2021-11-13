@@ -107,5 +107,5 @@ void readObjToTriangleMesh(const char *file, tinyobj::attrib_t &attrib, std::vec
   if(!ret)
     exit(1);
 
-  std::cout << "Model vertices: " << attrib.vertices.size() << std::endl;
+  //std::cout << "Model vertices: " << attrib.vertices.size() << std::endl;
 }

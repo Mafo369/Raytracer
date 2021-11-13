@@ -43,7 +43,7 @@ Material mat_lib[] = {
 
 Scene *initScene0() {
   Scene *scene = initScene();
-  setCamera(scene, point3(4, 1, 2), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(3.f, 1.f, 1.f), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
   Material mat;
@@ -53,7 +53,7 @@ Scene *initScene0() {
 
   mat.type = METAL;
   mat.diffuseColor = color3(.8f);
-  mat.fuzz = 0.1;
+  mat.fuzz = 0.3;
   addObject(scene, initSphere(point3(0, 0.25, 0), 0.25, mat));
 
   mat.type = LAMBERTIAN;
@@ -506,7 +506,7 @@ Scene *initScene8() {
 }
 
 int main(int argc, char *argv[]) {
-  printf("Welcome to the L3 IGTAI RayTracer project\n");
+  //printf("Welcome to the L3 IGTAI RayTracer project\n");
 
   char basename[256];
 
@@ -560,17 +560,17 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  printf("render scene %d\n", scene_id);
+  //printf("render scene %d\n", scene_id);
 
   renderImage(img, scene);
   freeScene(scene);
   scene = NULL;
 
-  printf("save image to %s\n", basename);
-  saveImage(img, basename);
-  freeImage(img);
-  img = NULL;
-  printf("done. Goodbye\n");
+  //printf("save image to %s\n", basename);
+  //saveImage(img, basename);
+  //freeImage(img);
+  //img = NULL;
+  //printf("done. Goodbye\n");
 
   return 0;
 }

@@ -22,27 +22,27 @@
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
 
-inline double random_double() {
+inline float random_float() {
     // Returns a random real in [0,1).
-    return rand() / (RAND_MAX + 1.0);
+    return (float)rand() / (float)(RAND_MAX + 1.0);
 }
 
-inline double random_double(double min, double max) {
+inline float random_float(float min, float max) {
     // Returns a random real in [min,max).
-    return min + (max-min)*random_double();
+    return min + (max-min)*random_float();
 }
 
 inline vec3 unit_vector(vec3 v) {
-    int l = v.length();
+    float l = length(v);
     return vec3(v.x / l, v.y / l, v.z / l);
 }
         
-inline vec3 random(double min, double max) {
-    return vec3(random_double(min,max), random_double(min,max), random_double(min,max));
+inline vec3 random(float min, float max) {
+    return vec3(random_float(min,max), random_float(min,max), random_float(min,max));
 }
         
-double length_squared(vec3 e) {
-  return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
+float length_squared(vec3 e) {
+  return e.x*e.x + e.y*e.y + e.z*e.z;
 }
 
 vec3 random_in_unit_sphere() {
@@ -60,7 +60,7 @@ vec3 random_unit_vector() {
 bool near_zero(vec3 e) {
   // Return true if the vector is close to zero in all dimensions.
   const auto s = 1e-8;
-  return (fabs(e[0]) < s) && (fabs(e[1]) < s) && (fabs(e[2]) < s);
+  return (fabs(e.x) < s) && (fabs(e.y) < s) && (fabs(e.z) < s);
 }
         
 bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
@@ -72,7 +72,7 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
     if (near_zero(scatter_direction))
       scatter_direction = rec.normal;
 
-    rayInit(scattered, rec.position, normalize(scatter_direction), 0, 10000, r_in->depth+1);
+    rayInit(scattered, rec.position, scatter_direction);
     attenuation = rec.mat->diffuseColor;
   } else if (rec.mat->type == METAL){
       vec3 reflected = reflect(unit_vector(r_in->dir), rec.normal);
@@ -120,7 +120,7 @@ inline void set_face_normal(Ray *r, const vec3& outward_normal, Intersection *re
     rec->normal = front_face ? outward_normal :-outward_normal;
 }
 
-bool hit(Ray *r, double t_min, double t_max,Intersection *rec, Object *obj) {
+bool hit(Ray *r, float t_min, float t_max,Intersection *rec, Object *obj) {
     vec3 oc = r->orig - obj->geom.sphere.center;
     auto a = length_squared(r->dir);
     auto half_b = dot(oc, r->dir);
@@ -132,9 +132,9 @@ bool hit(Ray *r, double t_min, double t_max,Intersection *rec, Object *obj) {
 
     // Find the nearest root that lies in the acceptable range.
     auto root = (-half_b - sqrtd) / a;
-    if (root < r->tmin || r->tmax < root) {
+    if (root < t_min || t_max < root) {
         root = (-half_b + sqrtd) / a;
-        if (root < r->tmin || r->tmax < root)
+        if (root < t_min || t_max < root)
             return false;
     }
 
@@ -283,7 +283,7 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
     }
     else if (scene->objects[i]->geom.type == SPHERE)
     {
-      if (hit(ray, 0.001, std::numeric_limits<double>::infinity(),temp, scene->objects[i]))
+      if (hit(ray, 0.001, std::numeric_limits<float>::infinity(),temp, scene->objects[i]))
       {
         float temp_dist = ray->tmax;
         if (hasIntersection)
@@ -328,278 +328,66 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
   return hasIntersection;
 }
 
-/* ---------------------------------------------------------------------------
- */
-/*
- *	The following functions are coded from Cook-Torrance bsdf model
- *description and are suitable only
- *  for rough dielectrics material (RDM. Code has been validated with Mitsuba
- *renderer)
- */
-
-// Shadowing and masking function. Linked with the NDF. Here, Smith function,
-// suitable for Beckmann NDF
-float RDM_chiplus(float c) { return (c > 0.f) ? 1.f : 0.f; }
-
-/** Normal Distribution Function : Beckmann
- * NdotH : Norm . Half
- */
-float RDM_Beckmann(float NdotH, float alpha)
-{
-
-  //! \todo compute Beckmann normal distribution
-
-  float phi = RDM_chiplus(NdotH);
-
-  float cos2 = NdotH * NdotH;
-  float tan2 = (1 - (cos2)) / cos2;
-  float alpha2 = alpha * alpha;
-  float e = exp(-tan2 / (alpha2));
-  float pi_alpha_cos = M_PI * alpha2 * (cos2 * cos2);
-
-  float d = phi * (e / pi_alpha_cos);
-
-  return d;
-}
-
-// Fresnel term computation. Implantation of the exact computation. we can use
-// the Schlick approximation
-// LdotH : Light . Half
-float RDM_Fresnel(float LdotH, float extIOR, float intIOR)
-{
-
-  //! \todo compute Fresnel term
-  if (LdotH < 0)
-  {
-    LdotH = -LdotH;
-  }
-
-  float n1_n2 = (extIOR / intIOR) * (extIOR / intIOR);
-  float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
-  if (sin2_t >= 1.0f)
-  {
-    return 1.f;
-  }
-  float cos_t = sqrtf(1 - sin2_t);
-
-  float ncos_minus_it = (extIOR * LdotH - intIOR * cos_t);
-  float ncos_minus2_it = ncos_minus_it * ncos_minus_it;
-  float ncos_plus_it = (extIOR * LdotH + intIOR * cos_t);
-  float ncos_plus2_it = ncos_plus_it * ncos_plus_it;
-
-  float ncos_minus_ti = (extIOR * cos_t - intIOR * LdotH);
-  float ncos_minus2_ti = ncos_minus_ti * ncos_minus_ti;
-  float ncos_plus_ti = (extIOR * cos_t + intIOR * LdotH);
-  float ncos_plus2_ti = ncos_plus_ti * ncos_plus_ti;
-
-  float rs = ncos_minus2_it / ncos_plus2_it;
-  float rp = ncos_minus2_ti / ncos_plus2_ti;
-
-  float f = (rs + rp) / 2;
-
-  return f;
-}
-
-// DdotH : Dir . Half
-// HdotN : Half . Norm
-float RDM_G1(float DdotH, float DdotN, float alpha)
-{
-
-  //! \todo compute G1 term of the Smith fonction
-
-  float tanx = sqrtf(1 - (DdotN * DdotN)) / DdotN;
-  float b = 1 / (alpha * tanx);
-
-  float k = DdotH / DdotN;
-
-  float phi_k = RDM_chiplus(k);
-
-  if (b < 1.6f)
-  {
-    float b2 = b * b;
-    float fraction = (3.535 * b + 2.181 * b2) / (1 + 2.276 * b + 2.577 * b2);
-    float g1 = phi_k * fraction;
-    return g1;
-  }
-
-  return phi_k;
-}
-
-// LdotH : Light . Half
-// LdotN : Light . Norm
-// VdotH : View . Half
-// VdotN : View . Norm
-float RDM_Smith(float LdotH, float LdotN, float VdotH, float VdotN,
-                float alpha)
-{
-  return RDM_G1(LdotH, LdotN, alpha) * RDM_G1(VdotH, VdotN, alpha);
-}
-
-// Specular term of the Cook-torrance bsdf
-// LdotH : Light . Half
-// NdotH : Norm . Half
-// VdotH : View . Half
-// LdotN : Light . Norm
-// VdotN : View . Norm
-color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
-                  float VdotN, Material *m)
-{
-
-  //! \todo specular term of the bsdf, using D = RDB_Beckmann, F = RDM_Fresnel, G
-  //! = RDM_Smith
-
-  float d = RDM_Beckmann(NdotH, m->roughness);
-  float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
-  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
-
-  return color3(m->specularColor * ((d * f * g) / (4 * LdotN * VdotN)));
-}
-// diffuse term of the cook torrance bsdf
-color3 RDM_bsdf_d(Material *m)
-{
-
-  float pi = M_PI;
-  return color3(m->diffuseColor / pi);
-}
-
-// The full evaluation of bsdf(wi, wo) * cos (thetai)
-// LdotH : Light . Half
-// NdotH : Norm . Half
-// VdotH : View . Half
-// LdotN : Light . Norm
-// VdtoN : View . Norm
-// compute bsdf * cos(Oi)
-color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                Material *m)
-{
-
-  //! \todo compute bsdf diffuse and specular term
-  return color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
-}
-
-color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
-{
-  color3 ret = color3(0.f);
-
-  //! \todo compute bsdf, return the shaded color taking into account the
-  //! lightcolor
-
-  float ln = dot(l, n);
-
-  if (ln > 0)
-  {
-    vec3 vl = v + l;
-    vec3 h = vl / length(vl);
-
-    float LdotH = dot(l, h);
-    float NdotH = dot(n, h);
-    float VdotH = dot(v, h);
-    float LdotN = dot(l, n);
-    float VdotN = dot(v, n);
-    ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat) * LdotN;
-  }
-
-  return ret;
-}
-
-//! if tree is not null, use intersectKdTree to compute the intersection instead
-//! of intersect scene
-
-color3 ray_color(Scene *scene, Ray *ray, KdTree *tree)
-{
-  color3 ret = color3(0, 0, 0);
-  Intersection intersection;
-
-  if (ray->depth > 3)
-    return color3(0.f);
-
-  if (intersectKdTree(scene, tree, ray, &intersection))
-  {
-    size_t lightsCount = scene->lights.size();
-    for (size_t i = 0; i < lightsCount; i++)
-    {
-      vec3 v = ray->dir * -1.0f;
-      vec3 lp = scene->lights[i]->position - intersection.position;
-      vec3 l = lp / length(lp);
-
-      Ray *ray_ombre = new Ray();
-      rayInit(ray_ombre, intersection.position + (acne_eps * l), l, 0.f, distance(intersection.position + (acne_eps * l), scene->lights[i]->position));
-
-      Intersection temp_inter;
-      if (!intersectKdTree(scene, tree, ray_ombre, &temp_inter))
-      {
-        ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
-      }
-      else
-      {
-        ret += color3(0.f);
-      }
-
-      free(ray_ombre);
-    }
-
-    if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
-      return color3(1.f);
-
-    vec3 r = reflect(ray->dir, intersection.normal);
-    Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
-    rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
-
-    color3 cr = ray_color(scene, ray_ref, tree);
-    float LdotH = dot(ray_ref->dir, intersection.normal);
-    float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
-
-    ret += (f * cr * intersection.mat->specularColor);
-
-    free(ray_ref);
-  }
-  else
-  {
-    ret = scene->skyColor;
-  }
-
-  return ret;
-}
-
-
 color3 trace_ray(Scene *scene, Ray *r, KdTree *tree) {
 
   Intersection rec;
 
-  if(r->depth > 2)
+  if(r->depth > 4)
     return color3(0,0,0);
 
-  if (intersectKdTree(scene, tree, r, &rec)){
-  //if(intersectScene(scene, r, &rec)){
-    Ray *scattered = (Ray *)malloc(sizeof(Ray));
+  //if (intersectKdTree(scene, tree, r, &rec)){
+  if(intersectScene(scene, r, &rec)){
+    Ray scattered;
     color3 attenuation;
-    if (scatter(r, rec, attenuation, scattered))
-      return attenuation * trace_ray(scene, scattered, tree);
+    if (scatter(r, rec, attenuation, &scattered)){
+      scattered.depth =  r->depth + 1;
+      return attenuation * trace_ray(scene, &scattered, tree);
+    }
     return color3(0,0,0);
   }
-  vec3 unit_direction = r->dir;
+  vec3 unit_direction = unit_vector(r->dir);
   auto t = 0.5*(unit_direction.y + 1.0);
   return color3((1.0-t)*1.0, (1.0-t)*1.0, (1.0-t)*1.0) + color3(t*0.5, t*0.7, t*1.0);
 }
   
 // Utility Functions
 
-inline double degrees_to_radians(double degrees) {
+inline float degrees_to_radians(float degrees) {
   return degrees * M_PI / 180.0;
 }
 
 vec3 random_in_unit_disk() {
     while (true) {
-        auto p = vec3(random_double(-1,1), random_double(-1,1), 0);
+        auto p = vec3(random_float(-1,1), random_float(-1,1), 0);
         if (length_squared(p) >= 1) continue;
         return p;
     }
 }
         
-inline double clamp(double x, double min, double max) {
+inline float clamp(float x, float min, float max) {
     if (x < min) return min;
     if (x > max) return max;
     return x;
+}
+float length(vec3 v) {
+  return sqrt(length_squared(v));
+}
+
+void write_color(std::ostream &out, color3 pixel_color, int samples_per_pixel) {
+    auto r = pixel_color.x;
+    auto g = pixel_color.y;
+    auto b = pixel_color.z;
+
+    // Divide the color by the number of samples and gamma-correct for gamma=2.0.
+    auto scale = 1.0 / (float)samples_per_pixel;
+    r = sqrt(scale * r);
+    g = sqrt(scale * g);
+    b = sqrt(scale * b);
+
+    // Write the translated [0,255] value of each color component.
+    out << static_cast<int>(256 * clamp(r, 0.0, 0.999)) << ' '
+        << static_cast<int>(256 * clamp(g, 0.0, 0.999)) << ' '
+        << static_cast<int>(256 * clamp(b, 0.0, 0.999)) << '\n';
 }
 
 void renderImage(Image *img, Scene *scene)
@@ -608,19 +396,20 @@ void renderImage(Image *img, Scene *scene)
   //! This function is already operational, you might modify it for antialiasing
   //! and kdtree initializaion
   
-  auto samples_per_pixel = 150;
+  auto samples_per_pixel = 100;
   
-  auto dist_to_focus = (scene->cam.position-scene->cam.lookat).length();
-  auto aperture = 0.005;
+  float dist_to_focus = length(scene->cam.position-scene->cam.lookat);
+  //std::cout << dist_to_focus << std::endl;
+  auto aperture = 0.1;
   
   camera cam(scene->cam.position, scene->cam.lookat, scene->cam.up, scene->cam.fov, scene->cam.aspect, aperture, dist_to_focus);
 
   KdTree *tree = initKdTree(scene);
 
-  printf("End building tree\n");
+  //printf("End building tree\n");
 
   //! \todo initialize KdTree
-
+  /*
   for (size_t j = 0; j < img->height; j++)
   {
     if (j != 0)
@@ -638,8 +427,8 @@ void renderImage(Image *img, Scene *scene)
     {
       color3 pixel_color(0,0,0);
       for (int s = 0; s < samples_per_pixel; ++s) {
-        auto u = (i + random_double()) / (img->width-1);
-        auto v = (j + random_double()) / (img->height-1);
+        auto u = (i + random_float()) / (img->width-1);
+        auto v = (j + random_float()) / (img->height-1);
         Ray r;
         cam.get_ray(u, v, &r);
         //get_ray(u1, v1, &r, lens_radius, u, v, origin, lower_left_corner, horizontal, vertical);
@@ -650,7 +439,7 @@ void renderImage(Image *img, Scene *scene)
       auto b = pixel_color.z;
 
       // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-      auto scale = 1.0 / samples_per_pixel;
+      auto scale = 1.f / samples_per_pixel;
       r = sqrt(scale * r);
       g = sqrt(scale * g);
       b = sqrt(scale * b);
@@ -659,7 +448,31 @@ void renderImage(Image *img, Scene *scene)
       color3 *ptr = getPixelPtr(img, i, j);
       *ptr = def_color;
       //color3 *ptr = getPixelPtr(img, i, j);
-      //*ptr = trace_ray_multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
+      // *ptr = trace_ray_multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
     }
   }
+  */
+
+  const int image_width = 800;
+  const int image_height = 600;
+
+  std::cout << "P3\n" << 800 << ' ' << 600 << "\n255\n";
+
+  for(int j = image_height-1; j >= 0; --j) {
+    std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
+    for(int i = 0; i < image_width; ++i) {
+      color3 pixel_color(0, 0, 0);
+#pragma omp parallel for
+      for (int s = 0; s < samples_per_pixel; ++s) {
+        auto u = (i + random_float()) / (image_width-1);
+        auto v = (j + random_float()) / (image_height-1);
+        Ray r;
+        cam.get_ray(u, v, &r);
+        pixel_color += trace_ray(scene, &r, tree);
+      }
+      write_color(std::cout, pixel_color, samples_per_pixel);
+    }
+  }
+  std::cerr << "\nDone.\n";
+
 }
