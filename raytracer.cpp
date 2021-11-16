@@ -62,6 +62,21 @@ bool near_zero(vec3 e) {
   const auto s = 1e-8;
   return (fabs(e.x) < s) && (fabs(e.y) < s) && (fabs(e.z) < s);
 }
+
+vec3 refract(const vec3& uv, const vec3& n, float etai_over_etat) {
+    float cos_theta = fmin(dot(-uv, n), 1.f);
+    vec3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
+    float f = fabs(1.f - length_squared(r_out_perp));
+    vec3 r_out_parallel = -sqrt(f) * n;
+    return r_out_perp + r_out_parallel;
+}
+
+float reflectance(float cosine, float ref_idx) {
+  // Use Schlick's approximation for reflectance.
+  auto r0 = (1-ref_idx) / (1+ref_idx);
+  r0 = r0*r0;
+  return r0 + (1-r0)*pow((1 - cosine),5);
+}
         
 bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
   
@@ -76,9 +91,25 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
     attenuation = rec.mat->diffuseColor;
   } else if (rec.mat->type == METAL){
       vec3 reflected = reflect(unit_vector(r_in->dir), rec.normal);
-      rayInit(scattered, rec.position, reflected + rec.mat->fuzz*random_in_unit_sphere(), 0, 10000, r_in->depth+1);
+      rayInit(scattered, rec.position, reflected + rec.mat->fuzz*random_in_unit_sphere());
       attenuation = rec.mat->diffuseColor;
       return (dot(scattered->dir, rec.normal) > 0);
+  } else if (rec.mat->type == DIELECTRIC){
+      attenuation = color3(1.0, 1.0, 1.0);
+      float refraction_ratio = rec.front_face ? (1.0/rec.mat->IOR) : rec.mat->IOR;
+
+      vec3 unit_direction = unit_vector(r_in->dir);
+      float cos_theta = fmin(dot(-unit_direction, rec.normal), 1.f);
+      float sin_theta = sqrt(1.f - cos_theta*cos_theta);
+
+      bool cannot_refract = refraction_ratio * sin_theta > 1.0;
+      vec3 direction;
+      if (cannot_refract || reflectance(cos_theta, refraction_ratio) > random_float())
+        direction = reflect(unit_direction, rec.normal);
+      else
+        direction = refract(unit_direction, rec.normal, refraction_ratio);
+
+      rayInit(scattered, rec.position, direction);
   }
   
   return true;
@@ -116,8 +147,8 @@ bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
     
 
 inline void set_face_normal(Ray *r, const vec3& outward_normal, Intersection *rec) {
-    bool front_face = dot(r->dir, outward_normal) < 0;
-    rec->normal = front_face ? outward_normal :-outward_normal;
+    rec->front_face = dot(r->dir, outward_normal) < 0;
+    rec->normal = rec->front_face ? outward_normal :-outward_normal;
 }
 
 bool hit(Ray *r, float t_min, float t_max,Intersection *rec, Object *obj) {
@@ -332,11 +363,11 @@ color3 trace_ray(Scene *scene, Ray *r, KdTree *tree) {
 
   Intersection rec;
 
-  if(r->depth > 4)
+  if(r->depth > 20)
     return color3(0,0,0);
 
-  //if (intersectKdTree(scene, tree, r, &rec)){
-  if(intersectScene(scene, r, &rec)){
+  if (intersectKdTree(scene, tree, r, &rec)){
+  //if(intersectScene(scene, r, &rec)){
     Ray scattered;
     color3 attenuation;
     if (scatter(r, rec, attenuation, &scattered)){
@@ -396,11 +427,10 @@ void renderImage(Image *img, Scene *scene)
   //! This function is already operational, you might modify it for antialiasing
   //! and kdtree initializaion
   
-  auto samples_per_pixel = 100;
+  auto samples_per_pixel = 200;
   
   float dist_to_focus = length(scene->cam.position-scene->cam.lookat);
-  //std::cout << dist_to_focus << std::endl;
-  auto aperture = 0.1;
+  auto aperture = 0.01;
   
   camera cam(scene->cam.position, scene->cam.lookat, scene->cam.up, scene->cam.fov, scene->cam.aspect, aperture, dist_to_focus);
 
@@ -409,7 +439,6 @@ void renderImage(Image *img, Scene *scene)
   //printf("End building tree\n");
 
   //! \todo initialize KdTree
-  /*
   for (size_t j = 0; j < img->height; j++)
   {
     if (j != 0)
@@ -431,7 +460,6 @@ void renderImage(Image *img, Scene *scene)
         auto v = (j + random_float()) / (img->height-1);
         Ray r;
         cam.get_ray(u, v, &r);
-        //get_ray(u1, v1, &r, lens_radius, u, v, origin, lower_left_corner, horizontal, vertical);
         pixel_color += trace_ray(scene, &r, tree);
       }
       auto r = pixel_color.x;
@@ -447,12 +475,9 @@ void renderImage(Image *img, Scene *scene)
       color3 def_color(clamp(r, 0.0, 0.999),clamp(g, 0.0, 0.999),clamp(b, 0.0, 0.999)); 
       color3 *ptr = getPixelPtr(img, i, j);
       *ptr = def_color;
-      //color3 *ptr = getPixelPtr(img, i, j);
-      // *ptr = trace_ray_multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
     }
   }
-  */
-
+  /*
   const int image_width = 800;
   const int image_height = 600;
 
@@ -474,5 +499,5 @@ void renderImage(Image *img, Scene *scene)
     }
   }
   std::cerr << "\nDone.\n";
-
+  */
 }

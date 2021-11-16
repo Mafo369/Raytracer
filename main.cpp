@@ -43,23 +43,24 @@ Material mat_lib[] = {
 
 Scene *initScene0() {
   Scene *scene = initScene();
-  setCamera(scene, point3(3.f, 1.f, 1.f), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(3.f, 1.f, 0.f), vec3(0, 0.3, 0), vec3(0, 1, 0), 40,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
   Material mat;
-  mat.IOR = 1.3;
+  mat.IOR = 1.5;
   mat.roughness = 0.1;
   mat.specularColor = color3(0.5f);
 
   mat.type = METAL;
-  mat.diffuseColor = color3(.8f);
+  mat.diffuseColor = color3(.8f, 0.f, 0.f);
   mat.fuzz = 0.3;
   addObject(scene, initSphere(point3(0, 0.25, 0), 0.25, mat));
 
-  mat.type = LAMBERTIAN;
+  mat.type = DIELECTRIC;
   mat.diffuseColor = color3(0.5f, 0.f, 0.f);
   addObject(scene, initSphere(point3(0.50, 0.25, 0), .25, mat));
 
+  mat.type = LAMBERTIAN;
   mat.diffuseColor = color3(0.f, 0.5f, 0.5f);
   addObject(scene, initSphere(point3(0, 1, 0), .25, mat));
 
@@ -405,7 +406,7 @@ void addObjectsFromFile(const char *filename, Scene *scene, Material default_mat
 Scene *initScene6() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(-3, 1.5, -2), vec3(0, 1, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(-2.5, 1.5f, -2), vec3(0, 1, 0), vec3(0, 1, 0), 40,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.6f, 0.3f, 0.5f));
   
@@ -422,12 +423,14 @@ Scene *initScene6() {
 
 
   Material mat;
-  mat.type = METAL;
+  mat.type = DIELECTRIC;
   mat.fuzz = 0.1;
   mat.diffuseColor = color3(.8f);
+  mat.IOR = 1.5;
 
   addObjectsFromFile("../assets/bunny.obj", scene, mat);
 
+  mat.type = LAMBERTIAN;
   mat.diffuseColor = color3(0.7, 0, 0);
   mat.specularColor = color3(1, 0, 0);
   mat.IOR = 1.5;
@@ -566,11 +569,11 @@ int main(int argc, char *argv[]) {
   freeScene(scene);
   scene = NULL;
 
-  //printf("save image to %s\n", basename);
-  //saveImage(img, basename);
-  //freeImage(img);
-  //img = NULL;
-  //printf("done. Goodbye\n");
+  printf("save image to %s\n", basename);
+  saveImage(img, basename);
+  freeImage(img);
+  img = NULL;
+  printf("done. Goodbye\n");
 
   return 0;
 }

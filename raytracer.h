@@ -16,6 +16,8 @@ typedef struct intersection_s {
 
   bool isTex;
   vec2 t;
+
+  bool front_face;
 } Intersection;
 
 float clamp(float x, float min, float max);

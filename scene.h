@@ -10,7 +10,7 @@ typedef struct object_s Object;
 typedef struct light_s Light;
 typedef struct camera_s Camera;
 
-enum matType {LAMBERTIAN=1, METAL};
+enum matType {LAMBERTIAN=1, METAL, DIELECTRIC};
 
 typedef struct material_s {
   float IOR;	//! Index of refraction (for dielectric)

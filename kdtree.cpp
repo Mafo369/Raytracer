@@ -543,7 +543,7 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
       Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
       if (scene->objects[currentNode.node->objects[i]]->geom.type == SPHERE)
       {
-        if (hit(ray, 0.001, std::numeric_limits<double>::infinity(),temp, scene->objects[currentNode.node->objects[i]])/*intersectSphere(ray, temp, scene->objects[currentNode.node->objects[i]])*/)
+        if (hit(ray, 0.001, std::numeric_limits<float>::infinity(),temp, scene->objects[currentNode.node->objects[i]])/*intersectSphere(ray, temp, scene->objects[currentNode.node->objects[i]])*/)
         {
           float temp_dist = ray->tmax;
           if (hasIntersection)
