@@ -78,7 +78,6 @@ Scene *initScene0() {
 }
 
 Scene *initScene1() {
-
   Scene *scene = initScene();
   setCamera(scene, point3(3, 0, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
