@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define WIDTH 800
-#define HEIGHT 600
+#define WIDTH 600
+#define HEIGHT 400
 
 Material mat_lib[] = {
     /* nickel */
@@ -422,10 +422,8 @@ Scene *initScene6() {
 
 
   Material mat;
-  mat.type = DIELECTRIC;
-  mat.fuzz = 0.1;
-  mat.diffuseColor = color3(.8f);
-  mat.IOR = 1.5;
+  mat.type = LAMBERTIAN;
+  mat.diffuseColor = color3(0.5f);
 
   addObjectsFromFile("../assets/bunny.obj", scene, mat);
 
@@ -434,7 +432,8 @@ Scene *initScene6() {
   mat.specularColor = color3(1, 0, 0);
   mat.IOR = 1.5;
   mat.roughness = 0.0681;
-  addObject(scene, initPlane(vec3(0, 1, 0), 0.01, mat));
+  //addObject(scene, initPlane(vec3(0, 1, 0), 0.01, mat));
+  addObject(scene, initSphere(point3(0, -10, 0), 10, mat));
 
   mat.diffuseColor = color3(0, 0.8, 0);
   mat.specularColor = color3(0.6, 0.6, 0);
@@ -477,7 +476,7 @@ Scene *initScene7() {
   return scene;
 }
 
-Scene *initScene8() {
+Scene *initScene9() {
   Scene *scene = initScene();
   setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
@@ -507,6 +506,65 @@ Scene *initScene8() {
   return scene;
 }
 
+Scene *initScene8() {
+  Scene *scene = initScene();
+  setCamera(scene, point3(13, 2, 3), vec3(0, 0, 0), vec3(0, 1, 0), 20,
+            3.0 / 2.0);
+  setSkyColor(scene, color3(0, 0, 0));
+  Material ground_material;
+  ground_material.type = LAMBERTIAN;
+  ground_material.diffuseColor = color3(0.5,0.5,0.5);
+
+  addObject(scene, initSphere(point3(0, -1000, 0), 1000, ground_material));
+
+  for(int a = -11; a < 11; a++){
+    for(int b = -11; b < 11; b++){
+      auto choose_mat = random_float();
+      point3 center(a+ 0.9*random_float(), 0.2, b + 0.9*random_float());
+
+      if (length((center - point3(4, 0.2, 0))) > 0.9f){
+        Material sphere_material;
+        
+        if(choose_mat < 0.8){
+          auto albedo = color3(random_float(), random_float(), random_float()) * color3(random_float(), random_float(), random_float());  
+          sphere_material.type = LAMBERTIAN;
+          sphere_material.diffuseColor = albedo;
+          addObject(scene, initSphere(center, 0.2, sphere_material));
+        } else if(choose_mat < 0.95){
+          auto albedo = color3(random_float(0.5, 1),random_float(0.5, 1),random_float(0.5, 1)); 
+          auto fuzz = random_float(0, 0.5);
+          sphere_material.type = METAL;
+          sphere_material.fuzz = fuzz;
+          sphere_material.diffuseColor = albedo;
+          addObject(scene, initSphere(center, 0.2, sphere_material));
+        } else {
+          sphere_material.type = DIELECTRIC;
+          sphere_material.IOR = 1.5;
+          addObject(scene, initSphere(center, 0.2, sphere_material));
+        }
+      }
+    }
+  }
+
+  Material material1;
+  material1.type = DIELECTRIC;
+  material1.IOR = 1.5;
+  addObject(scene, initSphere(point3(0, 1, 0), 1.0, material1));
+
+  Material material2;
+  material2.type = LAMBERTIAN;
+  material2.diffuseColor = color3(0.4, 0.2, 0.1);
+  addObject(scene, initSphere(point3(-4, 1, 0), 1.0, material2));
+  
+  Material material3;
+  material3.type = METAL;
+  material3.fuzz = 0.0;
+  material3.diffuseColor = color3(0.7, 0.6, 0.5);
+  addObject(scene, initSphere(point3(4, 1, 0), 1.0, material3));
+  
+  return scene;
+}
+
 int main(int argc, char *argv[]) {
   //printf("Welcome to the L3 IGTAI RayTracer project\n");
 
@@ -526,7 +584,12 @@ int main(int argc, char *argv[]) {
     scene_id = atoi(argv[2]);
   }
 
-  Image *img = initImage(WIDTH, HEIGHT);
+  const auto aspect_ratio = 3.0/2.0;
+  const int image_width = 1200;
+  const int image_height = static_cast<int>(image_width / aspect_ratio); 
+
+  Image *img = initImage(image_width, image_height);
+  //Image *img = initImage(WIDTH, HEIGHT);
   Scene *scene = NULL;
   switch (scene_id) {
   case 0:

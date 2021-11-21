@@ -20,6 +20,9 @@ typedef struct intersection_s {
   bool front_face;
 } Intersection;
 
+float length(vec3 v);
+float random_float();
+float random_float(float min, float max);
 float clamp(float x, float min, float max);
 vec3 random_in_unit_disk();
 float degrees_to_radians(float degrees);

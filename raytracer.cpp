@@ -22,12 +22,12 @@
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
 
-inline float random_float() {
+float random_float() {
     // Returns a random real in [0,1).
     return (float)rand() / (float)(RAND_MAX + 1.0);
 }
 
-inline float random_float(float min, float max) {
+float random_float(float min, float max) {
     // Returns a random real in [min,max).
     return min + (max-min)*random_float();
 }
@@ -168,7 +168,7 @@ bool hit(Ray *r, float t_min, float t_max,Intersection *rec, Object *obj) {
         if (root < t_min || t_max < root)
             return false;
     }
-
+    
     r->tmax = root;
     rec->position = r->orig + (r->tmax * r->dir);
     vec3 outward_normal = (rec->position - obj->geom.sphere.center) / obj->geom.sphere.radius;
@@ -363,11 +363,11 @@ color3 trace_ray(Scene *scene, Ray *r, KdTree *tree) {
 
   Intersection rec;
 
-  if(r->depth > 20)
+  if(r->depth > 5)
     return color3(0,0,0);
 
-  if (intersectKdTree(scene, tree, r, &rec)){
-  //if(intersectScene(scene, r, &rec)){
+  //if (intersectKdTree(scene, tree, r, &rec)){
+  if(intersectScene(scene, r, &rec)){
     Ray scattered;
     color3 attenuation;
     if (scatter(r, rec, attenuation, &scattered)){
@@ -427,10 +427,11 @@ void renderImage(Image *img, Scene *scene)
   //! This function is already operational, you might modify it for antialiasing
   //! and kdtree initializaion
   
-  auto samples_per_pixel = 200;
+  auto samples_per_pixel = 100;
   
-  float dist_to_focus = length(scene->cam.position-scene->cam.lookat);
-  auto aperture = 0.01;
+  //float dist_to_focus = length(scene->cam.position-scene->cam.lookat);
+  float dist_to_focus = 10.0;
+  auto aperture = 0.1;
   
   camera cam(scene->cam.position, scene->cam.lookat, scene->cam.up, scene->cam.fov, scene->cam.aspect, aperture, dist_to_focus);
 
