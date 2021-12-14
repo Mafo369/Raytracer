@@ -16,98 +16,59 @@
 #include <iostream>
 
 #include "camera.h"
+#include <glm/glm.hpp>
+#include <random>
+
+namespace glm {
+// not really needed, but it makes it easier to follow the book...
+template <int N, typename T, qualifier P> T length_sq(const vec<N, T, P> &x) { return dot(x, x); }
+} // namespace glm
 
 /// acne_eps is a small constant used to prevent acne when computing
 /// intersection
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
+static std::mt19937 m_rnGenerator{};
+static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
 
-float random_float() {
-    // Returns a random real in [0,1).
-    return (float)rand() / (float)(RAND_MAX + 1.0);
-}
-
-float random_float(float min, float max) {
-    // Returns a random real in [min,max).
-    return min + (max-min)*random_float();
-}
-
-inline vec3 unit_vector(vec3 v) {
-    float l = length(v);
-    return vec3(v.x / l, v.y / l, v.z / l);
-}
-        
-inline vec3 random(float min, float max) {
-    return vec3(random_float(min,max), random_float(min,max), random_float(min,max));
-}
-        
-float length_squared(vec3 e) {
-  return e.x*e.x + e.y*e.y + e.z*e.z;
-}
-
-vec3 random_in_unit_sphere() {
-    while (true) {
-        auto p = random(-1,1);
-        if (length_squared(p) >= 1) continue;
-        return p;
-    }
-}
-
-vec3 random_unit_vector() {
-    return unit_vector(random_in_unit_sphere());
-}
-        
-bool near_zero(vec3 e) {
-  // Return true if the vector is close to zero in all dimensions.
-  const auto s = 1e-8;
-  return (fabs(e.x) < s) && (fabs(e.y) < s) && (fabs(e.z) < s);
-}
-
-vec3 refract(const vec3& uv, const vec3& n, float etai_over_etat) {
-    float cos_theta = fmin(dot(-uv, n), 1.f);
-    vec3 r_out_perp =  etai_over_etat * (uv + cos_theta*n);
-    float f = fabs(1.f - length_squared(r_out_perp));
-    vec3 r_out_parallel = -sqrt(f) * n;
-    return r_out_perp + r_out_parallel;
-}
-
-float reflectance(float cosine, float ref_idx) {
+static float reflectance(float cosine, float ref_idx) {
   // Use Schlick's approximation for reflectance.
-  auto r0 = (1-ref_idx) / (1+ref_idx);
-  r0 = r0*r0;
-  return r0 + (1-r0)*pow((1 - cosine),5);
+  float r0 = (1.0f - ref_idx) / (1.0f + ref_idx);
+  r0 = r0 * r0;
+  return r0 + (1.0f - r0) * std::pow((1.0f - cosine), 5.0f);
 }
         
 bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
   
   if(rec.mat->type == LAMBERTIAN){
-    auto scatter_direction = rec.normal + random_unit_vector();
+    vec3 scatter_direction = rec.normal + glm::sphericalRand(1.0f);
             
     // Catch degenerate scatter direction
-    if (near_zero(scatter_direction))
+    //if (near_zero(scatter_direction))
+    if (glm::any(glm::epsilonEqual(scatter_direction, vec3{0, 0, 0}, std::numeric_limits<float>::epsilon())))
       scatter_direction = rec.normal;
 
     rayInit(scattered, rec.position, scatter_direction);
     attenuation = rec.mat->diffuseColor;
   } else if (rec.mat->type == METAL){
-      vec3 reflected = reflect(unit_vector(r_in->dir), rec.normal);
-      rayInit(scattered, rec.position, reflected + rec.mat->fuzz*random_in_unit_sphere());
+      vec3 reflected = glm::reflect(glm::normalize(r_in->dir), rec.normal);
+      rayInit(scattered, rec.position, reflected + rec.mat->fuzz * glm::sphericalRand(1.0f));
       attenuation = rec.mat->diffuseColor;
-      return (dot(scattered->dir, rec.normal) > 0);
+      return (glm::dot(scattered->dir, rec.normal) > 0);
   } else if (rec.mat->type == DIELECTRIC){
-      attenuation = color3(1.0, 1.0, 1.0);
-      float refraction_ratio = rec.front_face ? (1.0/rec.mat->IOR) : rec.mat->IOR;
+      attenuation = color3(1.0f, 1.0f, 1.0f);
+      float refraction_ratio = rec.front_face ? (1.0f/rec.mat->IOR) : rec.mat->IOR;
 
-      vec3 unit_direction = unit_vector(r_in->dir);
-      float cos_theta = fmin(dot(-unit_direction, rec.normal), 1.f);
-      float sin_theta = sqrt(1.f - cos_theta*cos_theta);
+      vec3 unit_direction = glm::normalize(r_in->dir);
+      float cos_theta = std::min(glm::dot(-unit_direction, rec.normal), 1.0f);
+      float sin_theta = std::sqrt(1.0f - cos_theta*cos_theta);
 
-      bool cannot_refract = refraction_ratio * sin_theta > 1.0;
+      bool cannot_refract = refraction_ratio * sin_theta > 1.0f;
       vec3 direction;
-      if (cannot_refract || reflectance(cos_theta, refraction_ratio) > random_float())
-        direction = reflect(unit_direction, rec.normal);
+      if (cannot_refract || reflectance(cos_theta, refraction_ratio) > m_unifDistribution(m_rnGenerator))
+        direction = glm::reflect(unit_direction, rec.normal);
       else
-        direction = refract(unit_direction, rec.normal, refraction_ratio);
+        direction = glm::refract(unit_direction, rec.normal, refraction_ratio);
 
       rayInit(scattered, rec.position, direction);
   }
@@ -141,21 +102,21 @@ bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
       return true;
     }
   }
-
   return false;
 }
     
 
 inline void set_face_normal(Ray *r, const vec3& outward_normal, Intersection *rec) {
-    rec->front_face = dot(r->dir, outward_normal) < 0;
+    rec->front_face = glm::dot(r->dir, outward_normal) < 0;
     rec->normal = rec->front_face ? outward_normal :-outward_normal;
 }
 
 bool hit(Ray *r, float t_min, float t_max,Intersection *rec, Object *obj) {
     vec3 oc = r->orig - obj->geom.sphere.center;
-    auto a = length_squared(r->dir);
-    auto half_b = dot(oc, r->dir);
-    auto c = length_squared(oc) - obj->geom.sphere.radius*obj->geom.sphere.radius;
+    auto a = glm::length_sq(r->dir);
+    auto half_b = glm::dot(oc, r->dir);
+    float radius = obj->geom.sphere.radius;
+    auto c = glm::length_sq(oc) - radius*radius;
 
     auto discriminant = half_b*half_b - a*c;
     if (discriminant < 0) return false;
@@ -171,7 +132,12 @@ bool hit(Ray *r, float t_min, float t_max,Intersection *rec, Object *obj) {
     
     r->tmax = root;
     rec->position = r->orig + (r->tmax * r->dir);
-    vec3 outward_normal = (rec->position - obj->geom.sphere.center) / obj->geom.sphere.radius;
+    //vec3 outward_normal = (rec->position - obj->geom.sphere.center) / obj->geom.sphere.radius;
+    vec3 outward_normal = glm::normalize(rec->position - obj->geom.sphere.center);
+
+    if (radius < 0)
+      outward_normal *= -1.0f;
+
     set_face_normal(r, outward_normal, rec);
     rec->mat = &(obj->mat);
     
@@ -366,8 +332,8 @@ color3 trace_ray(Scene *scene, Ray *r, KdTree *tree) {
   if(r->depth > 5)
     return color3(0,0,0);
 
-  //if (intersectKdTree(scene, tree, r, &rec)){
-  if(intersectScene(scene, r, &rec)){
+  if (intersectKdTree(scene, tree, r, &rec)){
+  //if(intersectScene(scene, r, &rec)){
     Ray scattered;
     color3 attenuation;
     if (scatter(r, rec, attenuation, &scattered)){
@@ -376,60 +342,28 @@ color3 trace_ray(Scene *scene, Ray *r, KdTree *tree) {
     }
     return color3(0,0,0);
   }
-  vec3 unit_direction = unit_vector(r->dir);
+  vec3 unit_direction = glm::normalize(r->dir);
   auto t = 0.5*(unit_direction.y + 1.0);
-  return color3((1.0-t)*1.0, (1.0-t)*1.0, (1.0-t)*1.0) + color3(t*0.5, t*0.7, t*1.0);
+  auto op_t = 1.0 - t;
+  return color3(op_t*1.0, op_t*1.0, op_t*1.0) + color3(t*0.5, t*0.7, t*1.0);
 }
   
 // Utility Functions
 
 inline float degrees_to_radians(float degrees) {
-  return degrees * M_PI / 180.0;
-}
-
-vec3 random_in_unit_disk() {
-    while (true) {
-        auto p = vec3(random_float(-1,1), random_float(-1,1), 0);
-        if (length_squared(p) >= 1) continue;
-        return p;
-    }
-}
-        
-inline float clamp(float x, float min, float max) {
-    if (x < min) return min;
-    if (x > max) return max;
-    return x;
-}
-float length(vec3 v) {
-  return sqrt(length_squared(v));
-}
-
-void write_color(std::ostream &out, color3 pixel_color, int samples_per_pixel) {
-    auto r = pixel_color.x;
-    auto g = pixel_color.y;
-    auto b = pixel_color.z;
-
-    // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-    auto scale = 1.0 / (float)samples_per_pixel;
-    r = sqrt(scale * r);
-    g = sqrt(scale * g);
-    b = sqrt(scale * b);
-
-    // Write the translated [0,255] value of each color component.
-    out << static_cast<int>(256 * clamp(r, 0.0, 0.999)) << ' '
-        << static_cast<int>(256 * clamp(g, 0.0, 0.999)) << ' '
-        << static_cast<int>(256 * clamp(b, 0.0, 0.999)) << '\n';
+  return degrees * M_PI / 180.0f;
 }
 
 void renderImage(Image *img, Scene *scene)
 {
 
-  //! This function is already operational, you might modify it for antialiasing
-  //! and kdtree initializaion
+  // rng stuff
+  std::mt19937 m_rnGenerator{};
+  std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
+
+  auto samples_per_pixel = 50;
   
-  auto samples_per_pixel = 100;
-  
-  //float dist_to_focus = length(scene->cam.position-scene->cam.lookat);
+  //float dist_to_focus = glm::length(scene->cam.position-scene->cam.lookat);
   float dist_to_focus = 10.0;
   auto aperture = 0.1;
   
@@ -452,53 +386,24 @@ void renderImage(Image *img, Scene *scene)
     for (; cpt < 100; cpt += 5)
       printf(" ");
     printf("]\n");
-#pragma omp parallel for
+    #pragma omp parallel for 
     for (size_t i = 0; i < img->width; i++)
     {
       color3 pixel_color(0,0,0);
-      for (int s = 0; s < samples_per_pixel; ++s) {
-        auto u = (i + random_float()) / (img->width-1);
-        auto v = (j + random_float()) / (img->height-1);
-        Ray r;
-        cam.get_ray(u, v, &r);
-        pixel_color += trace_ray(scene, &r, tree);
-      }
-      auto r = pixel_color.x;
-      auto g = pixel_color.y;
-      auto b = pixel_color.z;
-
-      // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-      auto scale = 1.f / samples_per_pixel;
-      r = sqrt(scale * r);
-      g = sqrt(scale * g);
-      b = sqrt(scale * b);
-
-      color3 def_color(clamp(r, 0.0, 0.999),clamp(g, 0.0, 0.999),clamp(b, 0.0, 0.999)); 
       color3 *ptr = getPixelPtr(img, i, j);
-      *ptr = def_color;
-    }
-  }
-  /*
-  const int image_width = 800;
-  const int image_height = 600;
-
-  std::cout << "P3\n" << 800 << ' ' << 600 << "\n255\n";
-
-  for(int j = image_height-1; j >= 0; --j) {
-    std::cerr << "\rScanlines remaining: " << j << ' ' << std::flush;
-    for(int i = 0; i < image_width; ++i) {
-      color3 pixel_color(0, 0, 0);
-#pragma omp parallel for
       for (int s = 0; s < samples_per_pixel; ++s) {
-        auto u = (i + random_float()) / (image_width-1);
-        auto v = (j + random_float()) / (image_height-1);
+        auto u = (i + m_unifDistribution(m_rnGenerator)) / (img->width-1);
+        auto v = (j + m_unifDistribution(m_rnGenerator)) / (img->height-1);
         Ray r;
         cam.get_ray(u, v, &r);
         pixel_color += trace_ray(scene, &r, tree);
       }
-      write_color(std::cout, pixel_color, samples_per_pixel);
+      // Divide the color by the number of samples and gamma-correct for gamma=2.0.
+      pixel_color /= samples_per_pixel;
+      pixel_color = glm::sqrt(pixel_color);
+      pixel_color = glm::clamp(pixel_color, 0.0f, 1.0f);
+
+      *ptr = pixel_color;
     }
   }
-  std::cerr << "\nDone.\n";
-  */
 }

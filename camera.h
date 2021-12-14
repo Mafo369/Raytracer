@@ -5,6 +5,7 @@
 #include "ray.h"
 #include "raytracer.h"
 
+#include <glm/gtc/random.hpp>
 #include <iostream>
 
 class camera {
@@ -19,22 +20,22 @@ class camera {
             float focus_dist 
         ) {
             auto theta = degrees_to_radians(vfov);
-            auto h = tan(theta/2.f);
-            auto viewport_height = 2.f * h;
+            auto h = std::tan(theta/2.f);
+            auto viewport_height = 2.0f * h;
             auto viewport_width = aspect_ratio * viewport_height;
+            lens_radius = aperture / 2.0f;
 
             std::cerr << "lookfrom:" << lookfrom.x << " " << lookfrom.y << " " << lookfrom.z << std::endl;
             std::cerr << "lookat:" << lookat.x << " " << lookat.y << " " << lookat.z << std::endl;
 
-            w = unit_vector(lookfrom - lookat);
-            u = unit_vector(cross(vup, w));
-            v = cross(w, u);
+            w = glm::normalize(lookfrom - lookat);
+            u = glm::normalize(glm::cross(vup, w));
+            v = glm::cross(w, u);
 
             origin = lookfrom;
             horizontal = focus_dist * viewport_width * u;
             vertical = focus_dist * viewport_height * v;
-            lower_left_corner = origin - horizontal/2.f - vertical/2.f - focus_dist*w;
-            lens_radius = aperture / 2.f;
+            lower_left_corner = origin - horizontal/2.0f - vertical/2.0f - focus_dist*w;
 
             std::cerr << "w:" << w.x << " " << w.y << " " << w.z << std::endl;
             std::cerr << "u:" << u.x << " " << u.y << " " << u.z << std::endl;
@@ -50,11 +51,10 @@ class camera {
         camera() {};
 
         void get_ray(float s, float t, Ray *r) const {
-            vec3 rd = lens_radius * random_in_unit_disk();
+            glm::vec2 rd = glm::diskRand(lens_radius);
             vec3 offset = u * rd.x + v * rd.y;
 
             rayInit(r, origin + offset, lower_left_corner + s*horizontal + t*vertical - origin - offset);
-            //rayInit(r, origin,normalize(lower_left_corner + (float)s*horizontal + (float)t*vertical - origin));
         }
 
     private:

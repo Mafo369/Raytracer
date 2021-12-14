@@ -20,13 +20,7 @@ typedef struct intersection_s {
   bool front_face;
 } Intersection;
 
-float length(vec3 v);
-float random_float();
-float random_float(float min, float max);
-float clamp(float x, float min, float max);
-vec3 random_in_unit_disk();
 float degrees_to_radians(float degrees);
-vec3 unit_vector(vec3 v);
 bool hit(Ray *r, float t_min, float t_max,Intersection *rec, Object *obj);
 /// test the ray intersection against each object of the scene, the nearest intersection
 // is stored in the parameter intersection

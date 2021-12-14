@@ -3,9 +3,12 @@
 #include "ray.h"
 #include "raytracer.h"
 #include "scene.h"
+#include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <random>
 
 #define WIDTH 600
 #define HEIGHT 400
@@ -43,7 +46,7 @@ Material mat_lib[] = {
 
 Scene *initScene0() {
   Scene *scene = initScene();
-  setCamera(scene, point3(3.f, 1.f, 0.f), vec3(0, 0.3, 0), vec3(0, 1, 0), 40,
+  setCamera(scene, point3(3.0f, 1.0f, 0.0f), vec3(0.0f, 0.3f, 0.0f), vec3(0.0f, 1.0f, 0.0f), 40,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
   Material mat;
@@ -52,7 +55,7 @@ Scene *initScene0() {
   mat.specularColor = color3(0.5f);
 
   mat.type = METAL;
-  mat.diffuseColor = color3(.8f, 0.f, 0.f);
+  mat.diffuseColor = color3(0.8f, 0.0f, 0.0f);
   mat.fuzz = 0.3;
   addObject(scene, initSphere(point3(0, 0.25, 0), 0.25, mat));
 
@@ -506,6 +509,11 @@ Scene *initScene9() {
   return scene;
 }
 
+static std::mt19937 m_rnGenerator{};
+static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
+static std::uniform_real_distribution<float> m_unifDistributionRange{0.5f, 1.0f};
+static std::uniform_real_distribution<float> m_unifDistributionRange2{0.0f, 0.5f};
+
 Scene *initScene8() {
   Scene *scene = initScene();
   setCamera(scene, point3(13, 2, 3), vec3(0, 0, 0), vec3(0, 1, 0), 20,
@@ -519,20 +527,20 @@ Scene *initScene8() {
 
   for(int a = -11; a < 11; a++){
     for(int b = -11; b < 11; b++){
-      auto choose_mat = random_float();
-      point3 center(a+ 0.9*random_float(), 0.2, b + 0.9*random_float());
+      auto choose_mat = m_unifDistribution(m_rnGenerator);
+      point3 center(a+ 0.9*m_unifDistribution(m_rnGenerator), 0.2, b + 0.9*m_unifDistribution(m_rnGenerator));
 
-      if (length((center - point3(4, 0.2, 0))) > 0.9f){
+      if (glm::length((center - point3(4, 0.2, 0))) > 0.9f){
         Material sphere_material;
         
         if(choose_mat < 0.8){
-          auto albedo = color3(random_float(), random_float(), random_float()) * color3(random_float(), random_float(), random_float());  
+          auto albedo = color3(m_unifDistribution(m_rnGenerator), m_unifDistribution(m_rnGenerator), m_unifDistribution(m_rnGenerator)) * color3(m_unifDistribution(m_rnGenerator), m_unifDistribution(m_rnGenerator), m_unifDistribution(m_rnGenerator));  
           sphere_material.type = LAMBERTIAN;
           sphere_material.diffuseColor = albedo;
           addObject(scene, initSphere(center, 0.2, sphere_material));
         } else if(choose_mat < 0.95){
-          auto albedo = color3(random_float(0.5, 1),random_float(0.5, 1),random_float(0.5, 1)); 
-          auto fuzz = random_float(0, 0.5);
+          auto albedo = color3(m_unifDistributionRange(m_rnGenerator),m_unifDistributionRange(m_rnGenerator),m_unifDistributionRange(m_rnGenerator)); 
+          auto fuzz = m_unifDistributionRange2(m_rnGenerator);
           sphere_material.type = METAL;
           sphere_material.fuzz = fuzz;
           sphere_material.diffuseColor = albedo;
@@ -583,7 +591,6 @@ int main(int argc, char *argv[]) {
   if (argc == 3) {
     scene_id = atoi(argv[2]);
   }
-
   const auto aspect_ratio = 3.0/2.0;
   const int image_width = 1200;
   const int image_height = static_cast<int>(image_width / aspect_ratio); 
