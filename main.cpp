@@ -10,8 +10,8 @@
 
 #include <random>
 
-#define WIDTH 600
-#define HEIGHT 400
+#define WIDTH 1200
+#define HEIGHT 800
 
 Material mat_lib[] = {
     /* nickel */
@@ -437,7 +437,7 @@ Scene *initScene6() {
   mat.IOR = 1.5;
   mat.roughness = 0.0681;
   //addObject(scene, initPlane(vec3(0, 1, 0), 0.01, mat));
-  addObject(scene, initSphere(point3(0, -10, 0), 10, mat));
+  addObject(scene, initSphere(point3(0, -30, 0), 30, mat));
 
   mat.diffuseColor = color3(0, 0.8, 0);
   mat.specularColor = color3(0.6, 0.6, 0);
@@ -495,7 +495,7 @@ Scene *initScene9() {
 
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
   addObject(scene, initPlane(vec3(0.5, 0, -0.5), 0, mat));
-  //addObject(scene, initPlane(vec3(-0.5, 0, -0.5), 0, mat));
+  addObject(scene, initPlane(vec3(-0.5, 0, -0.5), 0, mat));
 
   //addObject(scene, initPlane(vec3(0.5, 0, -0.5), -2.2, mat));
   //addObject(scene, initPlane(vec3(-0.5, 0, -0.5), +2.2, mat));
