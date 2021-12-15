@@ -52,7 +52,7 @@ class camera {
         camera() {};
 
         void get_ray(float s, float t, Ray *r) const {
-            glm::vec2 rd = glm::diskRand(lens_radius);
+            glm::vec2 rd = lens_radius * mDiskRand();
             vec3 offset = u * rd.x + v * rd.y;
 
             rayInit(r, origin + offset, lower_left_corner + s*horizontal + t*vertical - origin - offset);

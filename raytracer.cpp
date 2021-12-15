@@ -1,4 +1,5 @@
 
+#include <chrono>
 #include "image.h"
 #include "kdtree.h"
 #include "ray.h"
@@ -30,6 +31,27 @@ template <int N, typename T, qualifier P> T length_sq(const vec<N, T, P> &x) { r
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
 
+
+static std::mt19937 engine((omp_get_thread_num()+1));
+static std::uniform_real_distribution<float> m_unifDistributionRand{-1.0f, 1.0f};
+
+vec3 sphereRand(){
+  while(true){
+    vec3 p(m_unifDistributionRand(engine), m_unifDistributionRand(engine), 
+          m_unifDistributionRand(engine));
+    if (glm::length_sq(p) >= 1) continue;
+    return p;
+  }
+}
+
+vec3 mDiskRand(){
+  while(true){
+    auto p = vec3(m_unifDistributionRand(engine), m_unifDistributionRand(engine), 0);
+    if (glm::length_sq(p) >= 1) continue;
+    return p;
+  }
+}
+
 static float reflectance(float cosine, float ref_idx) {
   // Use Schlick's approximation for reflectance.
   float r0 = (1.0f - ref_idx) / (1.0f + ref_idx);
@@ -40,7 +62,7 @@ static float reflectance(float cosine, float ref_idx) {
 bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
   
   if(rec.mat->type == LAMBERTIAN){
-    vec3 scatter_direction = rec.normal + glm::sphericalRand(1.0f);
+    vec3 scatter_direction = rec.normal + sphereRand();
             
     // Catch degenerate scatter direction
     //if (near_zero(scatter_direction))
@@ -51,7 +73,7 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
     attenuation = rec.mat->diffuseColor;
   } else if (rec.mat->type == METAL){
       vec3 reflected = glm::reflect(glm::normalize(r_in->dir), rec.normal);
-      rayInit(scattered, rec.position, reflected + rec.mat->fuzz * glm::sphericalRand(1.0f));
+      rayInit(scattered, rec.position, reflected + rec.mat->fuzz * sphereRand());
       attenuation = rec.mat->diffuseColor;
       return (glm::dot(scattered->dir, rec.normal) > 0);
   } else if (rec.mat->type == DIELECTRIC){
@@ -368,13 +390,14 @@ void renderImage(Image *img, Scene *scene)
       
 
   //std::mt19937 m_rnGenerator{};
-  std::mt19937_64 engine((omp_get_thread_num()+1));
+  std::mt19937 engine((omp_get_thread_num()+1));
   std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
   
   camera cam(scene->cam.position, scene->cam.lookat, scene->cam.up, scene->cam.fov, scene->cam.aspect, aperture, dist_to_focus);
 
   KdTree *tree = initKdTree(scene);
 
+  auto startTime = std::chrono::system_clock::now();
   //printf("End building tree\n");
 
   //! \todo initialize KdTree
@@ -410,4 +433,7 @@ void renderImage(Image *img, Scene *scene)
       *ptr = pixel_color;
     }
   }
+  auto stopTime = std::chrono::system_clock::now();
+  std::cout << "Rendering took "<< std::chrono::duration_cast<std::chrono::duration<double>>(
+                    stopTime - startTime).count() << "s" << std::endl;
 }

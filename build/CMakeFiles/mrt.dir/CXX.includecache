@@ -1089,6 +1089,8 @@ defines.h
 /home/mafo/dev/Raytracer/defines.h
 
 /home/mafo/dev/Raytracer/raytracer.cpp
+chrono
+-
 image.h
 /home/mafo/dev/Raytracer/image.h
 kdtree.h
