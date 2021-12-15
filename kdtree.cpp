@@ -499,7 +499,8 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
     while (!currentNode.node->leaf)
     {
       float diff = currentNode.node->split - ray->orig[currentNode.node->axis];
-      t = diff / ray->dir[currentNode.node->axis];
+      float raxis = ray->dir[currentNode.node->axis];
+      t = diff / raxis;
 
       if (diff > 0.0)
       {
@@ -543,7 +544,7 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
       Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
       if (scene->objects[currentNode.node->objects[i]]->geom.type == SPHERE)
       {
-        if (hit(ray, 0.001, ray->tmax,temp, scene->objects[currentNode.node->objects[i]])/*intersectSphere(ray, temp, scene->objects[currentNode.node->objects[i]])*/)
+        if (hit(ray, ray->tmin, ray->tmax,temp, scene->objects[currentNode.node->objects[i]])/*intersectSphere(ray, temp, scene->objects[currentNode.node->objects[i]])*/)
         {
           float temp_dist = ray->tmax;
           if (hasIntersection)

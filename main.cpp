@@ -10,8 +10,8 @@
 
 #include <random>
 
-#define WIDTH 600
-#define HEIGHT 400
+#define WIDTH 1200
+#define HEIGHT 800
 
 Material mat_lib[] = {
     /* nickel */
@@ -591,12 +591,12 @@ int main(int argc, char *argv[]) {
   if (argc == 3) {
     scene_id = atoi(argv[2]);
   }
-  const auto aspect_ratio = 3.0/2.0;
-  const int image_width = 1200;
-  const int image_height = static_cast<int>(image_width / aspect_ratio); 
-
-  Image *img = initImage(image_width, image_height);
-  //Image *img = initImage(WIDTH, HEIGHT);
+//  const auto aspect_ratio = 3.0/2.0;
+//  const int image_width = 1200;
+//  const int image_height = static_cast<int>(image_width / aspect_ratio); 
+//
+//  Image *img = initImage(image_width, image_height);
+  Image *img = initImage(WIDTH, HEIGHT);
   Scene *scene = NULL;
   switch (scene_id) {
   case 0:

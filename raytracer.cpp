@@ -31,7 +31,6 @@ template <int N, typename T, qualifier P> T length_sq(const vec<N, T, P> &x) { r
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
 
-
 static std::minstd_rand engine((omp_get_thread_num()+1));
 static std::uniform_real_distribution<float> m_unifDistributionRand{-1.0f, 1.0f};
 
@@ -69,11 +68,11 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
     if (glm::any(glm::epsilonEqual(scatter_direction, vec3{0, 0, 0}, std::numeric_limits<float>::epsilon())))
       scatter_direction = rec.normal;
 
-    rayInit(scattered, rec.position, scatter_direction);
+    rayInit(scattered, rec.position+(acne_eps*scatter_direction), scatter_direction);
     attenuation = rec.mat->diffuseColor;
   } else if (rec.mat->type == METAL){
       vec3 reflected = glm::reflect(glm::normalize(r_in->dir), rec.normal);
-      rayInit(scattered, rec.position, reflected + rec.mat->fuzz * sphereRand());
+      rayInit(scattered, rec.position + (acne_eps*reflected), reflected + rec.mat->fuzz * sphereRand());
       attenuation = rec.mat->diffuseColor;
       return (glm::dot(scattered->dir, rec.normal) > 0);
   } else if (rec.mat->type == DIELECTRIC){
@@ -93,7 +92,7 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
       else
         direction = glm::refract(unit_direction, rec.normal, refraction_ratio);
 
-      rayInit(scattered, rec.position, direction);
+      rayInit(scattered, rec.position + (acne_eps*direction), direction);
   }
   
   return true;
@@ -147,9 +146,9 @@ bool hit(Ray *r, float t_min, float t_max,Intersection *rec, Object *obj) {
 
     // Find the nearest root that lies in the acceptable range.
     auto root = (-half_b - sqrtd) / a;
-    if (root < t_min || t_max < root) {
+    if (root <= t_min || t_max < root) {
         root = (-half_b + sqrtd) / a;
-        if (root < t_min || t_max < root)
+        if (root <= t_min || t_max < root)
             return false;
     }
     
@@ -352,29 +351,25 @@ color3 trace_ray(Scene *scene, Ray *r, KdTree *tree) {
 
   Intersection rec;
 
-  if(r->depth > 5)
+  if(r->depth > 50)
     return color3(0,0,0);
 
   if (intersectKdTree(scene, tree, r, &rec)){
   //if(intersectScene(scene, r, &rec)){
-    Ray scattered;
+    Ray *scattered = (Ray *)malloc(sizeof(Ray));
     color3 attenuation;
-    if (scatter(r, rec, attenuation, &scattered)){
-      scattered.depth =  r->depth + 1;
-      return attenuation * trace_ray(scene, &scattered, tree);
+    color3 final_color(0,0,0);
+    if (scatter(r, rec, attenuation, scattered)){
+      scattered->depth =  r->depth + 1;
+      final_color = attenuation * trace_ray(scene, scattered, tree);
     }
-    return color3(0,0,0);
+    free(scattered);
+    return final_color;
   }
   vec3 unit_direction = glm::normalize(r->dir);
   auto t = 0.5*(unit_direction.y + 1.0);
   auto op_t = 1.0 - t;
   return color3(op_t*1.0, op_t*1.0, op_t*1.0) + color3(t*0.5, t*0.7, t*1.0);
-}
-  
-// Utility Functions
-
-inline float degrees_to_radians(float degrees) {
-  return degrees * M_PI / 180.0f;
 }
 
 void renderImage(Image *img, Scene *scene)
@@ -382,12 +377,11 @@ void renderImage(Image *img, Scene *scene)
 
   // rng stuff
 
-  auto samples_per_pixel = 50;
+  auto samples_per_pixel = 500;
   
   //float dist_to_focus = glm::length(scene->cam.position-scene->cam.lookat);
   float dist_to_focus = 10.0;
   auto aperture = 0.1;
-      
 
   //std::mt19937 m_rnGenerator{};
   std::minstd_rand engine((omp_get_thread_num()+1));
@@ -436,4 +430,9 @@ void renderImage(Image *img, Scene *scene)
   auto stopTime = std::chrono::system_clock::now();
   std::cout << "Rendering took "<< std::chrono::duration_cast<std::chrono::duration<double>>(
                     stopTime - startTime).count() << "s" << std::endl;
+}
+
+// Utility Functions
+inline float degrees_to_radians(float degrees) {
+  return degrees * M_PI / 180.0f;
 }

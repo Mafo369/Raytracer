@@ -26,9 +26,6 @@ class camera {
             auto viewport_width = aspect_ratio * viewport_height;
             lens_radius = aperture / 2.0f;
 
-            std::cerr << "lookfrom:" << lookfrom.x << " " << lookfrom.y << " " << lookfrom.z << std::endl;
-            std::cerr << "lookat:" << lookat.x << " " << lookat.y << " " << lookat.z << std::endl;
-
             w = glm::normalize(lookfrom - lookat);
             u = glm::normalize(glm::cross(vup, w));
             v = glm::cross(w, u);
@@ -37,16 +34,6 @@ class camera {
             horizontal = focus_dist * viewport_width * u;
             vertical = focus_dist * viewport_height * v;
             lower_left_corner = origin - horizontal/2.0f - vertical/2.0f - focus_dist*w;
-
-            std::cerr << "w:" << w.x << " " << w.y << " " << w.z << std::endl;
-            std::cerr << "u:" << u.x << " " << u.y << " " << u.z << std::endl;
-            std::cerr << "v:" << v.x << " " << v.y << " " << v.z << std::endl;
-
-            std::cerr << "o:" << origin.x << " " << origin.y << " " << origin.z << std::endl;
-            std::cerr << "h:" << horizontal.x << " " << horizontal.y << " " << horizontal.z << std::endl;
-            std::cerr << "v:" << vertical.x << " " << vertical.y << " " << vertical.z << std::endl;
-            std::cerr << "llc:" << lower_left_corner.x << " " << lower_left_corner.y << " " << lower_left_corner.z << std::endl;
-            std::cerr << "lr:" << lens_radius << std::endl;
         }
 
         camera() {};
