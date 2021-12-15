@@ -10,8 +10,8 @@
 
 #include <random>
 
-#define WIDTH 1200
-#define HEIGHT 800
+#define WIDTH 600
+#define HEIGHT 400
 
 Material mat_lib[] = {
     /* nickel */
@@ -142,7 +142,8 @@ Scene *initScene2() {
   mat.specularColor = color3(0.95);
   mat.IOR = 1.1022;
   mat.roughness = 0.0579;
-
+  
+  mat = mat_lib[6];
   addObject(scene, initPlane(vec3(0, 0, 1), 0, mat));
 
   mat.diffuseColor = color3(0.005, 0.013, 0.032);
@@ -238,7 +239,7 @@ Scene *initScene3() {
 
 Scene *initScene4() {
   Scene *scene = initScene();
-  setCamera(scene, point3(6, 4, 4), vec3(0, 1, 0), vec3(0, 1, 0), 90,
+  setCamera(scene, point3(8, 4, 5), vec3(0, 1, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.2, 0.2, 0.7));
   Material mat;
@@ -481,7 +482,7 @@ Scene *initScene7() {
 
 Scene *initScene9() {
   Scene *scene = initScene();
-  setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(2, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0, 0, 0));
   Material mat;
@@ -490,20 +491,23 @@ Scene *initScene9() {
   mat.specularColor = color3(0.9f);
   mat.type = LAMBERTIAN;
 
-  mat.diffuseColor = color3(0.9f, 0.9f, 0.9f);
+  mat.diffuseColor = color3(0.9f, 0.9f, 0.0f);
 
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
   addObject(scene, initPlane(vec3(0.5, 0, -0.5), 0, mat));
-  addObject(scene, initPlane(vec3(-0.5, 0, -0.5), 0, mat));
+  //addObject(scene, initPlane(vec3(-0.5, 0, -0.5), 0, mat));
 
-  addObject(scene, initPlane(vec3(0.5, 0, -0.5), -2.2, mat));
-  addObject(scene, initPlane(vec3(-0.5, 0, -0.5), +2.2, mat));
+  //addObject(scene, initPlane(vec3(0.5, 0, -0.5), -2.2, mat));
+  //addObject(scene, initPlane(vec3(-0.5, 0, -0.5), +2.2, mat));
 
-  mat = mat_lib[0];
-  addObject(scene, initSphere(point3(1, 0.5, 0), .25, mat));
+  Material mat2;
+  mat2.type = METAL;
+  mat2.fuzz = 0.0;
+  mat2.diffuseColor = color3(0.7, 0.6, 0.5);
+  addObject(scene, initSphere(point3(1, 0.5, 0), .25, mat2));
   
-  addLight(scene, initLight(point3(1, 3, 0), color3(1, 1, 1)));
-  addLight(scene, initLight(point3(1.1, 3, 0), color3(1, 1, 1)));
+  //addLight(scene, initLight(point3(1, 3, 0), color3(1, 1, 1)));
+  //addLight(scene, initLight(point3(1.1, 3, 0), color3(1, 1, 1)));
   //addLight(scene, initLight(point3(0.9, 1, 0), color3(1, 1, 1)));
 
   return scene;
@@ -625,6 +629,9 @@ int main(int argc, char *argv[]) {
     break;
   case 8:
     scene = initScene8();
+    break;
+  case 9:
+    scene = initScene9();
     break;
 
   default:

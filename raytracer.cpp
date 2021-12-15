@@ -379,9 +379,9 @@ void renderImage(Image *img, Scene *scene)
 
   auto samples_per_pixel = 500;
   
-  //float dist_to_focus = glm::length(scene->cam.position-scene->cam.lookat);
-  float dist_to_focus = 10.0;
-  auto aperture = 0.1;
+  float dist_to_focus = glm::length(scene->cam.position-scene->cam.lookat);
+  //float dist_to_focus = 10.0;
+  auto aperture = 0.01;
 
   //std::mt19937 m_rnGenerator{};
   std::minstd_rand engine((omp_get_thread_num()+1));
