@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 2.8.11)
 project(RayTracer)
 
-set(CMAKE_CXX_FLAGS "-Wall -std=c++14 -g -fopenmp -O3")
+set(CMAKE_CXX_FLAGS "-Wall -std=c++17 -g -fopenmp -O3")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(mrt_SRCS

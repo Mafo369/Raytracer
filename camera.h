@@ -5,6 +5,7 @@
 #include "ray.h"
 #include "raytracer.h"
 
+#include <random>
 #include <glm/gtc/random.hpp>
 #include <iostream>
 

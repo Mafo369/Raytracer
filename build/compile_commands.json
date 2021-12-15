@@ -1,32 +1,32 @@
 [
 {
   "directory": "/home/mafo/dev/Raytracer/build",
-  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++14 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/image.cpp.o -c /home/mafo/dev/Raytracer/image.cpp",
+  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++17 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/image.cpp.o -c /home/mafo/dev/Raytracer/image.cpp",
   "file": "/home/mafo/dev/Raytracer/image.cpp"
 },
 {
   "directory": "/home/mafo/dev/Raytracer/build",
-  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++14 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/kdtree.cpp.o -c /home/mafo/dev/Raytracer/kdtree.cpp",
+  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++17 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/kdtree.cpp.o -c /home/mafo/dev/Raytracer/kdtree.cpp",
   "file": "/home/mafo/dev/Raytracer/kdtree.cpp"
 },
 {
   "directory": "/home/mafo/dev/Raytracer/build",
-  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++14 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o -c /home/mafo/dev/Raytracer/lodepng-master/lodepng.cpp",
+  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++17 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o -c /home/mafo/dev/Raytracer/lodepng-master/lodepng.cpp",
   "file": "/home/mafo/dev/Raytracer/lodepng-master/lodepng.cpp"
 },
 {
   "directory": "/home/mafo/dev/Raytracer/build",
-  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++14 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/main.cpp.o -c /home/mafo/dev/Raytracer/main.cpp",
+  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++17 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/main.cpp.o -c /home/mafo/dev/Raytracer/main.cpp",
   "file": "/home/mafo/dev/Raytracer/main.cpp"
 },
 {
   "directory": "/home/mafo/dev/Raytracer/build",
-  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++14 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/raytracer.cpp.o -c /home/mafo/dev/Raytracer/raytracer.cpp",
+  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++17 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/raytracer.cpp.o -c /home/mafo/dev/Raytracer/raytracer.cpp",
   "file": "/home/mafo/dev/Raytracer/raytracer.cpp"
 },
 {
   "directory": "/home/mafo/dev/Raytracer/build",
-  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++14 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/scene.cpp.o -c /home/mafo/dev/Raytracer/scene.cpp",
+  "command": "/usr/bin/c++   -I/home/mafo/dev/Raytracer/glm-master -I/home/mafo/dev/Raytracer/lodepng-master  -Wall -std=c++17 -g -fopenmp -O3   -o CMakeFiles/mrt.dir/scene.cpp.o -c /home/mafo/dev/Raytracer/scene.cpp",
   "file": "/home/mafo/dev/Raytracer/scene.cpp"
 }
 ]

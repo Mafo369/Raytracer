@@ -509,12 +509,12 @@ Scene *initScene9() {
   return scene;
 }
 
-static std::mt19937 m_rnGenerator{};
-static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
-static std::uniform_real_distribution<float> m_unifDistributionRange{0.5f, 1.0f};
-static std::uniform_real_distribution<float> m_unifDistributionRange2{0.0f, 0.5f};
 
 Scene *initScene8() {
+  std::mt19937 m_rnGenerator{};
+  std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
+  std::uniform_real_distribution<float> m_unifDistributionRange{0.5f, 1.0f};
+  std::uniform_real_distribution<float> m_unifDistributionRange2{0.0f, 0.5f};
   Scene *scene = initScene();
   setCamera(scene, point3(13, 2, 3), vec3(0, 0, 0), vec3(0, 1, 0), 20,
             3.0 / 2.0);

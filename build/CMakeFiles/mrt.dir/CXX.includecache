@@ -1057,6 +1057,8 @@ ray.h
 /home/mafo/dev/Raytracer/ray.h
 raytracer.h
 /home/mafo/dev/Raytracer/raytracer.h
+random
+-
 glm/gtc/random.hpp
 -
 iostream
@@ -1102,6 +1104,8 @@ stdio.h
 cmath
 -
 string.h
+-
+omp.h
 -
 glm/gtc/epsilon.hpp
 -

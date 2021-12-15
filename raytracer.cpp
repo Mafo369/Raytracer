@@ -8,6 +8,7 @@
 #include <cmath>
 #include <string.h>
 
+#include <omp.h>
 #include <glm/gtc/epsilon.hpp>
 
 #include <cstdlib>
@@ -28,8 +29,6 @@ template <int N, typename T, qualifier P> T length_sq(const vec<N, T, P> &x) { r
 /// intersection
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
-static std::mt19937 m_rnGenerator{};
-static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
 
 static float reflectance(float cosine, float ref_idx) {
   // Use Schlick's approximation for reflectance.
@@ -65,6 +64,8 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
 
       bool cannot_refract = refraction_ratio * sin_theta > 1.0f;
       vec3 direction;
+      static std::mt19937 m_rnGenerator{};
+      static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
       if (cannot_refract || reflectance(cos_theta, refraction_ratio) > m_unifDistribution(m_rnGenerator))
         direction = glm::reflect(unit_direction, rec.normal);
       else
@@ -358,14 +359,17 @@ void renderImage(Image *img, Scene *scene)
 {
 
   // rng stuff
-  std::mt19937 m_rnGenerator{};
-  std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
 
   auto samples_per_pixel = 50;
   
   //float dist_to_focus = glm::length(scene->cam.position-scene->cam.lookat);
   float dist_to_focus = 10.0;
   auto aperture = 0.1;
+      
+
+  //std::mt19937 m_rnGenerator{};
+  std::mt19937_64 engine((omp_get_thread_num()+1));
+  std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
   
   camera cam(scene->cam.position, scene->cam.lookat, scene->cam.up, scene->cam.fov, scene->cam.aspect, aperture, dist_to_focus);
 
@@ -392,8 +396,8 @@ void renderImage(Image *img, Scene *scene)
       color3 pixel_color(0,0,0);
       color3 *ptr = getPixelPtr(img, i, j);
       for (int s = 0; s < samples_per_pixel; ++s) {
-        auto u = (i + m_unifDistribution(m_rnGenerator)) / (img->width-1);
-        auto v = (j + m_unifDistribution(m_rnGenerator)) / (img->height-1);
+        auto u = (i + m_unifDistribution(engine)) / (img->width-1);
+        auto v = (j + m_unifDistribution(engine)) / (img->height-1);
         Ray r;
         cam.get_ray(u, v, &r);
         pixel_color += trace_ray(scene, &r, tree);
