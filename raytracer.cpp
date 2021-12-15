@@ -32,7 +32,7 @@ template <int N, typename T, qualifier P> T length_sq(const vec<N, T, P> &x) { r
 const float acne_eps = 1e-4;
 
 
-static std::mt19937 engine((omp_get_thread_num()+1));
+static std::minstd_rand engine((omp_get_thread_num()+1));
 static std::uniform_real_distribution<float> m_unifDistributionRand{-1.0f, 1.0f};
 
 vec3 sphereRand(){
@@ -86,7 +86,7 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
 
       bool cannot_refract = refraction_ratio * sin_theta > 1.0f;
       vec3 direction;
-      static std::mt19937 m_rnGenerator{};
+      static std::minstd_rand m_rnGenerator{};
       static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
       if (cannot_refract || reflectance(cos_theta, refraction_ratio) > m_unifDistribution(m_rnGenerator))
         direction = glm::reflect(unit_direction, rec.normal);
@@ -390,7 +390,7 @@ void renderImage(Image *img, Scene *scene)
       
 
   //std::mt19937 m_rnGenerator{};
-  std::mt19937 engine((omp_get_thread_num()+1));
+  std::minstd_rand engine((omp_get_thread_num()+1));
   std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
   
   camera cam(scene->cam.position, scene->cam.lookat, scene->cam.up, scene->cam.fov, scene->cam.aspect, aperture, dist_to_focus);
