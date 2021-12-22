@@ -1,4 +1,4 @@
-# Install script for directory: /home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer
+# Install script for directory: /home/mafo/dev/Raytracer
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/mafo/dev/Raytracer/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

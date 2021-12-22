@@ -4,12 +4,12 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/image.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/image.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/kdtree.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/kdtree.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/lodepng-master/lodepng.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/main.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/main.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/raytracer.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/raytracer.cpp.o"
-  "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/scene.cpp" "/home/mafo/ups/L3/s2/igtai/IGTAI-RayTracer/build/CMakeFiles/mrt.dir/scene.cpp.o"
+  "/home/mafo/dev/Raytracer/image.cpp" "/home/mafo/dev/Raytracer/build/CMakeFiles/mrt.dir/image.cpp.o"
+  "/home/mafo/dev/Raytracer/kdtree.cpp" "/home/mafo/dev/Raytracer/build/CMakeFiles/mrt.dir/kdtree.cpp.o"
+  "/home/mafo/dev/Raytracer/lodepng-master/lodepng.cpp" "/home/mafo/dev/Raytracer/build/CMakeFiles/mrt.dir/lodepng-master/lodepng.cpp.o"
+  "/home/mafo/dev/Raytracer/main.cpp" "/home/mafo/dev/Raytracer/build/CMakeFiles/mrt.dir/main.cpp.o"
+  "/home/mafo/dev/Raytracer/raytracer.cpp" "/home/mafo/dev/Raytracer/build/CMakeFiles/mrt.dir/raytracer.cpp.o"
+  "/home/mafo/dev/Raytracer/scene.cpp" "/home/mafo/dev/Raytracer/build/CMakeFiles/mrt.dir/scene.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

@@ -5,8 +5,8 @@ file(REMOVE_RECURSE
   "CMakeFiles/mrt.dir/main.cpp.o"
   "CMakeFiles/mrt.dir/raytracer.cpp.o"
   "CMakeFiles/mrt.dir/scene.cpp.o"
-  "mrt.pdb"
   "mrt"
+  "mrt.pdb"
 )
 
 # Per-language clean rules from dependency scanning.

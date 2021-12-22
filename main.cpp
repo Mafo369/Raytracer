@@ -47,14 +47,14 @@ Scene *initScene0() {
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
   Material mat;
-  mat.IOR = 1.3;
-  mat.roughness = 0.1;
-  mat.specularColor = color3(0.5f);
+  mat.IOR = 2.f;
+  mat.roughness = 2.f;
+  mat.specularColor = color3(1.f);
 
-  mat.diffuseColor = color3(.5f);
+  mat.diffuseColor = color3(.001f);
   addObject(scene, initSphere(point3(0, 0, 0), 0.25, mat));
 
-  mat.diffuseColor = color3(0.5f, 0.f, 0.f);
+  mat.diffuseColor = color3(1.0f);
   addObject(scene, initSphere(point3(1, 0, 0), .25, mat));
 
   mat.diffuseColor = color3(0.f, 0.5f, 0.5f);

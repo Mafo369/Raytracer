@@ -367,11 +367,32 @@ color3 RDM_bsdf_d(Material *m)
 // VdtoN : View . Norm
 // compute bsdf * cos(Oi)
 color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                Material *m)
+                vec3 v, vec3 l, vec3 h, vec3 n, Material *m)
 {
 
   //! \todo compute bsdf diffuse and specular term
-  return color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
+  // Cook-Terrance BRDF
+  auto fr = color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
+  // BTDF
+  float nino = 1.f/m->IOR;
+  vec3 vl = v + n*l; 
+  vec3 wh = vl/length(vl);
+  float NdotH_r = dot(n, wh);
+  float LdotH_r = dot(l, wh);
+  float VdotH_r = dot(v, wh);
+  
+  float d = RDM_Beckmann(NdotH, m->roughness);
+  float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
+  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
+
+  float a = 1.f*NdotH + m->IOR*LdotH;
+  float a2 = a*a;
+
+  float wiwh = abs(LdotH);
+  float wowh = abs(VdotH);
+
+  auto ft = color3(RDM_bsdf_d(m) + (m->specularColor * ((m->IOR * m->IOR)*(d*g*(1.0f-f))/a2)*((wiwh*wowh)/(abs(LdotN) * abs(VdotN))))); 
+  return ft;
 }
 
 color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
@@ -393,7 +414,7 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
     float VdotH = dot(v, h);
     float LdotN = dot(l, n);
     float VdotN = dot(v, n);
-    ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat) * LdotN;
+    ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, v, l, h, n, mat) * LdotN;
   }
 
   return ret;
