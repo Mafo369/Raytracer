@@ -1,4 +1,6 @@
 
+#include <algorithm>
+
 #include "image.h"
 #include "kdtree.h"
 #include "ray.h"
@@ -297,6 +299,31 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR)
   return f;
 }
 
+float RDM_FresnelD(float cosThetaI, float etaI, float etaT)
+{
+
+    cosThetaI = std::clamp(cosThetaI, -1.f, 1.f);
+    // Potentially swap indices of refraction
+    bool entering = cosThetaI > 0.f;
+    if (!entering) {
+        std::swap(etaI, etaT);
+        cosThetaI = std::abs(cosThetaI);
+    }
+
+    // Compute _cosThetaT_ using Snell's law
+    float sinThetaI = std::sqrt(std::max((float)0, 1 - cosThetaI * cosThetaI));
+    float sinThetaT = etaI / etaT * sinThetaI;
+
+    // Handle total internal reflection
+    if (sinThetaT >= 1) return 1;
+    float cosThetaT = std::sqrt(std::max((float)0, 1 - sinThetaT * sinThetaT));
+    float Rparl = ((etaT * cosThetaI) - (etaI * cosThetaT)) /
+                  ((etaT * cosThetaI) + (etaI * cosThetaT));
+    float Rperp = ((etaI * cosThetaI) - (etaT * cosThetaT)) /
+                  ((etaI * cosThetaI) + (etaT * cosThetaT));
+    return (Rparl * Rparl + Rperp * Rperp) / 2;
+}
+
 // DdotH : Dir . Half
 // HdotN : Half . Norm
 float RDM_G1(float DdotH, float DdotN, float alpha)
@@ -349,7 +376,7 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
   float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
   float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
 
-  return color3(m->specularColor * ((d * f * g) / (4 * LdotN * VdotN)));
+  return color3(m->diffuseColor * ((d * f * g) / (4 * LdotN * VdotN)));
 }
 // diffuse term of the cook torrance bsdf
 color3 RDM_bsdf_d(Material *m)
@@ -374,25 +401,34 @@ color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
   // Cook-Terrance BRDF
   auto fr = color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
   // BTDF
-  float nino = 1.f/m->IOR;
-  vec3 vl = v + n*l; 
-  vec3 wh = vl/length(vl);
-  float NdotH_r = dot(n, wh);
-  float LdotH_r = dot(l, wh);
-  float VdotH_r = dot(v, wh);
-  
-  float d = RDM_Beckmann(NdotH, m->roughness);
-  float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
-  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
+  float cosThetaO = n.z;
+  float cosThetaI = l.z;
+  color3 ft;
+  if (cosThetaI == 0 || cosThetaO == 0)
+    ft = color3(0.f);
+  else{
+    float eta = cosThetaO > 0 ? (m->IOR / 1.f) : (1.f/m->IOR); 
+    vec3 wh = n + eta*l; 
+    if (wh.z < 0) wh = -wh;
+    if (dot(n, wh) * dot(l, wh) > 0) 
+      ft = color3(0.f);
+    else{
+      float NdotHr = dot(n, wh);
+      float LdotHr = dot(l, wh);
+      float VdotHr = dot(v, wh);
+      float f = RDM_FresnelD(NdotHr, 1.f, m->IOR);
+      float d = RDM_Beckmann(NdotHr, m->roughness);
+      float g = RDM_Smith(LdotHr, LdotN, VdotHr, VdotN, m->roughness);
+      float sqrtDenom = dot(n, wh) + eta * dot(l, wh);
+      float factor = 1/eta;
+      ft = (1.f - f) * m->specularColor *                                             
+            std::abs(d * g * eta * eta *  
+                     std::abs(dot(l, wh)) * std::abs(dot(n, wh)) * factor * factor /         
+                     (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));   
+    }
+  }
 
-  float a = 1.f*NdotH + m->IOR*LdotH;
-  float a2 = a*a;
-
-  float wiwh = abs(LdotH);
-  float wowh = abs(VdotH);
-
-  auto ft = color3(RDM_bsdf_d(m) + (m->specularColor * ((m->IOR * m->IOR)*(d*g*(1.0f-f))/a2)*((wiwh*wowh)/(abs(LdotN) * abs(VdotN))))); 
-  return ft;
+  return fr;
 }
 
 color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
@@ -467,8 +503,28 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     float LdotH = dot(ray_ref->dir, intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
-    ret += (f * cr * intersection.mat->specularColor);
+    color3 reflectionColor = (f * cr * intersection.mat->specularColor);
+   
+    bool inside = false;
+    vec3 nhit = intersection.normal;
+    if (dot(ray->dir, intersection.normal) > 0) nhit = -nhit, inside = true;
+    float ior = 1.1;
+    float eta = (inside) ? ior : 1/ior;
+    float cosi = -dot(nhit, ray->dir);
+    float k = 1 -eta *eta * (1-cosi*cosi);
 
+    vec3 refr = ray->dir * eta + nhit * (eta * cosi - std::sqrt(k));
+    Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
+    rayInit(ray_refr, intersection.position - nhit *acne_eps, refr, 0, 100000, ray->depth + 1);
+
+    color3 crr = trace_ray(scene, ray_refr, tree);
+    float LdotHr = dot(ray_refr->dir, nhit);
+    
+    color3 refractionColor = ((1.0f-f) * crr * intersection.mat->specularColor);
+
+    ret += reflectionColor + refractionColor;
+
+    free(ray_refr);
     free(ray_ref);
   }
   else

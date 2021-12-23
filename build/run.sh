@@ -7,4 +7,3 @@
 ./mrt test6 6
 ./mrt test7 7
 ./mrt test8 8
-./mrt test9 9

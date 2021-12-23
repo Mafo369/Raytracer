@@ -49,18 +49,24 @@ Scene *initScene0() {
   Material mat;
   mat.IOR = 2.f;
   mat.roughness = 2.f;
-  mat.specularColor = color3(1.f);
+  mat.specularColor = color3(0.f, 1.f, 0.f);
 
   mat.diffuseColor = color3(.001f);
   addObject(scene, initSphere(point3(0, 0, 0), 0.25, mat));
 
   mat.diffuseColor = color3(1.0f);
+  mat.specularColor = color3(0.5f, 0.f, 0.f);
+  mat.roughness = 0.1f;
   addObject(scene, initSphere(point3(1, 0, 0), .25, mat));
 
   mat.diffuseColor = color3(0.f, 0.5f, 0.5f);
+  mat.specularColor = color3(0.f, 0.5f, 0.5f);
+  mat.roughness = 1.f;
   addObject(scene, initSphere(point3(0, 1, 0), .25, mat));
 
   mat.diffuseColor = color3(0.f, 0.f, 0.5f);
+  mat.specularColor = color3(0.f, 0.f, 0.7f);
+  mat.roughness = 0.5f;
   addObject(scene, initSphere(point3(0, 0, 1), .25, mat));
 
   mat.diffuseColor = color3(0.6f);
@@ -403,18 +409,22 @@ Scene *initScene6() {
   //addLight(scene, initLight(point3(100, 1, 1), color3(50, 50, 50)));
   //addLight(scene, initLight(point3(1, 0.1, 0.5), color3(5, 5, 5)));
   //addLight(scene, initLight(point3(0, 0, 0), color3(5, 5, 5)));
-  addLight(scene, initLight(point3(-6, 3, 7), color3(3, 3, 3)));
+  addLight(scene, initLight(point3(-6, 3, 7), color3(10, 10, 10)));
 
-  addLight(scene, initLight(point3(6, 3, -7), color3(3, 3, 3)));
+  addLight(scene, initLight(point3(6, 3, -7), color3(10, 10, 10)));
 
-  addLight(scene, initLight(point3(-6, 4, 0), color3(3, 3, 3)));
+  addLight(scene, initLight(point3(-6, 4, 0), color3(10, 10, 10)));
   addLight(scene, initLight(point3(4, 10, 10), color3(1, 1, 1)));
 
 
 
   Material mat;
+  mat.IOR = 1.5f;
+  mat.diffuseColor = color3(0.0f);
+  mat.specularColor = color3(1.0f);
+  mat.roughness = 0.f;
 
-  addObjectsFromFile("../assets/bunny.obj", scene, mat_lib[0]);
+  addObjectsFromFile("../assets/bunny.obj", scene, mat);
 
   mat.diffuseColor = color3(0.7, 0, 0);
   mat.specularColor = color3(1, 0, 0);
