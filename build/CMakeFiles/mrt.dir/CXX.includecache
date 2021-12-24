@@ -738,20 +738,6 @@ constants.inl
 
 ../glm-master/glm/gtc/constants.inl
 
-../glm-master/glm/gtc/epsilon.hpp
-../detail/setup.hpp
-../glm-master/glm/detail/setup.hpp
-../detail/qualifier.hpp
-../glm-master/glm/detail/qualifier.hpp
-epsilon.inl
-../glm-master/glm/gtc/epsilon.inl
-
-../glm-master/glm/gtc/epsilon.inl
-../vector_relational.hpp
-../glm-master/glm/vector_relational.hpp
-../common.hpp
-../glm-master/glm/common.hpp
-
 ../glm-master/glm/integer.hpp
 detail/qualifier.hpp
 ../glm-master/glm/detail/qualifier.hpp
@@ -1026,39 +1012,27 @@ glm/gtc/constants.hpp
 defines.h
 /home/mafo/dev/Raytracer/defines.h
 
-/home/mafo/dev/Raytracer/kdtree.h
+/home/mafo/dev/Raytracer/main.cpp
 defines.h
 /home/mafo/dev/Raytracer/defines.h
-ray.h
-/home/mafo/dev/Raytracer/ray.h
-raytracer.h
-/home/mafo/dev/Raytracer/raytracer.h
-
-/home/mafo/dev/Raytracer/ray.h
-defines.h
-/home/mafo/dev/Raytracer/defines.h
-
-/home/mafo/dev/Raytracer/raytracer.cpp
-algorithm
--
 image.h
 /home/mafo/dev/Raytracer/image.h
-kdtree.h
-/home/mafo/dev/Raytracer/kdtree.h
 ray.h
 /home/mafo/dev/Raytracer/ray.h
 raytracer.h
 /home/mafo/dev/Raytracer/raytracer.h
-scene_types.h
-/home/mafo/dev/Raytracer/scene_types.h
+scene.h
+/home/mafo/dev/Raytracer/scene.h
 stdio.h
 -
-cmath
+stdlib.h
 -
 string.h
 -
-glm/gtc/epsilon.hpp
--
+
+/home/mafo/dev/Raytracer/ray.h
+defines.h
+/home/mafo/dev/Raytracer/defines.h
 
 /home/mafo/dev/Raytracer/raytracer.h
 defines.h
@@ -1075,14 +1049,6 @@ defines.h
 /home/mafo/dev/Raytracer/defines.h
 tiny_obj_loader.h
 /home/mafo/dev/Raytracer/tiny_obj_loader.h
-
-/home/mafo/dev/Raytracer/scene_types.h
-defines.h
-/home/mafo/dev/Raytracer/defines.h
-scene.h
-/home/mafo/dev/Raytracer/scene.h
-vector
--
 
 /home/mafo/dev/Raytracer/tiny_obj_loader.h
 map

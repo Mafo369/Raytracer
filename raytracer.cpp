@@ -5,6 +5,7 @@
 #include "kdtree.h"
 #include "ray.h"
 #include "raytracer.h"
+#include "scene.h"
 #include "scene_types.h"
 #include <stdio.h>
 #include <cmath>
@@ -378,6 +379,22 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
 
   return color3(m->specularColor * ((d * f * g) / (4 * LdotN * VdotN)));
 }
+color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
+                  float VdotN, Material *m)
+{
+
+  //! \todo specular term of the bsdf, using D = RDB_Beckmann, F = RDM_Fresnel, G
+  //! = RDM_Smith
+
+  float d = RDM_Beckmann(NdotH, m->roughness);
+  float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
+  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
+
+  float denom = (m->IOR*LdotH + 1.f*VdotH);
+
+  float no = m->IOR;
+  return color3(m->specularColor * (LdotH * VdotH)/(LdotN * VdotN)*((no*no)*(1.0f-f)*g*d)/(denom*denom));
+}
 // diffuse term of the cook torrance bsdf
 color3 RDM_bsdf_d(Material *m)
 {
@@ -394,41 +411,16 @@ color3 RDM_bsdf_d(Material *m)
 // VdtoN : View . Norm
 // compute bsdf * cos(Oi)
 color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                vec3 v, vec3 l, vec3 h, vec3 n, Material *m)
+                Material *m)
 {
 
   //! \todo compute bsdf diffuse and specular term
-  // Cook-Terrance BRDF
-  auto fr = color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
-  // BTDF
-  float cosThetaO = n.z;
-  float cosThetaI = l.z;
-  color3 ft;
-  if (cosThetaI == 0 || cosThetaO == 0)
-    ft = color3(0.f);
-  else{
-    float eta = cosThetaO > 0 ? (m->IOR / 1.f) : (1.f/m->IOR); 
-    vec3 wh = n + eta*l; 
-    if (wh.z < 0) wh = -wh;
-    if (dot(n, wh) * dot(l, wh) > 0) 
-      ft = color3(0.f);
-    else{
-      float NdotHr = dot(n, wh);
-      float LdotHr = dot(l, wh);
-      float VdotHr = dot(v, wh);
-      float f = RDM_FresnelD(NdotHr, 1.f, m->IOR);
-      float d = RDM_Beckmann(NdotHr, m->roughness);
-      float g = RDM_Smith(LdotHr, LdotN, VdotHr, VdotN, m->roughness);
-      float sqrtDenom = dot(n, wh) + eta * dot(l, wh);
-      float factor = 1/eta;
-      ft = (1.f - f) * m->specularColor *                                             
-            std::abs(d * g * eta * eta *  
-                     std::abs(dot(l, wh)) * std::abs(dot(n, wh)) * factor * factor /         
-                     (cosThetaI * cosThetaO * sqrtDenom * sqrtDenom));   
-    }
-  }
-
-  return fr;
+  return color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
+}
+color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
+                Material *m)
+{
+  return color3(RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
 }
 
 color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
@@ -442,15 +434,29 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
 
   if (ln > 0)
   {
-    vec3 vl = v + l;
-    vec3 h = vl / length(vl);
 
-    float LdotH = dot(l, h);
-    float NdotH = dot(n, h);
-    float VdotH = dot(v, h);
-    float LdotN = dot(l, n);
-    float VdotN = dot(v, n);
-    ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, v, l, h, n, mat) * LdotN;
+    if (mat->mtype == DIELECTRIC){
+      vec3 vl = v + l;
+      vec3 h = vl / length(vl);
+      float LdotH = dot(l, h);
+      float NdotH = dot(n, h);
+      float VdotH = dot(v, h);
+      float LdotN = dot(l, n);
+      float VdotN = dot(v, n);
+      ret = lc * 
+        (RDM_btdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat) + 
+         RDM_brdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat)) * LdotN;
+    }
+    else{
+      vec3 vl = v + l;
+      vec3 h = vl / length(vl);
+      float LdotH = dot(l, h);
+      float NdotH = dot(n, h);
+      float VdotH = dot(v, h);
+      float LdotN = dot(l, n);
+      float VdotN = dot(v, n);
+      ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat) * LdotN;
+    }
   }
 
   return ret;
@@ -494,50 +500,38 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 
     if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
       return color3(1.f);
-
-    color3 reflectionColor = color3(0.f);
     color3 refractionColor = color3(0.f);
-    bool outside = dot(ray->dir, intersection.normal) < 0;
-
     vec3 r = reflect(ray->dir, intersection.normal);
-    vec3 bias = acne_eps * r;
-    vec3 reflectionROrig = outside ? intersection.position + bias : intersection.position - bias;
     Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
-    rayInit(ray_ref, reflectionROrig, r, 0, 100000, ray->depth + 1);
-    
+    rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+
+    color3 cr = trace_ray(scene, ray_ref, tree);
     float LdotH = dot(ray_ref->dir, intersection.normal);
-    float kr = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
-    reflectionColor = trace_ray(scene, ray_ref, tree);
+    float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+
+    color3 reflectionColor = (f * cr * intersection.mat->specularColor);
   
-    if (kr < 1){
-      float eta = (outside) ? 1/intersection.mat->IOR : intersection.mat->IOR;
-      vec3 refractionDir = refract(ray->dir, intersection.normal, eta);
-      bias = acne_eps * intersection.normal;
-      vec3 refractionROrig = outside ? intersection.position - bias : intersection.position + bias;
-      
+    if(intersection.mat->mtype == DIELECTRIC) {
+      bool inside = false;
+      vec3 nhit = intersection.normal;
+      if (dot(ray->dir, intersection.normal) > 0) nhit = -nhit, inside = true;
+      float ior = intersection.mat->IOR;
+      float eta = (inside) ? ior : 1/ior;
+      float cosi = -dot(nhit, ray->dir);
+      float k = 1 -eta *eta * (1-cosi*cosi);
+
+      vec3 refr = ray->dir * eta + nhit * (eta * cosi - std::sqrt(k));
       Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
-      rayInit(ray_refr, refractionROrig, refractionDir, 0, 100000, ray->depth + 1);
-      refractionColor = trace_ray(scene, ray_refr, tree);
+      rayInit(ray_refr, intersection.position - nhit *acne_eps, refr, 0, 100000, ray->depth + 1);
+
+      color3 crr = trace_ray(scene, ray_refr, tree);
+      
+      refractionColor = (crr);
       free(ray_refr);
     }
 
-    ret += (reflectionColor * kr * intersection.mat->specularColor) + (refractionColor * (1.f - kr)* intersection.mat->specularColor);
 
-    //bool inside = false;
-    //vec3 nhit = intersection.normal;
-    //if (dot(ray->dir, intersection.normal) > 0) nhit = -nhit, inside = true;
-    //float ior = 1.1;
-    //float eta = (inside) ? ior : 1/ior;
-    //float cosi = -dot(nhit, ray->dir);
-    //float k = 1 -eta *eta * (1-cosi*cosi);
-
-    //vec3 refr = ray->dir * eta + nhit * (eta * cosi - std::sqrt(k));
-    //Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
-    //rayInit(ray_refr, intersection.position - nhit *acne_eps, refr, 0, 100000, ray->depth + 1);
-
-    //color3 crr = trace_ray(scene, ray_refr, tree);
-    //
-    //color3 refractionColor = ((1.0f-f) * crr * intersection.mat->specularColor);
+    ret += reflectionColor + refractionColor;
 
     free(ray_ref);
   }

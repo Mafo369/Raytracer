@@ -1049,6 +1049,8 @@ ray.h
 /home/mafo/dev/Raytracer/ray.h
 raytracer.h
 /home/mafo/dev/Raytracer/raytracer.h
+scene.h
+/home/mafo/dev/Raytracer/scene.h
 scene_types.h
 /home/mafo/dev/Raytracer/scene_types.h
 stdio.h
