@@ -409,7 +409,7 @@ void addObjectsFromFile(const char *filename, Scene *scene, Material default_mat
 Scene *initScene6() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(-2.5, 1.5f, -2), vec3(0, 1, 0), vec3(0, 1, 0), 40,
+  setCamera(scene, point3(-2.5, 0.3f, -2), vec3(0, 1, 0), vec3(0, 1, 0), 40,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.6f, 0.3f, 0.5f));
   
@@ -429,7 +429,10 @@ Scene *initScene6() {
   mat.type = LAMBERTIAN;
   mat.diffuseColor = color3(0.5f);
 
-  addObjectsFromFile("../assets/bunny.obj", scene, mat);
+  Material material1;
+  material1.type = DIELECTRIC;
+  material1.IOR = 1.2;
+  addObjectsFromFile("../assets/bunny.obj", scene, material1);
 
   mat.type = LAMBERTIAN;
   mat.diffuseColor = color3(0.7, 0, 0);

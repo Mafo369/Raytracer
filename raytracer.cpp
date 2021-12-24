@@ -262,6 +262,8 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj)
     intersection->mat = &(obj->mat);
     intersection->normal = normalize(cross(v1v2, v1v3));
     ray->tmax = t;
+
+    set_face_normal(ray, intersection->normal, intersection);
     return true;
   }
   return false;
@@ -377,7 +379,7 @@ void renderImage(Image *img, Scene *scene)
 
   // rng stuff
 
-  auto samples_per_pixel = 500;
+  auto samples_per_pixel = 200;
   
   float dist_to_focus = glm::length(scene->cam.position-scene->cam.lookat);
   //float dist_to_focus = 10.0;
