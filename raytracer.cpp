@@ -57,6 +57,21 @@ static float reflectance(float cosine, float ref_idx) {
   r0 = r0 * r0;
   return r0 + (1.0f - r0) * std::pow((1.0f - cosine), 5.0f);
 }
+		
+static inline bool Refract(const vec3& incidentRay, const vec3& normal, float relativeRefrIndex, vec3& refractedRay)
+{
+  const float projectionOnNormal = incidentRay.x * normal.x + incidentRay.y * normal.y + 
+                      incidentRay.z * normal.z;
+
+  const float cos2t = 1. - relativeRefrIndex * relativeRefrIndex * (1. - projectionOnNormal * projectionOnNormal);
+  if (cos2t > 0)
+  {
+    refractedRay = relativeRefrIndex * (incidentRay - projectionOnNormal * normal) - sqrt(cos2t) * normal;
+    return true;
+  }
+
+  return false; // total internal reflection!
+}
         
 bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
   
@@ -77,22 +92,69 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
       return (glm::dot(scattered->dir, rec.normal) > 0);
   } else if (rec.mat->type == DIELECTRIC){
       attenuation = color3(1.0f, 1.0f, 1.0f);
-      float refraction_ratio = rec.front_face ? (1.0f/rec.mat->IOR) : rec.mat->IOR;
 
-      vec3 unit_direction = glm::normalize(r_in->dir);
-      float cos_theta = std::min(glm::dot(-unit_direction, rec.normal), 1.0f);
-      float sin_theta = std::sqrt(1.0f - cos_theta*cos_theta);
+      vec3 outNormal;
+      float cosine = r_in->dir.x * rec.normal.x + r_in->dir.y * rec.normal.y + 
+                      r_in->dir.z * rec.normal.z;
+      float relativeRefrIndex;
+      float refrIndex = rec.mat->IOR;
+      
+      float density = 0.03f;
+      color3 volumeColor(1.f ,1.f, 0.f);
 
-      bool cannot_refract = refraction_ratio * sin_theta > 1.0f;
-      vec3 direction;
+      if (cosine > 0){
+        outNormal = -rec.normal;
+        relativeRefrIndex = refrIndex;
+        cosine = sqrt(1 - refrIndex * refrIndex * (1 - cosine * cosine));
+
+        const color3 absorb = r_in->tmax * density * volumeColor;
+        const color3 transparency = color3(exp(-absorb.x), exp(-absorb.x), exp(-absorb.x));
+        attenuation *= transparency;
+      }
+      else{
+        outNormal = rec.normal;
+        relativeRefrIndex = 1.f/refrIndex;
+        cosine *= -1;
+      }
+
+      vec3 refracted(0.f);
+      double reflectProbability;
+      if (Refract(r_in->dir, outNormal, relativeRefrIndex, refracted))
+        reflectProbability = reflectance(cosine, refrIndex); // Fresnel reflectance
+      else
+        reflectProbability = 1.; // total reflexion		
+
       static std::minstd_rand m_rnGenerator{};
       static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
-      if (cannot_refract || reflectance(cos_theta, refraction_ratio) > m_unifDistribution(m_rnGenerator))
-        direction = glm::reflect(unit_direction, rec.normal);
+      if (m_unifDistribution(m_rnGenerator) < reflectProbability)
+      {
+        vec3 reflected = glm::reflect(r_in->dir, outNormal);
+        rayInit(scattered, rec.position + (acne_eps*outNormal), reflected);
+      }
       else
-        direction = glm::refract(unit_direction, rec.normal, refraction_ratio);
+      {
+        rayInit(scattered, rec.position - (acne_eps*outNormal), refracted);
+      }
 
-      rayInit(scattered, rec.position + (acne_eps*direction), direction);
+      return true;
+
+
+      //float refraction_ratio = rec.front_face ? (1.0f/rec.mat->IOR) : rec.mat->IOR;
+
+      //vec3 unit_direction = glm::normalize(r_in->dir);
+      //float cos_theta = std::min(glm::dot(-unit_direction, rec.normal), 1.0f);
+      //float sin_theta = std::sqrt(1.0f - cos_theta*cos_theta);
+
+      //bool cannot_refract = refraction_ratio * sin_theta > 1.0f;
+      //vec3 direction;
+      //static std::minstd_rand m_rnGenerator{};
+      //static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};
+      //if (cannot_refract || reflectance(cos_theta, refraction_ratio) > m_unifDistribution(m_rnGenerator))
+      //  direction = glm::reflect(unit_direction, rec.normal);
+      //else
+      //  direction = glm::refract(unit_direction, rec.normal, refraction_ratio);
+
+      //rayInit(scattered, rec.position + (acne_eps*direction), direction);
   }
   
   return true;
@@ -263,7 +325,7 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj)
     intersection->normal = normalize(cross(v1v2, v1v3));
     ray->tmax = t;
 
-    set_face_normal(ray, intersection->normal, intersection);
+    //set_face_normal(ray, intersection->normal, intersection);
     return true;
   }
   return false;
