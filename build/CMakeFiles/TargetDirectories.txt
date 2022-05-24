@@ -1,4 +1,0 @@
-/home/mafo/dev/Raytracer/build/CMakeFiles/rebuild_cache.dir
-/home/mafo/dev/Raytracer/build/CMakeFiles/edit_cache.dir
-/home/mafo/dev/Raytracer/build/CMakeFiles/unit-test.dir
-/home/mafo/dev/Raytracer/build/CMakeFiles/mrt.dir
