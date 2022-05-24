@@ -66,7 +66,9 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj)
     {
       intersection->position = ray->orig + (t * ray->dir);
       intersection->mat = &(obj->mat);
-      intersection->normal = normalize(intersection->position - obj->geom.sphere.center);
+      vec3 normal = normalize(intersection->position - obj->geom.sphere.center);
+      intersection->isOutside = dot(ray->dir, normal) < 0;
+      intersection->normal = intersection->isOutside ? normal : -normal;
       ray->tmax = t;
       return true;
     }
@@ -95,7 +97,9 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj)
     }
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = &(obj->mat);
-    intersection->normal = normalize(intersection->position - obj->geom.sphere.center);
+    vec3 normal = normalize(intersection->position - obj->geom.sphere.center);
+    intersection->isOutside = dot(ray->dir, normal) < 0;
+    intersection->normal = intersection->isOutside ? normal : -normal;
     ray->tmax = t;
     return true;
   }
@@ -379,12 +383,10 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
 
   return color3(m->specularColor * ((d * f * g) / (4 * LdotN * VdotN)));
 }
+
 color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
                   float VdotN, Material *m)
 {
-
-  //! \todo specular term of the bsdf, using D = RDB_Beckmann, F = RDM_Fresnel, G
-  //! = RDM_Smith
 
   float d = RDM_Beckmann(NdotH, m->roughness);
   float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
@@ -395,6 +397,7 @@ color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
   float no = m->IOR;
   return color3(m->specularColor * (LdotH * VdotH)/(LdotN * VdotN)*((no*no)*(1.0f-f)*g*d)/(denom*denom));
 }
+
 // diffuse term of the cook torrance bsdf
 color3 RDM_bsdf_d(Material *m)
 {
@@ -417,6 +420,7 @@ color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
   //! \todo compute bsdf diffuse and specular term
   return color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
 }
+
 color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
                 Material *m)
 {
@@ -500,7 +504,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 
     if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
       return color3(1.f);
-    color3 refractionColor = color3(0.f);
+
     vec3 r = reflect(ray->dir, intersection.normal);
     Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
     rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
@@ -510,23 +514,16 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
     color3 reflectionColor = (f * cr * intersection.mat->specularColor);
-  
+    color3 refractionColor = color3(0.f);
+
     if(intersection.mat->mtype == DIELECTRIC) {
-      bool inside = false;
-      vec3 nhit = intersection.normal;
-      if (dot(ray->dir, intersection.normal) > 0) nhit = -nhit, inside = true;
-      float ior = intersection.mat->IOR;
-      float eta = (inside) ? ior : 1/ior;
-      float cosi = -dot(nhit, ray->dir);
-      float k = 1 -eta *eta * (1-cosi*cosi);
+      float refractionRatio = intersection.isOutside ? (1/intersection.mat->IOR) : intersection.mat->IOR;
 
-      vec3 refr = ray->dir * eta + nhit * (eta * cosi - std::sqrt(k));
+      vec3 refr = refract(normalize(ray->dir), intersection.normal, refractionRatio);
       Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
-      rayInit(ray_refr, intersection.position - nhit *acne_eps, refr, 0, 100000, ray->depth + 1);
+      rayInit(ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
 
-      color3 crr = trace_ray(scene, ray_refr, tree);
-      
-      refractionColor = (crr);
+      refractionColor = trace_ray(scene, ray_refr, tree);
       free(ray_refr);
     }
 

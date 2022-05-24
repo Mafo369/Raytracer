@@ -16,6 +16,8 @@ typedef struct intersection_s {
 
   bool isTex;
   vec2 t;
+
+  bool isOutside;
 } Intersection;
 
 
