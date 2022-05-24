@@ -432,6 +432,7 @@ Scene *initScene6() {
   Material material1;
   material1.type = DIELECTRIC;
   material1.IOR = 1.2;
+  material1.invIOR = 1.f/material1.IOR;
   addObjectsFromFile("../assets/bunny.obj", scene, material1);
 
   mat.type = LAMBERTIAN;
@@ -446,7 +447,7 @@ Scene *initScene6() {
   mat.specularColor = color3(0.6, 0.6, 0);
   mat.IOR = 1.5;
   mat.roughness = 0.0681;
-  //addObject(scene, initPlane(vec3(0, 0, 1), +10, mat));
+  addObject(scene, initPlane(vec3(0, 0, 1), -10, mat));
 
   
   return scene;

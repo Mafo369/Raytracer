@@ -60,11 +60,10 @@ static float reflectance(float cosine, float ref_idx) {
 		
 static inline bool Refract(const vec3& incidentRay, const vec3& normal, float relativeRefrIndex, vec3& refractedRay)
 {
-  const float projectionOnNormal = incidentRay.x * normal.x + incidentRay.y * normal.y + 
-                      incidentRay.z * normal.z;
+  const float projectionOnNormal = dot(incidentRay, normal);
 
-  const float cos2t = 1. - relativeRefrIndex * relativeRefrIndex * (1. - projectionOnNormal * projectionOnNormal);
-  if (cos2t > 0)
+  const float cos2t = 1.f - relativeRefrIndex * relativeRefrIndex * (1.f - projectionOnNormal * projectionOnNormal);
+  if (cos2t > 0.f)
   {
     refractedRay = relativeRefrIndex * (incidentRay - projectionOnNormal * normal) - sqrt(cos2t) * normal;
     return true;
@@ -78,8 +77,6 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
   if(rec.mat->type == LAMBERTIAN){
     vec3 scatter_direction = rec.normal + sphereRand();
             
-    // Catch degenerate scatter direction
-    //if (near_zero(scatter_direction))
     if (glm::any(glm::epsilonEqual(scatter_direction, vec3{0, 0, 0}, std::numeric_limits<float>::epsilon())))
       scatter_direction = rec.normal;
 
@@ -94,27 +91,26 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
       attenuation = color3(1.0f, 1.0f, 1.0f);
 
       vec3 outNormal;
-      float cosine = r_in->dir.x * rec.normal.x + r_in->dir.y * rec.normal.y + 
-                      r_in->dir.z * rec.normal.z;
+      float cosine = dot(r_in->dir, rec.normal);
       float relativeRefrIndex;
       float refrIndex = rec.mat->IOR;
       
-      float density = 0.03f;
+      float density = 1.0f;
       color3 volumeColor(1.f ,1.f, 0.f);
 
       if (cosine > 0){
         outNormal = -rec.normal;
         relativeRefrIndex = refrIndex;
-        cosine = sqrt(1 - refrIndex * refrIndex * (1 - cosine * cosine));
+        cosine = sqrt(1.f - refrIndex * refrIndex * (1.f - cosine * cosine));
 
         const color3 absorb = r_in->tmax * density * volumeColor;
-        const color3 transparency = color3(exp(-absorb.x), exp(-absorb.x), exp(-absorb.x));
+        const color3 transparency = color3(exp(-absorb.x), exp(-absorb.y), exp(-absorb.z));
         attenuation *= transparency;
       }
       else{
         outNormal = rec.normal;
-        relativeRefrIndex = 1.f/refrIndex;
-        cosine *= -1;
+        relativeRefrIndex = rec.mat->invIOR;
+        cosine *= -1.f;
       }
 
       vec3 refracted(0.f);
@@ -122,7 +118,7 @@ bool scatter(Ray *r_in, Intersection rec, color3 &attenuation, Ray *scattered) {
       if (Refract(r_in->dir, outNormal, relativeRefrIndex, refracted))
         reflectProbability = reflectance(cosine, refrIndex); // Fresnel reflectance
       else
-        reflectProbability = 1.; // total reflexion		
+        reflectProbability = 1.f; // total reflexion		
 
       static std::minstd_rand m_rnGenerator{};
       static std::uniform_real_distribution<float> m_unifDistribution{0.0f, 1.0f};

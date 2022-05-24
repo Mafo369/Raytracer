@@ -19,6 +19,7 @@ typedef struct material_s {
   color3 diffuseColor;	//! Base color
   matType type;
   float fuzz;
+  float invIOR;
 } Material;
 
 enum Etype {SPHERE=1, PLANE, TRIANGLE};
