@@ -82,7 +82,6 @@ installed-*
 
 
 # Json
-*.json
 
 # Auto-generated plugins registration file
 src/MainApplication/Systems.cpp
@@ -98,3 +97,5 @@ tests/external/Catch2
 *.old
 *.prof
 .cache/
+
+compile_commands.json
