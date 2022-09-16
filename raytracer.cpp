@@ -10,8 +10,11 @@
 #include <stdio.h>
 #include <cmath>
 #include <string.h>
+#include <iostream>
 
 #include <glm/gtc/epsilon.hpp>
+#include <random>
+#include <omp.h>
 
 /// acne_eps is a small constant used to prevent acne when computing
 /// intersection
@@ -146,6 +149,7 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj)
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = &(obj->mat);
     intersection->normal = normalize(cross(v1v2, v1v3));
+    intersection->isOutside = dot(ray->dir, intersection->normal) < 0;
     ray->tmax = t;
     return true;
   }
@@ -468,13 +472,22 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat)
 
 //! if tree is not null, use intersectKdTree to compute the intersection instead
 //! of intersect scene
+float reflectance(float cosine, float ref_idx) {
+    // Use Schlick's approximation for reflectance.
+    auto r0 = (1-ref_idx) / (1+ref_idx);
+    r0 = r0*r0;
+    return r0 + (1-r0)*pow((1 - cosine),5);
+}
+
+std::minstd_rand engine((omp_get_thread_num()+1));
+std::uniform_real_distribution<float> m_unifDistributionRand{0.f, 1.0f};
 
 color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 {
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 3)
+  if (ray->depth > 5)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -509,26 +522,31 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
     rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
-    color3 cr = trace_ray(scene, ray_ref, tree);
+    color3 reflectionColor = trace_ray(scene, ray_ref, tree);
     float LdotH = dot(ray_ref->dir, intersection.normal);
     float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
-    color3 reflectionColor = (f * cr * intersection.mat->specularColor);
     color3 refractionColor = color3(0.f);
 
     if(intersection.mat->mtype == DIELECTRIC) {
-      float refractionRatio = intersection.isOutside ? (1/intersection.mat->IOR) : intersection.mat->IOR;
+      float refractionRatio = 
+        intersection.isOutside ? (1/intersection.mat->IOR) : intersection.mat->IOR;
 
-      vec3 refr = refract(normalize(ray->dir), intersection.normal, refractionRatio);
-      Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
-      rayInit(ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
+      vec3 unit_direction = normalize( ray->dir );
+      //float cos_theta = fmin(dot(-unit_direction, intersection.normal), 1.0);
+      //float sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+      //bool cannot_refract = refractionRatio * sin_theta > 1.0;
+      //if(!cannot_refract && reflectance(cos_theta, refractionRatio) < m_unifDistributionRand(engine)){
+        vec3 refr = refract(unit_direction, intersection.normal, refractionRatio);
+        Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
+        rayInit(ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
 
-      refractionColor = trace_ray(scene, ray_refr, tree);
-      free(ray_refr);
+        refractionColor = trace_ray(scene, ray_refr, tree);
+        free(ray_refr);
+      //}
     }
 
-
-    ret += reflectionColor + refractionColor;
+    ret += (f * reflectionColor * intersection.mat->specularColor) + refractionColor * (1 - f);
 
     free(ray_ref);
   }
@@ -539,6 +557,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 
   return ret;
 }
+
 
 color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
                                vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
