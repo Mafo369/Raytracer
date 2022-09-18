@@ -148,8 +148,9 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj)
   {
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = &(obj->mat);
-    intersection->normal = normalize(cross(v1v2, v1v3));
-    intersection->isOutside = dot(ray->dir, intersection->normal) < 0;
+    intersection->normal = abs(normalize(cross(v1v2, v1v3)));
+    intersection->isOutside = true;
+    //if(dot(ray->dir, intersection->normal) < 0) intersection->normal = -intersection->normal, intersection->isOutside = false; 
     ray->tmax = t;
     return true;
   }
@@ -268,6 +269,19 @@ float RDM_Beckmann(float NdotH, float alpha)
   float d = phi * (e / pi_alpha_cos);
 
   return d;
+}
+
+float Fresnel(float VdotH, const float eta) 
+{
+    const float cos_theta_i = VdotH;
+    const float cos_theta_t2 = 1.0f - (1.0f-cos_theta_i*cos_theta_i) / (eta*eta);
+    // total internal reflection
+    if (cos_theta_t2 <= 0.0f) return 1.0f;
+    const float cos_theta_t = sqrtf(cos_theta_t2);
+    const float Rs = (cos_theta_i - eta * cos_theta_t) / (cos_theta_i + eta * cos_theta_t);
+    const float Rp = (eta * cos_theta_i - cos_theta_t) / (eta * cos_theta_i + cos_theta_t);
+    const float F = 0.5f * (Rs * Rs + Rp * Rp);
+    return F;
 }
 
 // Fresnel term computation. Implantation of the exact computation. we can use
@@ -487,7 +501,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 5)
+  if (ray->depth > 8)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -503,7 +517,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       rayInit(ray_ombre, intersection.position + (acne_eps * l), l, 0.f, distance(intersection.position + (acne_eps * l), scene->lights[i]->position));
 
       Intersection temp_inter;
-      if (!intersectKdTree(scene, tree, ray_ombre, &temp_inter))
+      if (!intersectKdTree(scene, tree, ray_ombre, &temp_inter) && intersection.mat->mtype != DIELECTRIC)
       {
         ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat);
       }
@@ -518,17 +532,20 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
       return color3(1.f);
 
-    vec3 r = reflect(ray->dir, intersection.normal);
-    Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
-    rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
-
-    color3 reflectionColor = trace_ray(scene, ray_ref, tree);
-    float LdotH = dot(ray_ref->dir, intersection.normal);
-    float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
-
+    color3 reflectionColor = color3(0.f);
     color3 refractionColor = color3(0.f);
 
     if(intersection.mat->mtype == DIELECTRIC) {
+      // REFRACTION + REFLECTION
+      vec3 r = reflect(ray->dir, intersection.normal);
+      Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
+
+      rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+      color3 reflectionColor = trace_ray(scene, ray_ref, tree);
+
+      float LdotH = dot(ray_ref->dir, intersection.normal);
+      float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+
       float refractionRatio = 
         intersection.isOutside ? (1/intersection.mat->IOR) : intersection.mat->IOR;
 
@@ -544,11 +561,58 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
         refractionColor = trace_ray(scene, ray_refr, tree);
         free(ray_refr);
       //}
+      free(ray_ref);
+      
+      ret += ( reflectionColor * f * intersection.mat->specularColor ) + refractionColor * (1 - f);
+    } 
+    else
+    {
+      // REFLECTION
+      vec3 r = reflect(ray->dir, intersection.normal);
+      Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
+      rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+
+      color3 cr = trace_ray(scene, ray_ref, tree);
+      float LdotH = dot(ray_ref->dir, intersection.normal);
+      float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+
+      reflectionColor = (f * cr * intersection.mat->specularColor);
+      
+      ret += reflectionColor;
+      free(ray_ref);
     }
 
-    ret += (f * reflectionColor * intersection.mat->specularColor) + refractionColor * (1 - f);
+    //vec3 r = reflect(ray->dir, intersection.normal);
+    //Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
+    //rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
-    free(ray_ref);
+    //color3 reflectionColor = trace_ray(scene, ray_ref, tree);
+    //float LdotH = dot(ray_ref->dir, intersection.normal);
+    //float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+
+    //color3 refractionColor = color3(0.f);
+
+    //if(intersection.mat->mtype == DIELECTRIC) {
+    //  float refractionRatio = 
+    //    intersection.isOutside ? (1/intersection.mat->IOR) : intersection.mat->IOR;
+
+    //  vec3 unit_direction = normalize( ray->dir );
+    //  float cos_theta = fmin(dot(-unit_direction, intersection.normal), 1.0);
+    //  float sin_theta = sqrt(1.0 - cos_theta*cos_theta);
+    //  bool cannot_refract = refractionRatio * sin_theta > 1.0;
+    //  if(!cannot_refract && reflectance(cos_theta, refractionRatio) < m_unifDistributionRand(engine)){
+    //    vec3 refr = refract(unit_direction, intersection.normal, refractionRatio);
+    //    Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
+    //    rayInit(ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
+
+    //    refractionColor = trace_ray(scene, ray_refr, tree);
+    //    free(ray_refr);
+    //  }
+    //}
+
+    //ret += (f * reflectionColor * intersection.mat->specularColor) + refractionColor * (1 - f);
+
+    //free(ray_ref);
   }
   else
   {

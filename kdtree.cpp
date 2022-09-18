@@ -161,6 +161,9 @@ KdTree *initKdTree(Scene *scene)
   root->min = vec3(xmin, ymin, zmin);
   root->max = vec3(xmax, ymax, zmax);
 
+  std::cout << "xmin: " << xmin << " " << ymin << "" << zmin << std::endl;
+  std::cout << "xmax: " << xmax << " " << ymax << "" << zmax << std::endl;
+
   for (size_t i = 0; i < tree->inTree.size(); i++)
   {
     root->objects.push_back(tree->inTree[i]);
