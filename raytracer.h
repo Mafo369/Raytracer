@@ -14,8 +14,9 @@ typedef struct intersection_s {
   point3 position; //! the intersection point
   Material *mat; //! the material of th intersected object
 
-  bool isTex;
   vec2 t;
+  float u;
+  float v;
 
   bool isOutside;
 } Intersection;

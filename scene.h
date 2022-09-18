@@ -4,6 +4,8 @@
 #include "defines.h"
 #include "tiny_obj_loader.h"
 
+#include "textures.hpp"
+
 // SCENE
 typedef struct scene_s Scene;
 typedef struct object_s Object;
@@ -17,7 +19,10 @@ typedef struct material_s {
   float roughness; //! 0.001 - 0.01 : very smooth finish with slight imperfections. 0.1 : relatively rough. 0.3-0.7 extremely rough 
   color3 specularColor;	//! Specular "albedo"
   color3 diffuseColor;	//! Base color
-  Mtype mtype;
+  Mtype mtype = DIFFUSE;
+  
+  texture* m_texture = nullptr;
+  
 } Material;
 
 enum Etype {SPHERE=1, PLANE, TRIANGLE};

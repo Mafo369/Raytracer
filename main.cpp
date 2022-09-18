@@ -12,7 +12,7 @@
 
 Material mat_lib[] = {
     /* nickel */
-    {1.5, 0.7, {1.0, 1.0, 1.0}, {0.0, 0.0, 1.0}, DIELECTRIC},
+    {1.5, 2.2, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, DIELECTRIC},
 
     /* specular black phenolic */
     {1.072, 0.0588, {1.0, 0.824, 0.945}, {0.002, 0.002, 0.003}},
@@ -437,7 +437,7 @@ Scene *initScene6() {
   mat.specularColor = color3(1.0f);
   mat.roughness = 1.f;
 
-  addObjectsFromFile("../assets/new_bunny.obj", scene, mat_lib[0]);
+  addObjectsFromFile("../assets/bunny.obj", scene, mat_lib[0]);
 
   mat.diffuseColor = color3(0.7, 0, 0);
   mat.specularColor = color3(1, 0, 0);
@@ -487,7 +487,7 @@ Scene *initScene7() {
 
 Scene *initScene8() {
   Scene *scene = initScene();
-  setCamera(scene, point3(50, 1, 50), vec3(0, 1, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(28, 1, 28), vec3(0, 1, 0), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.4, 0.9, 0.9));
 
@@ -497,7 +497,7 @@ Scene *initScene8() {
 
   addLight(scene, initLight(point3(0, 50, 0), color3(1, 1, 1)));
   
-  addObject(scene, initSphere(point3(24, 8, 24), 8.f, mat_lib[0]));
+  addObject(scene, initSphere(point3(24, 2, 24), 2.f, mat_lib[0]));
   addLight(scene, initLight(point3(5, 30, 5),color3(1, 1, 1)));
 
   Material mats;
@@ -505,17 +505,18 @@ Scene *initScene8() {
   mats.specularColor = color3(0.f, 0.f, 0.7f);
   mats.roughness = 0.5f;
 
-    addObject(scene, initSphere(point3(-50, 7, -50), 7.f, mat_lib[8]));
-    addObject(scene, initSphere(point3(0, 7, 20), 7.f, mats));
-  addObject(scene, initSphere(point3(20, 7, 0), 7.f, mat_lib[8]));
+    addObject(scene, initSphere(point3(-5, 1.8, -5), 1.8f, mat_lib[8]));
+    addObject(scene, initSphere(point3(18, 1.8, 26), 1.8f, mats));
+  addObject(scene, initSphere(point3(26, 1.8, 18), 1.8f, mat_lib[8]));
 
 
   Material mat;
-  mat.diffuseColor = color3(0.7, 0, 0);
-  mat.specularColor = color3(1, 0, 0);
+  mat.diffuseColor = color3(0.5);
+  mat.specularColor = color3(0.5);
   mat.IOR = 1.5;
   mat.roughness = 0.0681;
   mat.mtype = DIFFUSE;
+  mat.m_texture = new checker_texture(color3(0.2, 0.3, 0.1), color3(0.9, 0.9, 0.9));
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
   return scene;
