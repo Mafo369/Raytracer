@@ -22,19 +22,6 @@
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
 
-vec3 computePrimaryTexDir(vec3 normal)
-{
-    vec3 a = cross(normal, vec3(1, 0, 0));
-    vec3 b = cross(normal, vec3(0, 1, 0));
-
-    vec3 max_ab = dot(a, a) < dot(b, b) ? b : a;
-
-    vec3 c = cross(normal, vec3(0, 0, 1));
-
-    return normalize(dot(max_ab, max_ab) < dot(c, c) ? c : max_ab);
-}
-
-
 bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
 {
 
@@ -286,19 +273,6 @@ float RDM_Beckmann(float NdotH, float alpha)
   return d;
 }
 
-float Fresnel(float VdotH, const float eta) 
-{
-    const float cos_theta_i = VdotH;
-    const float cos_theta_t2 = 1.0f - (1.0f-cos_theta_i*cos_theta_i) / (eta*eta);
-    // total internal reflection
-    if (cos_theta_t2 <= 0.0f) return 1.0f;
-    const float cos_theta_t = sqrtf(cos_theta_t2);
-    const float Rs = (cos_theta_i - eta * cos_theta_t) / (cos_theta_i + eta * cos_theta_t);
-    const float Rp = (eta * cos_theta_i - cos_theta_t) / (eta * cos_theta_i + cos_theta_t);
-    const float F = 0.5f * (Rs * Rs + Rp * Rp);
-    return F;
-}
-
 // Fresnel term computation. Implantation of the exact computation. we can use
 // the Schlick approximation
 // LdotH : Light . Half
@@ -337,29 +311,23 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR)
   return f;
 }
 
-float RDM_FresnelD(float cosThetaI, float etaI, float etaT)
-{
+float schlick(float VdotN, float extIOR, float intIOR){
+  float cos = VdotN;
 
-    cosThetaI = std::clamp(cosThetaI, -1.f, 1.f);
-    // Potentially swap indices of refraction
-    bool entering = cosThetaI > 0.f;
-    if (!entering) {
-        std::swap(etaI, etaT);
-        cosThetaI = std::abs(cosThetaI);
-    }
+  if( intIOR > extIOR ){
+      float n = intIOR / extIOR;
+      float sin2_t = (n*n) * (1.0f - (cos*cos)); 
+      if( sin2_t > 1.0f )
+        return 1.0f;
+      
+      float cos_t = sqrtf(1.0f - sin2_t);
 
-    // Compute _cosThetaT_ using Snell's law
-    float sinThetaI = std::sqrt(std::max((float)0, 1 - cosThetaI * cosThetaI));
-    float sinThetaT = etaI / etaT * sinThetaI;
+      cos = cos_t;
+  }
 
-    // Handle total internal reflection
-    if (sinThetaT >= 1) return 1;
-    float cosThetaT = std::sqrt(std::max((float)0, 1 - sinThetaT * sinThetaT));
-    float Rparl = ((etaT * cosThetaI) - (etaI * cosThetaT)) /
-                  ((etaT * cosThetaI) + (etaI * cosThetaT));
-    float Rperp = ((etaI * cosThetaI) - (etaT * cosThetaT)) /
-                  ((etaI * cosThetaI) + (etaT * cosThetaT));
-    return (Rparl * Rparl + Rperp * Rperp) / 2;
+  float r0 = ((intIOR - extIOR) / (intIOR + extIOR));
+  float r02 = r0 * r0;
+  return r02 + (1.f - r02) * powf(1.f - cos, 5);
 }
 
 // DdotH : Dir . Half
@@ -560,19 +528,12 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 
       float refractionRatio = 
         intersection.isOutside ? (1.f/intersection.mat->IOR) : intersection.mat->IOR;
-
-      float f;
-      if(intersection.isOutside)
-        f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
-      else
-        f = RDM_Fresnel(LdotH, intersection.mat->IOR, 1.f);
+      float f = intersection.isOutside ? 
+          RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR) : 
+          RDM_Fresnel(LdotH, intersection.mat->IOR, 1.f);
 
       vec3 unit_direction = normalize( ray->dir );
-      float cos_theta = fmin(dot(-unit_direction, intersection.normal), 1.0f);
-      float sin_theta = sqrt(1.0 - cos_theta*cos_theta);
-      bool cannot_refract = refractionRatio * sin_theta > 1.0f;
-
-      if(f<1.0f/*!cannot_refract*/ /*&& !(reflectance(cos_theta, refractionRatio) > m_unifDistributionRand(engine))*/){
+      if( f < 1.0f /*&& !(reflectance(cos_theta, refractionRatio) > m_unifDistributionRand(engine))*/){
         vec3 refr = refract(unit_direction, intersection.normal, refractionRatio);
         Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
         rayInit(ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
