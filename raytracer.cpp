@@ -164,9 +164,8 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj)
   {
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = &(obj->mat);
-    intersection->normal = abs(normalize(cross(v1v2, v1v3)));
-    intersection->isOutside = true;
-    //if(dot(ray->dir, intersection->normal) < 0) intersection->normal = -intersection->normal, intersection->isOutside = false; 
+    intersection->isOutside = dot(ray->dir, obj->geom.triangle.normal) < 0;
+    intersection->normal = intersection->isOutside ? obj->geom.triangle.normal : -obj->geom.triangle.normal;
     ray->tmax = t;
     return true;
   }
@@ -474,29 +473,22 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float
 
   float ln = dot(l, n);
 
+  vec3 vl = v + l;
+  vec3 h = vl / length(vl);
+  float LdotH = dot(l, h);
+  float NdotH = dot(n, h);
+  float VdotH = dot(v, h);
+  float LdotN = dot(l, n);
+  float VdotN = dot(v, n);
   if (ln > 0)
   {
 
     if (mat->mtype == DIELECTRIC){
-      vec3 vl = v + l;
-      vec3 h = vl / length(vl);
-      float LdotH = dot(l, h);
-      float NdotH = dot(n, h);
-      float VdotH = dot(v, h);
-      float LdotN = dot(l, n);
-      float VdotN = dot(v, n);
       ret = lc * 
         (RDM_btdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat) + 
          RDM_brdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat)) * LdotN;
     }
     else{
-      vec3 vl = v + l;
-      vec3 h = vl / length(vl);
-      float LdotH = dot(l, h);
-      float NdotH = dot(n, h);
-      float VdotH = dot(v, h);
-      float LdotN = dot(l, n);
-      float VdotN = dot(v, n);
       ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex) * LdotN;
     }
   }
@@ -557,6 +549,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 
     if(intersection.mat->mtype == DIELECTRIC) {
       // REFRACTION + REFLECTION
+
       vec3 r = reflect(ray->dir, intersection.normal);
       Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
 
@@ -564,17 +557,22 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       color3 reflectionColor = trace_ray(scene, ray_ref, tree);
 
       float LdotH = dot(ray_ref->dir, intersection.normal);
-      float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
       float refractionRatio = 
         intersection.isOutside ? (1.f/intersection.mat->IOR) : intersection.mat->IOR;
+
+      float f;
+      if(intersection.isOutside)
+        f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+      else
+        f = RDM_Fresnel(LdotH, intersection.mat->IOR, 1.f);
 
       vec3 unit_direction = normalize( ray->dir );
       float cos_theta = fmin(dot(-unit_direction, intersection.normal), 1.0f);
       float sin_theta = sqrt(1.0 - cos_theta*cos_theta);
       bool cannot_refract = refractionRatio * sin_theta > 1.0f;
 
-      if(!cannot_refract /*&& !(reflectance(cos_theta, refractionRatio) > m_unifDistributionRand(engine))*/){
+      if(f<1.0f/*!cannot_refract*/ /*&& !(reflectance(cos_theta, refractionRatio) > m_unifDistributionRand(engine))*/){
         vec3 refr = refract(unit_direction, intersection.normal, refractionRatio);
         Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
         rayInit(ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
