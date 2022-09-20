@@ -22,6 +22,10 @@
 //  or boucing (add this amount to the position before casting a new ray !
 const float acne_eps = 1e-4;
 
+void printColor( color3 color ) {
+  std::cout << "color: " << color.x << " " << color.y << " " << color.z << std::endl;
+}
+
 bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
 {
 
@@ -155,7 +159,12 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj)
     intersection->mat = &(obj->mat);
     intersection->isOutside = dot(ray->dir, obj->geom.triangle.normal) < 0;
     //intersection->normal = intersection->isOutside ? obj->geom.triangle.normal : -obj->geom.triangle.normal;
-    intersection->normal = obj->geom.triangle.normal;
+    intersection->u = u;
+    intersection->v = v;
+
+    vec3 normal = obj->geom.triangle.n2 * u + obj->geom.triangle.n3 * v + obj->geom.triangle.n1 * (1.f - u - v);
+
+    intersection->normal = normal;
     ray->tmax = t;
     return true;
   }
@@ -283,10 +292,10 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR)
 {
 
   //! \todo compute Fresnel term
-  //if (LdotH < 0)
-  //{
-  //  LdotH = -LdotH;
-  //}
+  if (LdotH < 0)
+  {
+    LdotH = -LdotH;
+  }
 
   float n1_n2 = (extIOR / intIOR) * (extIOR / intIOR);
   float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
@@ -393,7 +402,8 @@ color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
 {
 
   float d = RDM_Beckmann(NdotH, m->roughness);
-  float f = RDM_Fresnel(LdotH, extIOR, intIOR);
+  //float f = RDM_Fresnel(LdotH, extIOR, intIOR);
+  float f = schlick(LdotH, extIOR, intIOR);
   float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
 
   float denom = (intIOR*LdotH + extIOR*VdotH);
@@ -432,11 +442,15 @@ color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
 color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
                 Material *m, float extIOR, float intIOR )
 {
+  if(VdotN == 0.f)
+    return color3(0,0,0);
+
   float d = RDM_Beckmann(NdotH, m->roughness);
-  float f = RDM_Fresnel(LdotH, extIOR, intIOR);
+  //float f = RDM_Fresnel(LdotH, extIOR, intIOR);
+  float f = schlick(LdotH, extIOR, intIOR);
   float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
 
-  return color3(m->specularColor * ((d * f * g) / (4.f * LdotN * VdotN)));
+  return m->specularColor * ((d * f * g) / (4.f * LdotN * VdotN));
 }
 
 color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float vTex, bool outside)
@@ -448,6 +462,7 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float
 
   if (mat->mtype == DIELECTRIC){
     float LdotN = abs(dot(l, n));
+    if(LdotN == 0.0f) return ret;
     float VdotN = abs(dot(v, n));
     float extIOR, intIOR;
     if(outside){
@@ -515,7 +530,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 5)
+  if (ray->depth > 10)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))

@@ -44,6 +44,24 @@ Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat)
     return ret;
 }
 
+Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, Material mat){
+    Object *ret;
+    ret = (Object *)malloc(sizeof(Object));
+    ret->geom.type = TRIANGLE;
+    ret->geom.triangle.p1 = p1;
+    ret->geom.triangle.p2 = p2;
+    ret->geom.triangle.p3 = p3;
+    ret->geom.triangle.n1 = n1;
+    ret->geom.triangle.n2 = n2;
+    ret->geom.triangle.n3 = n3;
+    ret->geom.triangle.normal = n;
+    ret->geom.triangle.tex[0] = t[0];
+    ret->geom.triangle.tex[1] = t[1];
+    ret->geom.triangle.tex[2] = t[2];
+    memcpy(&(ret->mat), &mat, sizeof(Material));
+    return ret;
+}
+
 void freeObject(Object *obj) {
     free(obj);
 }

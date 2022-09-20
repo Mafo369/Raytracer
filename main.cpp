@@ -7,12 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define WIDTH 800
-#define HEIGHT 600
+#define WIDTH 1200
+#define HEIGHT 800
 
 Material mat_lib[] = {
     /* bunny glass */
-    {1.02, 2.2, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, DIELECTRIC },
+    {1.05, 2.2, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, DIELECTRIC },
 
     /* specular black phenolic */
     {1.072, 0.0588, {1.0, 0.824, 0.945}, {0.002, 0.002, 0.003}},
@@ -41,7 +41,7 @@ Material mat_lib[] = {
     /* blue acrylic */
     {1.1153, 0.068, {0.012, 0.036, 0.106}, {1.0, 0.965, 1.07}},
 
-    {1.51, 0.344, {1.0, 1.0, 1.0}, {1.0, .0, .0}, DIELECTRIC },
+    {1.51, 2.2, {1.0, 1.0, 1.0}, {1.0, .0, .0}, DIELECTRIC },
 };
 
 Scene *initScene0() {
@@ -50,31 +50,23 @@ Scene *initScene0() {
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
   Material mat;
-  mat.IOR = 1.3f;
-  mat.roughness = 2.f;
-  mat.specularColor = color3(1.f, 1.f, 1.f);
-  mat.mtype = DIELECTRIC;
+  mat.IOR = 1.3;
+  mat.roughness = 0.1;
+  mat.specularColor = color3(0.5f);
 
-  mat.diffuseColor = color3(.001f);
+  mat.diffuseColor = color3(.5f);
   addObject(scene, initSphere(point3(0, 0, 0), 0.25, mat));
 
-  mat.diffuseColor = color3(1.0f);
-  mat.specularColor = color3(0.5f, 0.f, 0.f);
-  mat.roughness = 0.5f;
+  mat.diffuseColor = color3(0.5f, 0.f, 0.f);
   addObject(scene, initSphere(point3(1, 0, 0), .25, mat));
 
   mat.diffuseColor = color3(0.f, 0.5f, 0.5f);
-  mat.specularColor = color3(0.f, 0.5f, 0.5f);
-  mat.roughness = 1.f;
   addObject(scene, initSphere(point3(0, 1, 0), .25, mat));
 
   mat.diffuseColor = color3(0.f, 0.f, 0.5f);
-  mat.specularColor = color3(0.f, 0.f, 0.7f);
-  mat.roughness = 0.5f;
   addObject(scene, initSphere(point3(0, 0, 1), .25, mat));
 
   mat.diffuseColor = color3(0.6f);
-  mat.mtype = DIFFUSE;
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
   addLight(scene, initLight(point3(10, 10, 10), color3(1, 1, 1)));
@@ -316,7 +308,7 @@ Scene *initScene5() {
   mat.IOR = 6;
   mat.roughness = 0.0181;
   vec2 textures[3];
-  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[10]));
+  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[0]));
 
   v1 = vec3(1,0,0);
   v0 = vec3(0,1,0);
@@ -325,7 +317,7 @@ Scene *initScene5() {
   v1v0 = v1-v0;
   v2v0 = v2-v0;
   n = normalize(cross(v2v0, v1v0));
-  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[10]));
+  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[0]));
   
   mat.diffuseColor = color3(0.016, 0.073, 0.04);
   mat.specularColor = color3(1.0, 1.056, 1.146);
@@ -416,7 +408,7 @@ void addObjectsFromFile(const char *filename, Scene *scene, Material default_mat
       else{
         mat = default_mat;
       }
-      addObject(scene, initTriangle(v0, v1, v2, n,textures,mat));
+      addObject(scene, initSmoothTriangle(v0, v1, v2, n, textures, normals[0], normals[1], normals[2],mat));
     }
   }
 }
@@ -424,9 +416,9 @@ void addObjectsFromFile(const char *filename, Scene *scene, Material default_mat
 Scene *initScene6() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(-4, 2, 4), vec3(0, 0, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(-4.5, 2.5, 3.5), vec3(0, 0, 0), vec3(0, 0.5, 0), 60,
             (float)WIDTH / (float)HEIGHT);
-  setSkyColor(scene, color3(0.6f, 0.3f, 0.5f));
+  setSkyColor(scene, color3(0.459f, 0.f, 0.878f));
   
   //addLight(scene, initLight(point3(100, 1, 1), color3(50, 50, 50)));
   //addLight(scene, initLight(point3(1, 0.1, 0.5), color3(5, 5, 5)));
@@ -441,6 +433,7 @@ Scene *initScene6() {
   addLight(scene, initLight(point3(-5, 4, 5), color3(1, 1, 1)));
   addLight(scene, initLight(point3(-5, 4, 4), color3(1, 1, 1)));
 
+  //addLight(scene, initLight(point3(20, 1, -20), color3(1, 1, 1)));
 
   Material mat;
   mat.IOR = 1.3f;
@@ -448,20 +441,39 @@ Scene *initScene6() {
   mat.specularColor = color3(1.0f);
   mat.roughness = 1.f;
 
-  addObjectsFromFile("../assets/new_bunny.obj", scene, mat_lib[10]);
+  addObjectsFromFile("../assets/new_bunny.obj", scene, mat_lib[0]);
 
   mat.diffuseColor = color3(0.7, 0, 0);
-  mat.specularColor = color3(1, 0, 0);
+  mat.specularColor = color3(0.95, 0, 0);
   mat.IOR = 1.5;
-  mat.roughness = 0.0681;
+  mat.roughness = 0.5;
+  mat.mtype = DIFFUSE;
+  addObject(scene, initSphere(point3(4, 0., -2), 0.4, mat));
+
+  mat.diffuseColor = color3(0., 0, 0.7);
+  mat.specularColor = color3(0., 0, 0.95);
+  mat.IOR = 1.5;
+  mat.roughness = 0.5;
+  mat.mtype = DIFFUSE;
+  addObject(scene, initSphere(point3(-0.5, 0., 0), 0.2, mat));
+
+  mat.diffuseColor = color3(0.7, 0.5, 0);
+  mat.specularColor = color3(0.95, 0.6, 0);
+  mat.IOR = 1.5;
+  mat.roughness = 0.5;
+  mat.mtype = DIFFUSE;
+  addObject(scene, initSphere(point3(-0.9, 0., 3), 0.2, mat));
+
+  addObject(scene, initSphere(point3(4, 0., 3), 0.2, mat_lib[2]));
 
   mat.diffuseColor = color3(0.5);
   mat.specularColor = color3(0.5);
   mat.IOR = 1.5;
   mat.roughness = 0.0681;
   mat.mtype = DIFFUSE;
-  mat.m_texture = new checker_texture(color3(0.2, 0.3, 0.1), color3(0.9, 0.9, 0.9));
-  addObject(scene, initPlane(vec3(0, 1, 0), 1, mat));
+  mat.m_texture = new checker_texture(color3(1.0, 1.0, 1.0), color3(0, 0, 0));
+  addObject(scene, initPlane(vec3(0, 1, 0), 0.4, mat));
+  mat.m_texture = nullptr;
 
   mat.diffuseColor = color3(0, 0.8, 0);
   mat.specularColor = color3(0.6, 0.6, 0);
@@ -469,6 +481,42 @@ Scene *initScene6() {
   mat.roughness = 0.0681;
   //addObject(scene, initPlane(vec3(0, 0, 1), +10, mat));
 
+  mat.diffuseColor = color3(0.014, 0.012, 0.012);
+  mat.specularColor = color3(0.7, 0.882, 0.786);
+  mat.IOR = 6;
+  mat.roughness = 0.0181;
+  addObject(scene, initSphere(point3(0, 0., -4), .3, mat));
+
+  mat.diffuseColor = color3(0.26, 0.036, 0.014);
+  mat.specularColor = color3(1.0, 0.852, 1.172);
+  mat.IOR = 1.3771;
+  mat.roughness = 0.01589;
+  addObject(scene, initSphere(point3(-1, -.05, 0), .15, mat));
+
+  mat.diffuseColor = color3(0.014, 0.012, 0.012);
+  mat.specularColor = color3(0.7, 0.882, 0.786);
+  mat.IOR = 3;
+  mat.roughness = 0.00181;
+  addObject(scene, initSphere(point3(1, 0.05, 2), .25, mat));
+
+  mat.diffuseColor = color3(0.46, 0.136, 0.114);
+  mat.specularColor = color3(0.8, 0.852, 0.8172);
+  mat.IOR = 1.5771;
+  mat.roughness = 0.01589;
+  addObject(scene, initSphere(point3(1.6, 0., 2.6), 0.215, mat));
+
+  mat.diffuseColor = color3(0.06, 0.26, 0.22);
+  mat.specularColor = color3(0.70, 0.739, 0.721);
+  mat.IOR = 1.3051;
+  mat.roughness = 0.567;
+  addObject(scene, initSphere(point3(1.9, 0.05, 2.2), .25, mat));
+
+  mat.diffuseColor = color3(0.012, 0.036, 0.406);
+  mat.specularColor = color3(1.0, 0.965, 1.07);
+  mat.IOR = 1.1153;
+  mat.roughness = 0.068;
+  mat.roughness = 0.18;
+  addObject(scene, initSphere(point3(-2, 0, 1.5), .20, mat));
   
   return scene;
 }
