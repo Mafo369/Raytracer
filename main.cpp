@@ -41,7 +41,7 @@ Material mat_lib[] = {
     /* blue acrylic */
     {1.1153, 0.068, {0.012, 0.036, 0.106}, {1.0, 0.965, 1.07}},
 
-    {1.5, 2.2, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, DIELECTRIC },
+    {1.51, 0.344, {1.0, 1.0, 1.0}, {1.0, .0, .0}, DIELECTRIC },
 };
 
 Scene *initScene0() {
@@ -316,7 +316,7 @@ Scene *initScene5() {
   mat.IOR = 6;
   mat.roughness = 0.0181;
   vec2 textures[3];
-  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[0]));
+  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[10]));
 
   v1 = vec3(1,0,0);
   v0 = vec3(0,1,0);
@@ -325,7 +325,7 @@ Scene *initScene5() {
   v1v0 = v1-v0;
   v2v0 = v2-v0;
   n = normalize(cross(v2v0, v1v0));
-  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[0]));
+  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[10]));
   
   mat.diffuseColor = color3(0.016, 0.073, 0.04);
   mat.specularColor = color3(1.0, 1.056, 1.146);
@@ -448,7 +448,7 @@ Scene *initScene6() {
   mat.specularColor = color3(1.0f);
   mat.roughness = 1.f;
 
-  addObjectsFromFile("../assets/new_bunny.obj", scene, mat_lib[0]);
+  addObjectsFromFile("../assets/new_bunny.obj", scene, mat_lib[10]);
 
   mat.diffuseColor = color3(0.7, 0, 0);
   mat.specularColor = color3(1, 0, 0);

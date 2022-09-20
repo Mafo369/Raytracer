@@ -74,7 +74,8 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj)
       intersection->mat = &(obj->mat);
       vec3 normal = normalize(intersection->position - obj->geom.sphere.center);
       intersection->isOutside = dot(ray->dir, normal) < 0;
-      intersection->normal = intersection->isOutside ? normal : -normal;
+      //intersection->normal = intersection->isOutside ? normal : -normal;
+      intersection->normal = normal;
       ray->tmax = t;
       return true;
     }
@@ -105,7 +106,8 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj)
     intersection->mat = &(obj->mat);
     vec3 normal = normalize(intersection->position - obj->geom.sphere.center);
     intersection->isOutside = dot(ray->dir, normal) < 0;
-    intersection->normal = intersection->isOutside ? normal : -normal;
+    //intersection->normal = intersection->isOutside ? normal : -normal;
+    intersection->normal = normal;
     ray->tmax = t;
     return true;
   }
@@ -152,7 +154,8 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj)
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = &(obj->mat);
     intersection->isOutside = dot(ray->dir, obj->geom.triangle.normal) < 0;
-    intersection->normal = intersection->isOutside ? obj->geom.triangle.normal : -obj->geom.triangle.normal;
+    //intersection->normal = intersection->isOutside ? obj->geom.triangle.normal : -obj->geom.triangle.normal;
+    intersection->normal = obj->geom.triangle.normal;
     ray->tmax = t;
     return true;
   }
@@ -280,10 +283,10 @@ float RDM_Fresnel(float LdotH, float extIOR, float intIOR)
 {
 
   //! \todo compute Fresnel term
-  if (LdotH < 0)
-  {
-    LdotH = -LdotH;
-  }
+  //if (LdotH < 0)
+  //{
+  //  LdotH = -LdotH;
+  //}
 
   float n1_n2 = (extIOR / intIOR) * (extIOR / intIOR);
   float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
@@ -337,8 +340,8 @@ float RDM_G1(float DdotH, float DdotN, float alpha)
 
   //! \todo compute G1 term of the Smith fonction
 
-  float tanx = sqrtf(1 - (DdotN * DdotN)) / DdotN;
-  float b = 1 / (alpha * tanx);
+  float tanx = sqrtf(1.f - (DdotN * DdotN)) / DdotN;
+  float b = 1.f / (alpha * tanx);
 
   float k = DdotH / DdotN;
 
@@ -347,7 +350,7 @@ float RDM_G1(float DdotH, float DdotN, float alpha)
   if (b < 1.6f)
   {
     float b2 = b * b;
-    float fraction = (3.535 * b + 2.181 * b2) / (1 + 2.276 * b + 2.577 * b2);
+    float fraction = (3.535f * b + 2.181f * b2) / (1.f + 2.276f * b + 2.577f * b2);
     float g1 = phi_k * fraction;
     return g1;
   }
@@ -386,16 +389,16 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
 }
 
 color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
-                  float VdotN, Material *m)
+                  float VdotN, Material *m, float extIOR, float intIOR)
 {
 
   float d = RDM_Beckmann(NdotH, m->roughness);
-  float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
+  float f = RDM_Fresnel(LdotH, extIOR, intIOR);
   float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
 
-  float denom = (m->IOR*LdotH + 1.f*VdotH);
+  float denom = (intIOR*LdotH + extIOR*VdotH);
 
-  float no = m->IOR;
+  float no = extIOR;
   return color3(m->specularColor * (LdotH * VdotH)/(LdotN * VdotN)*((no*no)*(1.0f-f)*g*d)/(denom*denom));
 }
 
@@ -427,39 +430,70 @@ color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
 }
 
 color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                Material *m)
+                Material *m, float extIOR, float intIOR )
 {
-  return color3(RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
+  float d = RDM_Beckmann(NdotH, m->roughness);
+  float f = RDM_Fresnel(LdotH, extIOR, intIOR);
+  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
+
+  return color3(m->specularColor * ((d * f * g) / (4.f * LdotN * VdotN)));
 }
 
-color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float vTex)
+color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float vTex, bool outside)
 {
   color3 ret = color3(0.f);
 
   //! \todo compute bsdf, return the shaded color taking into account the
   //! lightcolor
 
-  float ln = dot(l, n);
-
-  vec3 vl = v + l;
-  vec3 h = vl / length(vl);
-  float LdotH = dot(l, h);
-  float NdotH = dot(n, h);
-  float VdotH = dot(v, h);
-  float LdotN = dot(l, n);
-  float VdotN = dot(v, n);
-  if (ln > 0)
-  {
-
-    if (mat->mtype == DIELECTRIC){
-      ret = lc * 
-        (RDM_btdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat) + 
-         RDM_brdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat)) * LdotN;
+  if (mat->mtype == DIELECTRIC){
+    float LdotN = abs(dot(l, n));
+    float VdotN = abs(dot(v, n));
+    float extIOR, intIOR;
+    if(outside){
+      extIOR = mat->IOR;
+      intIOR = 1.f;
     }
-    else{
+    else
+    {
+      extIOR = 1.f;
+      intIOR = mat->IOR;
+    }
+
+    // REFLECTION
+    vec3 hr = (v + l);
+    hr = hr / length(hr);
+    float LdotH = abs(dot(l, hr));
+    float NdotH = abs(dot(n, hr));
+    float VdotH = abs(dot(v, hr));
+    auto brdfColor = RDM_brdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
+
+    // REFRACTION
+    hr = -intIOR * l - extIOR * v;
+    hr = hr / length(hr);
+    LdotH = abs(dot(l, hr));
+    NdotH = abs(dot(n, hr));
+    VdotH = abs(dot(v, hr));
+    auto btdfColor = RDM_btdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
+
+    // BSDF
+    ret = lc * ( brdfColor + btdfColor ) * LdotN;
+  }
+  else
+  {
+    float LdotN = dot(l, n);
+    if (LdotN > 0)
+    {
+      vec3 vl = v + l;
+      vec3 h = vl / length(vl);
+      float LdotH = dot(l, h);
+      float NdotH = dot(n, h);
+      float VdotH = dot(v, h);
+      float VdotN = dot(v, n);
       ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex) * LdotN;
     }
   }
+
 
   return ret;
 }
@@ -499,7 +533,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       Intersection temp_inter;
       if (!intersectKdTree(scene, tree, ray_ombre, &temp_inter))
       {
-        ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat, intersection.u, intersection.v);
+        ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat, intersection.u, intersection.v, intersection.isOutside);
       }
       else
       {
@@ -518,13 +552,14 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     if(intersection.mat->mtype == DIELECTRIC) {
       // REFRACTION + REFLECTION
 
-      vec3 r = reflect(ray->dir, intersection.normal);
+      auto normal = intersection.isOutside ? intersection.normal : -intersection.normal;
+      vec3 r = reflect(ray->dir, normal);
       Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
 
       rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
       color3 reflectionColor = trace_ray(scene, ray_ref, tree);
 
-      float LdotH = dot(ray_ref->dir, intersection.normal);
+      float LdotH = dot(ray_ref->dir, normal);
 
       float refractionRatio = 
         intersection.isOutside ? (1.f/intersection.mat->IOR) : intersection.mat->IOR;
@@ -534,7 +569,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 
       vec3 unit_direction = normalize( ray->dir );
       if( f < 1.0f /*&& !(reflectance(cos_theta, refractionRatio) > m_unifDistributionRand(engine))*/){
-        vec3 refr = refract(unit_direction, intersection.normal, refractionRatio);
+        vec3 refr = refract(unit_direction, normal, refractionRatio);
         Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
         rayInit(ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
 
