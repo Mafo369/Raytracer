@@ -9,6 +9,8 @@ set(mrt_SRCS
   main.cpp
   raytracer.cpp
   scene.cpp
+  intersection.cpp
+  bsdf.cpp
   )
 
 add_executable (mrt ${mrt_SRCS})
@@ -24,8 +26,8 @@ set(unit_test_SRCS
   scene.cpp
   )
 
-add_executable (unit-test ${unit_test_SRCS})
-target_include_directories (unit-test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/lodepng-master/ )
+#add_executable (unit-test ${unit_test_SRCS})
+#target_include_directories (unit-test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/lodepng-master/ )
 
 
 set(make_test_SRCS

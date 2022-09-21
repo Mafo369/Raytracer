@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define WIDTH 1200
-#define HEIGHT 800
+#define WIDTH 800
+#define HEIGHT 600
 
 Material mat_lib[] = {
     /* bunny glass */
@@ -595,8 +595,8 @@ Scene *initScene8() {
   mats.specularColor = color3(0.f, 0.f, 0.7f);
   mats.roughness = 0.5f;
 
-    addObject(scene, initSphere(point3(-5, 1.8, -5), 1.8f, mat_lib[8]));
-    addObject(scene, initSphere(point3(18, 1.8, 26), 1.8f, mats));
+  addObject(scene, initSphere(point3(-5, 1.8, -5), 1.8f, mat_lib[8]));
+  addObject(scene, initSphere(point3(18, 1.8, 26), 1.8f, mats));
   addObject(scene, initSphere(point3(26, 1.8, 18), 1.8f, mat_lib[8]));
 
 

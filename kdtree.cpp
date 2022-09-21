@@ -13,6 +13,8 @@
 
 #include <iostream>
 
+#include "intersection.hpp"
+
 #define COST_TRAVERSE 1.0
 #define COST_INTERSECT 1.5
 
