@@ -317,8 +317,23 @@ Scene *initScene5() {
   v1v0 = v1-v0;
   v2v0 = v2-v0;
   n = normalize(cross(v2v0, v1v0));
-  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat_lib[0]));
+  mat.diffuseColor = color3(0.5, 0,0);
+  mat.specularColor = color3(0.5, 0, 0);
+  mat.IOR = 1.01;
+  mat.roughness = 2.2;
+  mat.mtype = DIFFUSE;
+  mat.m_texture = new image_texture("../assets/container2.png");
+  textures[0] = vec2(0,0);
+  textures[1] = vec2(1,0);
+  textures[2] = vec2(0,1);
+  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat));
+  v0 = vec3(1,-1, 1);
+  textures[0] = vec2(1,1);
+  textures[1] = vec2(1,0);
+  textures[2] = vec2(0,1);
+  addObject(scene, initTriangle(v0, v1, v2, n,textures,mat));
   
+  mat.m_texture = nullptr;
   mat.diffuseColor = color3(0.016, 0.073, 0.04);
   mat.specularColor = color3(1.0, 1.056, 1.146);
   mat.IOR = 1.1481;
@@ -472,6 +487,15 @@ Scene *initScene6() {
   mat.roughness = 0.0681;
   mat.mtype = DIFFUSE;
   mat.m_texture = new checker_texture(color3(1.0, 1.0, 1.0), color3(0, 0, 0));
+
+  mat.diffuseColor = color3(0.5);
+  mat.specularColor = color3(0.5);
+  mat.IOR = 1.1;
+  //mat.roughness = 0.0681;
+  mat.roughness = 1.2;
+  mat.mtype = DIFFUSE;
+  //mat.m_texture = new checker_texture(color3(0.2, 0.3, 0.1), color3(0.9, 0.9, 0.9));
+  mat.m_texture = new image_texture("../assets/chessboardtexture.png");
   addObject(scene, initPlane(vec3(0, 1, 0), 0.4, mat));
   mat.m_texture = nullptr;
 
@@ -603,10 +627,12 @@ Scene *initScene8() {
   Material mat;
   mat.diffuseColor = color3(0.5);
   mat.specularColor = color3(0.5);
-  mat.IOR = 1.5;
-  mat.roughness = 0.0681;
+  mat.IOR = 1.1;
+  //mat.roughness = 0.0681;
+  mat.roughness = 1.2;
   mat.mtype = DIFFUSE;
-  mat.m_texture = new checker_texture(color3(0.2, 0.3, 0.1), color3(0.9, 0.9, 0.9));
+  //mat.m_texture = new checker_texture(color3(0.2, 0.3, 0.1), color3(0.9, 0.9, 0.9));
+  mat.m_texture = new image_texture("../assets/chessboardtexture.png");
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
   return scene;

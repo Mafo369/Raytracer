@@ -2,31 +2,38 @@
 #include <lodepng.h>
 #include <stdio.h>
 #include <string.h>
+#include <iostream>
 
 #define SAVE_PNG
 
 Image *loadPng(const char *filename){ //Not used -> tried to implement textures
-    unsigned char *image;
-    unsigned int *w = (unsigned int *)malloc(sizeof(unsigned int));
-    unsigned int *h = (unsigned int *)malloc(sizeof(unsigned int));;
-    unsigned int error = lodepng_decode_file(&image, w, h, filename, LCT_RGB, 24);
+    unsigned int w ;
+    unsigned int h ;
+    std::vector<unsigned char> image;
+    unsigned int error = lodepng::decode(image, w, h, filename);
 
     if(error){
         printf("Unable to load texture: %s\n", filename);
         return nullptr;
     }
 
-    Image *img = initImage(*w, *h);
-    // write image to file
-    for(unsigned y = 0; y < img->height; y++) {
-        color3 *ptr = getPixelPtr(img, 0, img->height-y-1);
-        for(unsigned x = 0; x < img->width; x++) {
-            ptr->r = image[y*img->width+x];
-            ptr->g = image[y*img->width+x + 1];
-            ptr->b = image[y*img->width+x + 2];
-            ptr += 3;
-        }
+    Image *img = initImage(w, h);
+
+    size_t idx = 0;
+    for (size_t j = 0; j < img->height; j++)
+    {
+      for (size_t i = 0; i < img->width; i++)
+      {
+        color3 *ptr = getPixelPtr(img, i, j);
+        unsigned int r = image[idx++];
+        unsigned int g = image[idx++];
+        unsigned int b = image[idx++];
+        color3 color = color3(r,g,b) / 255.f;
+        *ptr = color;
+        idx++;
+      }
     }
+
     return img;
 }
 

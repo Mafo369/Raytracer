@@ -21,8 +21,23 @@ bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
       intersection->position = ray->orig + (t * ray->dir);
       intersection->mat = &(obj->mat);
       intersection->normal = n;
-      intersection->u = fmod(intersection->position.x, 1.0f);
-      intersection->v = fmod(intersection->position.z, 1.0f);
+      if(intersection->position.x < 0 && intersection->position.z > 0){
+        intersection->u = 1+fmod(intersection->position.x / 6, 1.0f);
+        intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
+      }
+      else if(intersection->position.x < 0 && intersection->position.z < 0){
+        intersection->u = abs(fmod(intersection->position.x / 6, 1.0f));
+        intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
+      }
+      else if(intersection->position.x > 0 && intersection->position.z < 0){
+        intersection->u = abs(fmod(intersection->position.x / 6, 1.0f));
+        intersection->v = 1+fmod(intersection->position.z / 6, 1.0f);
+      }
+      else
+      {
+        intersection->u = 1+fmod(intersection->position.x / 6, 1.0f);
+        intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
+      }
       ray->tmax = t;
       return true;
     }
@@ -133,9 +148,9 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj)
     intersection->mat = &(obj->mat);
     intersection->isOutside = dot(ray->dir, obj->geom.triangle.normal) < 0;
     //intersection->normal = intersection->isOutside ? obj->geom.triangle.normal : -obj->geom.triangle.normal;
-    intersection->u = u;
-    intersection->v = v;
-
+    auto uv = obj->geom.triangle.tex[1] * u + obj->geom.triangle.tex[2] * v + obj->geom.triangle.tex[0] * (1.f - u - v);
+    intersection->u = uv.x;
+    intersection->v = uv.y;
     vec3 normal = obj->geom.triangle.n2 * u + obj->geom.triangle.n3 * v + obj->geom.triangle.n1 * (1.f - u - v);
 
     intersection->normal = normal;

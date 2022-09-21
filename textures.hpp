@@ -4,6 +4,8 @@
 #include <memory>
 #include <glm/glm.hpp>
 #include "defines.h"
+#include "image.h"
+#include <iostream>
 
 class texture {
     public:
@@ -52,5 +54,25 @@ class checker_texture : public texture {
         int height = 2;
 };
 
+class image_texture : public texture {
+  public:
+    image_texture() {}
+
+    image_texture(const char* filename) {
+      m_image = loadPng(filename);
+    }
+
+    virtual color3 value(float u, float v) const override {
+      int u2 = floor(u * (m_image->width-1));
+      int v2 = floor(v * (m_image->height-1));
+      ////std::cout << u2 << std::endl;
+      //std::cout << u2 << " " << v2 << std::endl;
+      color3 color = *getPixelPtr(m_image, u2, v2);
+      return color;
+    }
+
+  private:
+    Image* m_image;
+};
 
 #endif
