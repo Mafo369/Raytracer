@@ -8,8 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define WIDTH 1200
-#define HEIGHT 800
+#define WIDTH 800
+#define HEIGHT 600
 
 Material mat_lib[] = {
     /* bunny glass */
