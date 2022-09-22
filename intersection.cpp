@@ -69,6 +69,14 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj)
       intersection->isOutside = dot(ray->dir, normal) < 0;
       //intersection->normal = intersection->isOutside ? normal : -normal;
       intersection->normal = normal;
+
+      float pi = M_PI;
+      auto theta = acos(-normal.y);
+      auto phi = atan2(-normal.z, normal.x) + pi;
+
+      intersection->u = phi / (2*pi);
+      intersection->v = theta / pi;
+
       ray->tmax = t;
       return true;
     }
@@ -101,6 +109,14 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj)
     intersection->isOutside = dot(ray->dir, normal) < 0;
     //intersection->normal = intersection->isOutside ? normal : -normal;
     intersection->normal = normal;
+    float pi = M_PI;
+    auto theta = acos(-normal.y);
+    auto phi = atan2(-normal.z, normal.x) + pi;
+
+    intersection->u = phi / (2*pi);
+    intersection->v = theta / pi;
+
+
     ray->tmax = t;
     return true;
   }

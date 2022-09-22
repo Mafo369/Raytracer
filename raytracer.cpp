@@ -86,7 +86,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 3)
+  if (ray->depth > 10)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))

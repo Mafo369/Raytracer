@@ -3,12 +3,13 @@
 #include "ray.h"
 #include "raytracer.h"
 #include "scene.h"
+#include "textures.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define WIDTH 800
-#define HEIGHT 600
+#define WIDTH 1200
+#define HEIGHT 800
 
 Material mat_lib[] = {
     /* bunny glass */
@@ -53,6 +54,7 @@ Scene *initScene0() {
   mat.IOR = 1.3;
   mat.roughness = 0.1;
   mat.specularColor = color3(0.5f);
+  mat.m_texture = new image_texture("../assets/earthmap.png");
 
   mat.diffuseColor = color3(.5f);
   addObject(scene, initSphere(point3(0, 0, 0), 0.25, mat));
@@ -67,6 +69,7 @@ Scene *initScene0() {
   addObject(scene, initSphere(point3(0, 0, 1), .25, mat));
 
   mat.diffuseColor = color3(0.6f);
+  mat.m_texture = nullptr;
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
   addLight(scene, initLight(point3(10, 10, 10), color3(1, 1, 1)));
@@ -363,6 +366,7 @@ void addObjectsFromFile(const char *filename, Scene *scene, Material default_mat
 
       std::vector<point3> vector;
       std::vector<point3> normals;
+      std::vector<vec2> texture;
       vec2 textures[fv];
 
       // Loop over vertices in the face.
@@ -395,9 +399,6 @@ void addObjectsFromFile(const char *filename, Scene *scene, Material default_mat
       vec3 v0 = vector[0];
       vec3 v1 = vector[1];
       vec3 v2 = vector[2];
-
-      vec3 v1v0 = v1-v0;
-      vec3 v2v0 = v2-v0;
       //vec3 n = normalize(cross(v2v0, v1v0));
 
       vec3 n = normalize(normals[0] + normals[1] + normals[2]);
@@ -409,6 +410,7 @@ void addObjectsFromFile(const char *filename, Scene *scene, Material default_mat
         mat.diffuseColor.r = materials[matIndex].diffuse[0];
         mat.diffuseColor.g = materials[matIndex].diffuse[1];
         mat.diffuseColor.b = materials[matIndex].diffuse[2];
+        //mat.m_texture = new image_texture(materials[matIndex].diffuse_texname.c_str());
         if(materials[matIndex].specular[0] == 0 && materials[matIndex].specular[1] == 0 && materials[matIndex].specular[1] == 0){
           mat.specularColor.r = materials[matIndex].diffuse[0];
           mat.specularColor.g = materials[matIndex].diffuse[1];
@@ -510,6 +512,7 @@ Scene *initScene6() {
   mat.IOR = 6;
   mat.roughness = 0.0181;
   addObject(scene, initSphere(point3(0, 0., -4), .3, mat));
+  mat.m_texture = nullptr;
 
   mat.diffuseColor = color3(0.26, 0.036, 0.014);
   mat.specularColor = color3(1.0, 0.852, 1.172);
@@ -522,6 +525,7 @@ Scene *initScene6() {
   mat.IOR = 3;
   mat.roughness = 0.00181;
   addObject(scene, initSphere(point3(1, 0.05, 2), .25, mat));
+  mat.m_texture = nullptr;
 
   mat.diffuseColor = color3(0.46, 0.136, 0.114);
   mat.specularColor = color3(0.8, 0.852, 0.8172);
@@ -533,6 +537,7 @@ Scene *initScene6() {
   mat.specularColor = color3(0.70, 0.739, 0.721);
   mat.IOR = 1.3051;
   mat.roughness = 0.567;
+  mat.m_texture = new image_texture("../assets/earthmap.png");
   addObject(scene, initSphere(point3(1.9, 0.05, 2.2), .25, mat));
 
   mat.diffuseColor = color3(0.012, 0.036, 0.406);
@@ -548,13 +553,13 @@ Scene *initScene6() {
 Scene *initScene7() {
 
   Scene *scene = initScene();
-  setCamera(scene, point3(3, 2, 2), vec3(0, 0, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(8, 5, 7), vec3(0, 0, 0), vec3(0, 1, 0), 60,
             float(WIDTH) / float(HEIGHT));
   setSkyColor(scene, color3(0.2, 0.8, 0.7)); 
 
 
 
-  addObjectsFromFile("../assets/cube.obj", scene, mat_lib[0]);
+  addObjectsFromFile("../assets/indoor_plant_02.obj", scene, mat_lib[1]);
   
   //mat.diffuseColor = color3(.4, 0.8, .4);
   //mat.specularColor = color3(.4, 0.6, .2);
