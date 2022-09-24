@@ -1,0 +1,3 @@
+[submodule "Walnut"]
+	path = Walnut
+	url = git@github.com:thegeeko/Walnut.git

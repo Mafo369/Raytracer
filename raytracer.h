@@ -1,11 +1,9 @@
-#ifndef __RAYTRACER_H__
-#define __RAYTRACER_H__
+#pragma once
 
 #include "defines.h"
 #include "image.h"
 #include "scene.h"
 #include "ray.h"
-
 
 
 //! An intersection contains all the information to shade an intersection point.
@@ -21,7 +19,7 @@ typedef struct intersection_s {
   bool isOutside;
 } Intersection;
 
-
+#include "kdtree.h"
 
 /// test the ray intersection against each object of the scene, the nearest intersection
 // is stored in the parameter intersection
@@ -34,6 +32,11 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *sphere);
 bool intersectTriangle(Ray *ray, Intersection *intersection, Object *sphere);
 
 void renderImage(Image *img, Scene *scene);
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree);
+color3 trace_ray_4multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
+                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y);
+color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
+                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y);
 
 float RDM_Beckmann(float NdotH, float alpha);
 float RDM_Fresnel(float LdotH, float extIOR, float intIOR);
@@ -41,4 +44,3 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN, float Vdot
 color3 RDM_bsdf_d(Material *m);
 color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN, Material *m);
 
-#endif

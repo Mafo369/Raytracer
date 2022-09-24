@@ -11,9 +11,16 @@ set(mrt_SRCS
   scene.cpp
   intersection.cpp
   bsdf.cpp
+  Camera.cpp
+  Renderer.cpp
   )
 
+add_subdirectory(Walnut/)
+
 add_executable (mrt ${mrt_SRCS})
+
+target_link_libraries(mrt PUBLIC walnut)
+
 target_include_directories (mrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/lodepng-master/ )
 
 

@@ -86,7 +86,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 10)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -202,6 +202,31 @@ color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int index
   return (pixelColor / 9.f);
 }
 
+color3 trace_ray_4multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
+                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
+{
+
+  color3 pixelColor = color3(0.f);
+
+  // We use the same process as for one ray:
+  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+                     float(i) * dx + float(j) * dy*/
+  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
+  // from which we will use the average.
+  for (int i = 1; i <= 3; i+=2)
+  {
+    for (int j = 1; j <= 3; j+=2)
+    {
+      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+                     (indexI + float(i) / 4.f) * dx + (indexJ + float(j) / 4.f) * dy;
+      Ray rx;
+      rayInit(&rx, scene->cam.position, normalize(ray_dir));
+      pixelColor += trace_ray(scene, &rx, tree);
+    }
+  }
+  return (pixelColor / 4.f);
+}
+
 void renderImage(Image *img, Scene *scene)
 {
 
@@ -241,7 +266,13 @@ void renderImage(Image *img, Scene *scene)
     for (size_t i = 0; i < img->width; i++)
     {
       color3 *ptr = getPixelPtr(img, i, j);
-      *ptr = trace_ray_multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
+      *ptr = trace_ray_4multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
+
+      //vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+      //               float(i) * dx + float(j) * dy;
+      //Ray rx;
+      //rayInit(&rx, scene->cam.position, normalize(ray_dir));
+      //*ptr = trace_ray(scene, &rx, tree);
     }
   }
 }

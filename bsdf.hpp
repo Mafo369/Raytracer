@@ -1,3 +1,5 @@
+#pragma once
+
 #include "scene_types.h"
 
 color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,

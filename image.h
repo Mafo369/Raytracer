@@ -1,5 +1,4 @@
-#ifndef __IMAGE_H__
-#define __IMAGE_H__
+#pragma once
 
 #include "defines.h"
 
@@ -17,4 +16,3 @@ void freeImage(Image *img);
 void saveImage(Image *img, char *basename);
 
 
-#endif

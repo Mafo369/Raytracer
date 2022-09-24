@@ -1,5 +1,4 @@
-#ifndef __DEFINES_H__
-#define __DEFINES_H__
+#pragma once
 
 #define TP11
 #define TP12
@@ -25,4 +24,3 @@ using namespace glm;
 typedef vec3 point3;
 typedef vec3 color3;
 
-#endif

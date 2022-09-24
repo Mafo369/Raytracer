@@ -1,5 +1,4 @@
-#ifndef __RAY_H__
-#define __RAY_H__
+#pragma once
 
 #include "defines.h"
 // RAY
@@ -33,4 +32,3 @@ inline point3 rayAt(const Ray r, float t) {
     return r.orig + t*r.dir;
 }
 
-#endif

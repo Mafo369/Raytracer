@@ -1,5 +1,4 @@
-#ifndef __SCENE_TYPES_H__
-#define __SCENE_TYPES_H__
+#pragma once
 
 #include "defines.h"
 #include "scene.h"
@@ -76,4 +75,3 @@ typedef struct scene_s {
   color3 skyColor; //! the sky color, could be extended to a sky function ;)
 } Scene;
 
-#endif

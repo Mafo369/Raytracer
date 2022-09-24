@@ -1,3 +1,5 @@
+#pragma once
+
 #include "scene.h"
 #include "scene_types.h"
 #include "raytracer.h"
