@@ -71,6 +71,6 @@ class image_texture : public texture {
     }
 
   private:
-    Image* m_image;
+    RenderImage* m_image;
 };
 

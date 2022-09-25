@@ -6,7 +6,7 @@
 
 #define SAVE_PNG
 
-Image *loadPng(const char *filename){ //Not used -> tried to implement textures
+RenderImage *loadPng(const char *filename){ //Not used -> tried to implement textures
     unsigned int w ;
     unsigned int h ;
     std::vector<unsigned char> image;
@@ -17,7 +17,7 @@ Image *loadPng(const char *filename){ //Not used -> tried to implement textures
         return nullptr;
     }
 
-    Image *img = initImage(w, h);
+    RenderImage *img = initImage(w, h);
 
     size_t idx = 0;
     for (size_t j = 0; j < img->height; j++)
@@ -37,24 +37,24 @@ Image *loadPng(const char *filename){ //Not used -> tried to implement textures
     return img;
 }
 
-color3 *getPixelPtr(Image *img, size_t x, size_t y) {
+color3 *getPixelPtr(RenderImage *img, size_t x, size_t y) {
     return &(img->data[y * img->width + x]);
 }
 
-Image *initImage(size_t width, size_t height) {
-    Image *img = (Image*) malloc(sizeof(Image));
+RenderImage *initImage(size_t width, size_t height) {
+    RenderImage *img = (RenderImage*) malloc(sizeof(RenderImage));
     img->width = width;
     img->height = height;
     img->data = (color3 *)malloc(sizeof(color3)*width*height);
     return img;
 }
 
-void freeImage(Image *img) {
+void freeImage(RenderImage *img) {
     free(img->data);
     free(img);
 }
 
-void saveImage(Image *img, char *basename) {
+void saveImage(RenderImage *img, char *basename) {
 #ifdef SAVE_PNG
   char filename[256+4];
   strcpy(filename, basename);

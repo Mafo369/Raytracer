@@ -224,7 +224,7 @@ color3 trace_ray_4multisampling(Scene *scene, KdTree *tree, int indexI, int inde
   return (pixelColor / 4.f);
 }
 
-void renderImage(Image *img, Scene *scene)
+void renderImage(RenderImage *img, Scene *scene)
 {
 
   //! This function is already operational, you might modify it for antialiasing

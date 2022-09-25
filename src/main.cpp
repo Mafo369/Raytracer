@@ -8,13 +8,17 @@
 #include "Renderer.h"
 #include "Camera.h"
 
+#include "example_scenes.h"
+
 using namespace Walnut;
 
 class ExampleLayer : public Walnut::Layer
 {
 public:
-	ExampleLayer()
-		: m_Camera(45.0f, 0.1f, 100.0f) {}
+	ExampleLayer(Scene* scene)
+		: m_Camera(45.0f, 0.1f, 100.0f) {
+      m_Renderer.setScene(scene);
+    }
 
 	virtual void OnUpdate(float ts) override
 	{
@@ -66,13 +70,60 @@ private:
 	float m_LastRenderTime = 0.0f;
 };
 
+Scene* parseScene(int sceneId){
+  Scene *scene = NULL;
+  switch (sceneId) {
+  case 0:
+    scene = initScene0();
+    break;
+  case 1:
+    scene = initScene1();
+    break;
+  case 2:
+    scene = initScene2();
+    break;
+  case 3:
+    scene = initScene3();
+    break;
+  case 4:
+    scene = initScene4();
+    break;
+  case 5:
+    scene = initScene5();
+    break;
+  case 6:
+    scene = initScene6();
+    break;
+  case 7:
+    scene = initScene7();
+    break;
+  case 8:
+    scene = initScene8();
+    break;
+
+  default:
+    scene = initScene0();
+    break;
+  }
+  return scene;
+}
+
 Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 {
 	Walnut::ApplicationSpecification spec;
 	spec.Name = "Ray Tracing";
 
 	Walnut::Application* app = new Walnut::Application(spec);
-	app->PushLayer<ExampleLayer>();
+
+  int scene_id = 0;
+  if (argc == 3) {
+    scene_id = atoi(argv[2]);
+  }else if(argc == 4){
+    scene_id = atoi(argv[3]);
+  }
+  Scene* scene = parseScene(scene_id);
+  auto layer = std::make_shared<ExampleLayer>(scene);
+  app->PushLayer(layer);
 	app->SetMenubarCallback([app]()
 	{
 		if (ImGui::BeginMenu("File"))
@@ -86,15 +137,53 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	});
 	return app;
 }
-bool g_ApplicationRunning = true;
-int main(int argc, char** argv)
-	{
-		while (g_ApplicationRunning)
-		{
-			Walnut::Application* app = Walnut::CreateApplication(argc, argv);
-			app->Run();
-			delete app;
-		}
 
-		return 0;
-	}
+bool g_ApplicationRunning = true;
+#define WIDTH 800
+#define HEIGHT 600
+
+int main(int argc, char *argv[]) {
+  if (argc < 2 || argc > 4) {
+    printf("usage : %s [-rt] [filename] i\n", argv[0]);
+    printf("        filename : where to save the result, whithout extention\n");
+    printf("        i : scenen number, optional\n");
+    printf("        -rt : real time rendering, optional, no filename needed\n");
+    exit(0);
+  }
+
+
+  if(strcmp(argv[1], "-rt") == 0){
+    while (g_ApplicationRunning)
+    {
+      Walnut::Application* app = Walnut::CreateApplication(argc, argv);
+      app->Run();
+      delete app;
+    }
+    return 0;
+  }
+  char basename[256];
+  strncpy(basename, argv[1], 255);
+
+  RenderImage *img = initImage(WIDTH, HEIGHT);
+  int scene_id = 0;
+  if (argc == 3) {
+    scene_id = atoi(argv[2]);
+  }
+  Scene* scene = parseScene(scene_id);
+
+  printf("render scene %d\n", scene_id);
+
+  renderImage(img, scene);
+  freeScene(scene);
+  scene = NULL;
+
+  printf("save image to %s\n", basename);
+  saveImage(img, basename);
+  freeImage(img);
+  img = NULL;
+  printf("done. Goodbye\n");
+
+  return 0;
+}
+
+

@@ -31,6 +31,9 @@ public:
 	void Render(const CameraI& camera);
 
 	std::shared_ptr<Walnut::Image> GetFinalImage() const { return m_FinalImage; }
+
+  void setScene(Scene* renderScene){ scene = renderScene; 
+                                      tree = initKdTree(scene);}
 private:
 	glm::vec4 TraceRay(const Ray& ray);
 private:
@@ -38,6 +41,6 @@ private:
 	uint32_t* m_ImageData = nullptr;
 
   KdTree* tree;
-  Image* img;
+  RenderImage* img;
   Scene* scene; 
 };

@@ -58,7 +58,6 @@ Scene *initScene0() {
   mat.IOR = 1.3;
   mat.roughness = 0.1;
   mat.specularColor = color3(0.5f);
-  mat.m_texture = new image_texture("../assets/earthmap.png");
 
   mat.diffuseColor = color3(.5f);
   addObject(scene, initSphere(point3(0, 0, 0), 0.25, mat));
@@ -646,75 +645,3 @@ Scene *initScene8() {
 
   return scene;
 }
-
-//int main(int argc, char *argv[]) {
-//  printf("Welcome to the L3 IGTAI RayTracer project\n");
-//
-//  char basename[256];
-//
-//  if (argc < 2 || argc > 3) {
-//    printf("usage : %s filename i\n", argv[0]);
-//    printf("        filename : where to save the result, whithout extention\n");
-//    printf("        i : scenen number, optional\n");
-//    exit(0);
-//  }
-//
-//  strncpy(basename, argv[1], 255);
-//
-//  int scene_id = 0;
-//  if (argc == 3) {
-//    scene_id = atoi(argv[2]);
-//  }
-//
-//  Image *img = initImage(WIDTH, HEIGHT);
-//  Scene *scene = NULL;
-//  switch (scene_id) {
-//  case 0:
-//    scene = initScene0();
-//    break;
-//  case 1:
-//    scene = initScene1();
-//    break;
-//  case 2:
-//    scene = initScene2();
-//    break;
-//  case 3:
-//    scene = initScene3();
-//    break;
-//  case 4:
-//    scene = initScene4();
-//    break;
-//  case 5:
-//    scene = initScene5();
-//    break;
-//  case 6:
-//    scene = initScene6();
-//    break;
-//  case 7:
-//    scene = initScene7();
-//    break;
-//  case 8:
-//    scene = initScene8();
-//    break;
-//
-//  default:
-//    scene = initScene0();
-//    break;
-//  }
-//
-//  printf("render scene %d\n", scene_id);
-//
-//  renderImage(img, scene);
-//  freeScene(scene);
-//  scene = NULL;
-//
-//  printf("save image to %s\n", basename);
-//  saveImage(img, basename);
-//  freeImage(img);
-//  img = NULL;
-//  printf("done. Goodbye\n");
-//
-//  return 0;
-//}
-
-
