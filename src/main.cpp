@@ -1,3 +1,4 @@
+
 #include "Walnut/Application.h"
 #include "Walnut/EntryPoint.h"
 
@@ -6,8 +7,6 @@
 
 #include "Renderer.h"
 #include "Camera.h"
-
-bool g_ApplicationRunning = true;
 
 using namespace Walnut;
 
@@ -61,7 +60,7 @@ public:
 	}
 private:
 	Renderer m_Renderer;
-	Camera m_Camera;
+	CameraI m_Camera;
 	uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
 
 	float m_LastRenderTime = 0.0f;
@@ -87,8 +86,7 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 	});
 	return app;
 }
-
-
+bool g_ApplicationRunning = true;
 int main(int argc, char** argv)
 	{
 		while (g_ApplicationRunning)

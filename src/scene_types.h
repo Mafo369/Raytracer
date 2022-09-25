@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Camera.h"
 #include "defines.h"
 #include "scene.h"
 #include <vector>
@@ -9,17 +10,6 @@ typedef struct light_s {
     point3 position;
     color3 color;
 } Light;
-
-typedef struct camera_s {
-  point3 position; //! eye position
-    vec3 zdir; //! view direction
-    vec3 xdir; //! right direction
-    vec3 ydir; //! up direction
-    point3 center; //! center of the image plane
-  float fov;  //! field of view
-  float aspect; //! aspect ratio (typically use WIDTH/HEIGHT of the computed image
-} Camera;
-
 
 typedef struct geometry_s {
   Etype type; //! what kind of geometry we have, this value allows to determine which part of the union is valid;

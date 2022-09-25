@@ -1,7 +1,18 @@
 #pragma once
 
+#include "defines.h"
 #include <glm/glm.hpp>
 #include <vector>
+
+typedef struct camera_s {
+  point3 position; //! eye position
+    vec3 zdir; //! view direction
+    vec3 xdir; //! right direction
+    vec3 ydir; //! up direction
+    point3 center; //! center of the image plane
+  float fov;  //! field of view
+  float aspect; //! aspect ratio (typically use WIDTH/HEIGHT of the computed image
+} Camera;
 
 class CameraI
 {

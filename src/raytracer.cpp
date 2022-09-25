@@ -18,10 +18,6 @@
 #include "intersection.hpp"
 #include "bsdf.hpp"
 
-void printColor( color3 color ) {
-  std::cout << "color: " << color.x << " " << color.y << " " << color.z << std::endl;
-}
-
 color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float vTex, bool outside)
 {
   color3 ret = color3(0.f);
@@ -100,6 +96,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 
       Ray *ray_ombre = new Ray();
       rayInit(ray_ombre, intersection.position + (acne_eps * l), l, 0.f, distance(intersection.position + (acne_eps * l), scene->lights[i]->position));
+      ray_ombre->shadow = true;
 
       Intersection temp_inter;
       if (!intersectKdTree(scene, tree, ray_ombre, &temp_inter))
@@ -267,12 +264,6 @@ void renderImage(Image *img, Scene *scene)
     {
       color3 *ptr = getPixelPtr(img, i, j);
       *ptr = trace_ray_4multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
-
-      //vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-      //               float(i) * dx + float(j) * dy;
-      //Ray rx;
-      //rayInit(&rx, scene->cam.position, normalize(ray_dir));
-      //*ptr = trace_ray(scene, &rx, tree);
     }
   }
 }

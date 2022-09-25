@@ -14,6 +14,7 @@ typedef struct ray_s {
     int sign[3]; //! sign of the x,y,z component of dir, 0 -> positive, 1->negative. To optimize aabb intersection
     vec3 invdir; //! =1/dir, optimize aabb
 
+    bool shadow = false; // is it a shadow ray? to optimize kdtree traversal
 } Ray;
 
 inline void rayInit(Ray *r, point3 o, vec3 d, float tmin=0, float tmax=100000, int depth=0) {
