@@ -14,3 +14,5 @@ Scene *initScene5();
 Scene *initScene6();
 Scene *initScene7();
 Scene *initScene8();
+
+Scene* parseScene(int sceneId);

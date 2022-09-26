@@ -646,3 +646,42 @@ Scene *initScene8() {
 
   return scene;
 }
+
+Scene* parseScene(int sceneId){
+  Scene *scene = NULL;
+  switch (sceneId) {
+  case 0:
+    scene = initScene0();
+    break;
+  case 1:
+    scene = initScene1();
+    break;
+  case 2:
+    scene = initScene2();
+    break;
+  case 3:
+    scene = initScene3();
+    break;
+  case 4:
+    scene = initScene4();
+    break;
+  case 5:
+    scene = initScene5();
+    break;
+  case 6:
+    scene = initScene6();
+    break;
+  case 7:
+    scene = initScene7();
+    break;
+  case 8:
+    scene = initScene8();
+    break;
+
+  default:
+    scene = initScene0();
+    break;
+  }
+  return scene;
+}
+
