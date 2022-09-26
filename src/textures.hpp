@@ -1,5 +1,4 @@
-#ifndef TEXTURE_H
-#define TEXTURE_H
+#pragma once
 
 #include <memory>
 #include <glm/glm.hpp>
@@ -72,7 +71,6 @@ class image_texture : public texture {
     }
 
   private:
-    Image* m_image;
+    RenderImage* m_image;
 };
 
-#endif

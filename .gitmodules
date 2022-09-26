@@ -1,0 +1,3 @@
+[submodule "libs/Walnut"]
+	path = libs/Walnut
+	url = git@github.com:Mafo369/Walnut.git

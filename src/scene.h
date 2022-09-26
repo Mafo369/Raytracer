@@ -1,5 +1,4 @@
-#ifndef __SCENE_H__
-#define __SCENE_H__
+#pragma once
 
 #include "defines.h"
 #include "tiny_obj_loader.h"
@@ -60,4 +59,3 @@ void setSkyColor(Scene *scene, color3 c);
 void readObjToTriangleMesh(const char *file, tinyobj::attrib_t &attrib, std::vector<tinyobj::shape_t> &shapes, std::vector<tinyobj::material_t> &materials);
 
 
-#endif

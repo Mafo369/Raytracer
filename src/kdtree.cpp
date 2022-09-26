@@ -564,6 +564,11 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
             hasIntersection = true;
             *intersection = *temp;
             dist = temp_dist;
+            if(ray->shadow){
+              ray->tmax = dist;
+              free(temp);
+              return true;
+            }
           }
         }
       }
@@ -585,6 +590,11 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
             hasIntersection = true;
             *intersection = *temp;
             dist = temp_dist;
+            if(ray->shadow){
+              ray->tmax = dist;
+              free(temp);
+              return true;
+            }
           }
         }
       }
@@ -652,6 +662,8 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
   }
   if (hasIntersection)
   { // If object intersection in kdtree, use tmax as distance reference
+    if(ray->shadow)
+      return true;
     ray_backup->tmax = ray->tmax;
     dist = ray->tmax;
   }
