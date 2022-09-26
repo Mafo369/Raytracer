@@ -1,3 +1,3 @@
-[submodule "Walnut"]
+[submodule "libs/Walnut"]
 	path = libs/Walnut
-	url = git@github.com:thegeeko/Walnut.git
+	url = git@github.com:Mafo369/Walnut.git
