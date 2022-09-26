@@ -3,20 +3,19 @@
 #include "Walnut/Image.h"
 
 #include "Camera.h"
-#include "ray.h"
+#include "../ray.h"
 
 #include <memory>
 #include <glm/glm.hpp>
 
-#include "defines.h"
-#include "image.h"
-#include "ray.h"
-#include "raytracer.h"
-#include "scene.h"
-#include "textures.hpp"
-#include "kdtree.h"
-#include "scene_types.h"
-#include "intersection.hpp"
+#include "../defines.h"
+#include "../image.h"
+#include "../raytracer.h"
+#include "../scene.h"
+#include "../textures.hpp"
+#include "../kdtree.h"
+#include "../scene_types.h"
+#include "../intersection.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

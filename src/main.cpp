@@ -5,8 +5,8 @@
 #include "Walnut/Image.h"
 #include "Walnut/Timer.h"
 
-#include "Renderer.h"
-#include "Camera.h"
+#include "realtime/Renderer.h"
+#include "realtime/Camera.h"
 
 #include "example_scenes.h"
 
@@ -139,8 +139,6 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
 }
 
 bool g_ApplicationRunning = true;
-#define WIDTH 800
-#define HEIGHT 600
 
 int main(int argc, char *argv[]) {
   if (argc < 2 || argc > 4) {

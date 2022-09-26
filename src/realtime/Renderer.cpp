@@ -2,9 +2,6 @@
 
 #include "Walnut/Random.h"
 
-#include "raytracer.h"
-#include "example_scenes.h"
-
 namespace Utils {
 
 	static uint32_t ConvertToRGBA(const glm::vec4& color)

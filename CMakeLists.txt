@@ -11,8 +11,8 @@ set(mrt_SRCS
   src/scene.cpp
   src/intersection.cpp
   src/bsdf.cpp
-  src/Camera.cpp
-  src/Renderer.cpp
+  src/realtime/Camera.cpp
+  src/realtime/Renderer.cpp
   src/example_scenes.cpp
   )
 
