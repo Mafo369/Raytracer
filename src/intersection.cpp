@@ -21,23 +21,25 @@ bool intersectPlane(Ray *ray, Intersection *intersection, Object *obj)
       intersection->position = ray->orig + (t * ray->dir);
       intersection->mat = &(obj->mat);
       intersection->normal = n;
-      if(intersection->position.x < 0 && intersection->position.z > 0){
-        intersection->u = 1+fmod(intersection->position.x / 6, 1.0f);
-        intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
-      }
-      else if(intersection->position.x < 0 && intersection->position.z < 0){
-        intersection->u = abs(fmod(intersection->position.x / 6, 1.0f));
-        intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
-      }
-      else if(intersection->position.x > 0 && intersection->position.z < 0){
-        intersection->u = abs(fmod(intersection->position.x / 6, 1.0f));
-        intersection->v = 1+fmod(intersection->position.z / 6, 1.0f);
-      }
-      else
-      {
-        intersection->u = 1+fmod(intersection->position.x / 6, 1.0f);
-        intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
-      }
+      intersection->u = abs(fmod(intersection->position.x, 1.0f));
+      intersection->v = abs(fmod(intersection->position.z, 1.0f));
+      //if(intersection->position.x < 0 && intersection->position.z > 0){
+      //  intersection->u = 1+fmod(intersection->position.x / 6, 1.0f);
+      //  intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
+      //}
+      //else if(intersection->position.x < 0 && intersection->position.z < 0){
+      //  intersection->u = abs(fmod(intersection->position.x / 6, 1.0f));
+      //  intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
+      //}
+      //else if(intersection->position.x > 0 && intersection->position.z < 0){
+      //  intersection->u = abs(fmod(intersection->position.x / 6, 1.0f));
+      //  intersection->v = 1+fmod(intersection->position.z / 6, 1.0f);
+      //}
+      //else
+      //{
+      //  intersection->u = 1+fmod(intersection->position.x / 6, 1.0f);
+      //  intersection->v = abs(fmod(intersection->position.z / 6, 1.0f));
+      //}
       ray->tmax = t;
       return true;
     }

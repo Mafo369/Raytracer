@@ -22,5 +22,6 @@
 using namespace glm;
 
 typedef vec3 point3;
+typedef vec2 point2;
 typedef vec3 color3;
 

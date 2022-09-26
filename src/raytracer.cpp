@@ -91,24 +91,24 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     for (size_t i = 0; i < lightsCount; i++)
     {
       vec3 v = ray->dir * -1.0f;
-      vec3 lp = scene->lights[i]->position - intersection.position;
+      vec3 lp = scene->lights[i]->getPosition() - intersection.position;
       vec3 l = lp / length(lp);
 
-      Ray *ray_ombre = new Ray();
-      rayInit(ray_ombre, intersection.position + (acne_eps * l), l, 0.f, distance(intersection.position + (acne_eps * l), scene->lights[i]->position));
-      ray_ombre->shadow = true;
+      Ray ray_ombre;
+      rayInit(&ray_ombre, intersection.position + (acne_eps * l), l, 0.f, distance(intersection.position + (acne_eps * l), scene->lights[i]->getPosition()));
+      ray_ombre.shadow = true;
 
       Intersection temp_inter;
-      if (!intersectKdTree(scene, tree, ray_ombre, &temp_inter))
+      if (!intersectKdTree(scene, tree, &ray_ombre, &temp_inter))
       {
-        ret += shade(intersection.normal, v, l, scene->lights[i]->color, intersection.mat, intersection.u, intersection.v, intersection.isOutside);
+        ret += shade(intersection.normal, v, l, scene->lights[i]->getColor(), intersection.mat, intersection.u, intersection.v, intersection.isOutside);
       }
       else
       {
         ret += color3(0.f);
       }
 
-      free(ray_ombre);
+      //free(ray_ombre);
     }
 
     if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
@@ -120,14 +120,14 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     if(intersection.mat->mtype == DIELECTRIC) {
       // REFRACTION + REFLECTION
 
-      auto normal = intersection.isOutside ? intersection.normal : -intersection.normal;
+      vec3 normal = intersection.isOutside ? intersection.normal : -intersection.normal;
       vec3 r = reflect(ray->dir, normal);
-      Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
+      Ray ray_ref;
 
-      rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
-      color3 reflectionColor = trace_ray(scene, ray_ref, tree);
+      rayInit(&ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+      color3 reflectionColor = trace_ray(scene, &ray_ref, tree);
 
-      float LdotH = dot(ray_ref->dir, normal);
+      float LdotH = dot(ray_ref.dir, normal);
 
       float refractionRatio = 
         intersection.isOutside ? (1.f/intersection.mat->IOR) : intersection.mat->IOR;
@@ -138,13 +138,11 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       vec3 unit_direction = normalize( ray->dir );
       if( f < 1.0f ){
         vec3 refr = refract(unit_direction, normal, refractionRatio);
-        Ray *ray_refr = (Ray *)malloc(sizeof(Ray));
-        rayInit(ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
+        Ray ray_refr;
+        rayInit(&ray_refr, intersection.position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
 
-        refractionColor = trace_ray(scene, ray_refr, tree);
-        free(ray_refr);
+        refractionColor = trace_ray(scene, &ray_refr, tree);
       }
-      free(ray_ref);
       
       ret += ( reflectionColor * f * intersection.mat->specularColor ) + refractionColor * (1.0f - f);
     } 
@@ -152,17 +150,16 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     {
       // REFLECTION
       vec3 r = reflect(ray->dir, intersection.normal);
-      Ray *ray_ref = (Ray *)malloc(sizeof(Ray));
-      rayInit(ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+      Ray ray_ref;
+      rayInit(&ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
-      color3 cr = trace_ray(scene, ray_ref, tree);
-      float LdotH = dot(ray_ref->dir, intersection.normal);
+      color3 cr = trace_ray(scene, &ray_ref, tree);
+      float LdotH = dot(ray_ref.dir, intersection.normal);
       float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
       reflectionColor = (f * cr * intersection.mat->specularColor);
       
       ret += reflectionColor;
-      free(ray_ref);
     }
   }
   else

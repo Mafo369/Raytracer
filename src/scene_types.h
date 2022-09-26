@@ -5,10 +5,11 @@
 #include <vector>
 
 //! \file : internal types to describe a scene
-typedef struct light_s {
-    point3 position;
-    color3 color;
-} Light;
+//typedef struct light_s {
+//    point3 position;
+//    color3 color;
+//} Light;
+
 
 typedef struct camera_s {
   point3 position; //! eye position

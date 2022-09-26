@@ -5,6 +5,7 @@
 #include "defines.h"
 #include "image.h"
 #include <iostream>
+#include <algorithm>
 
 class texture {
     public:
@@ -64,10 +65,7 @@ class image_texture : public texture {
     virtual color3 value(float u, float v) const override {
       int u2 = floor((1.f-u) * (m_image->width-1));
       int v2 = floor((1.f-v) * (m_image->height-1));
-      ////std::cout << u2 << std::endl;
-      //std::cout << u2 << " " << v2 << std::endl;
-      color3 color = *getPixelPtr(m_image, u2, v2);
-      return color;
+      return *getPixelPtr(m_image, u2, v2);
     }
 
   private:

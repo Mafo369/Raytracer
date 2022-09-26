@@ -545,10 +545,10 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
     // Leaf found -> Find intersection with objects in node
     for (size_t i = 0; i < currentNode.node->objects.size(); i++)
     {
-      Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
+      Intersection temp;
       if (scene->objects[currentNode.node->objects[i]]->geom.type == SPHERE)
       {
-        if (intersectSphere(ray, temp, scene->objects[currentNode.node->objects[i]]))
+        if (intersectSphere(ray, &temp, scene->objects[currentNode.node->objects[i]]))
         {
           float temp_dist = ray->tmax;
           if (hasIntersection)
@@ -556,17 +556,16 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
             if (temp_dist < dist)
             {
               dist = temp_dist;
-              *intersection = *temp;
+              *intersection = temp;
             }
           }
           else
           {
             hasIntersection = true;
-            *intersection = *temp;
+            *intersection = temp;
             dist = temp_dist;
             if(ray->shadow){
               ray->tmax = dist;
-              free(temp);
               return true;
             }
           }
@@ -574,7 +573,7 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
       }
       else if (scene->objects[currentNode.node->objects[i]]->geom.type == TRIANGLE)
       {
-        if (intersectTriangle(ray, temp, scene->objects[currentNode.node->objects[i]]))
+        if (intersectTriangle(ray, &temp, scene->objects[currentNode.node->objects[i]]))
         {
           float temp_dist = ray->tmax;
           if (hasIntersection)
@@ -582,23 +581,21 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
             if (temp_dist < dist)
             {
               dist = temp_dist;
-              *intersection = *temp;
+              *intersection = temp;
             }
           }
           else
           {
             hasIntersection = true;
-            *intersection = *temp;
+            *intersection = temp;
             dist = temp_dist;
             if(ray->shadow){
               ray->tmax = dist;
-              free(temp);
               return true;
             }
           }
         }
       }
-      free(temp);
     }
     if (hasIntersection)
     { // If we find intersection we return true
@@ -647,8 +644,8 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
 
   float dist;
 
-  Ray *ray_backup = new Ray(); //Ray backup -> we'll use it to find plane intersections
-  rayInit(ray_backup, ray->orig, ray->dir, ray->tmin, ray->tmax);
+  Ray ray_backup; //Ray backup -> we'll use it to find plane intersections
+  rayInit(&ray_backup, ray->orig, ray->dir, ray->tmin, ray->tmax);
 
   if (intersectAabb(ray, tree->root->min, tree->root->max))
   { // If ray hits biggest bbox we traverse tree to find sphere intersections
@@ -664,34 +661,34 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
   { // If object intersection in kdtree, use tmax as distance reference
     if(ray->shadow)
       return true;
-    ray_backup->tmax = ray->tmax;
+    ray_backup.tmax = ray->tmax;
     dist = ray->tmax;
   }
   for (size_t i = 0; i < tree->outOfTree.size(); i++)
   { // Iterate through plane objects to find intersection
-    Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
-    if (intersectPlane(ray_backup, temp, scene->objects[tree->outOfTree[i]]))
+    Intersection temp;
+    if (intersectPlane(&ray_backup, &temp, scene->objects[tree->outOfTree[i]]))
     {
-      float temp_dist = ray_backup->tmax;
+      float temp_dist = ray_backup.tmax;
       if (hasIntersection)
       {
         if (temp_dist < dist)
         {
           dist = temp_dist;
-          *intersection = *temp;
+          *intersection = temp;
           ray->tmax = dist;
         }
       }
       else
       {
         hasIntersection = true;
-        *intersection = *temp;
+        *intersection = temp;
         dist = temp_dist;
         ray->tmax = dist;
+        if(ray->shadow)
+          return true;
       }
     }
-    free(temp);
   }
-  delete ray_backup;
   return hasIntersection;
 }
