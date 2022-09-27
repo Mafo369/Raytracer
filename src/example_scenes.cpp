@@ -629,6 +629,17 @@ Scene *initScene8() {
   
   addObject(scene, initSphere(point3(24, 2, 24), 2.f, mat_lib[10]));
   addLight(scene, initPointLight(point3(5, 30, 5),color3(1, 1, 1)));
+  
+  //auto light = new AreaLight(vec3(54,10,54), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
+  //addLight(scene, light);
+  //light = new AreaLight(vec3(54,10,18), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
+  //addLight(scene, light);
+  //light = new AreaLight(vec3(18,10,54), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
+  //addLight(scene, light);
+  //light = new AreaLight(vec3(2,50,2), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
+  //addLight(scene, light);
+  //light = new AreaLight(vec3(7,30,7), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
+  //addLight(scene, light);
 
   Material mats;
   mats.diffuseColor = color3(0.f, 0.f, 0.5f);

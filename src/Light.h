@@ -10,9 +10,11 @@ class Light {
     vec3 getColor() { return m_color; } 
     vec3 getPosition() { return m_position; }
     virtual float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) = 0;
+    virtual std::vector<vec3> getSamples() { return m_samples; }
   protected:
     color3 m_color;
     vec3 m_position;
+    std::vector<vec3> m_samples;
 };
 
 class PointLight : public Light {
@@ -29,7 +31,6 @@ class AreaLight : public Light {
     ~AreaLight();
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection);
     point3 pointOnLight(float u, float v);
-
     void setup(Scene* scene);
   private:
     float intensity;
@@ -38,7 +39,8 @@ class AreaLight : public Light {
     vec3 vvec;
     int m_usteps;
     int m_vsteps;
-    int samples;
+    int nbSamples;
+
 
     Object* m_t1;
     Object* m_t2;

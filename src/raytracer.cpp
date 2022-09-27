@@ -20,7 +20,7 @@
 
 #include "Light.h"
 
-color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float vTex, bool outside, float intensity)
+color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, float uTex, float vTex, bool outside, float intensity, std::vector<vec3> &samples)
 {
   color3 ret = color3(0.f);
 
@@ -28,52 +28,66 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float
   //! lightcolor
 
   if (mat->mtype == DIELECTRIC){
-    float LdotN = abs(dot(l, n));
-    if(LdotN == 0.0f) return ret;
-    float VdotN = abs(dot(v, n));
-    float extIOR, intIOR;
-    if(outside){
-      extIOR = mat->IOR;
-      intIOR = 1.f;
+    float cpt = 0.f;
+    for(auto& sample : samples){
+      cpt++;
+      vec3 lp = sample - intersectionPos;
+      vec3 l = lp / length(lp);
+      float LdotN = abs(dot(l, n));
+      if(LdotN == 0.0f) continue;
+      float VdotN = abs(dot(v, n));
+      float extIOR, intIOR;
+      if(outside){
+        extIOR = mat->IOR;
+        intIOR = 1.f;
+      }
+      else
+      {
+        extIOR = 1.f;
+        intIOR = mat->IOR;
+      }
+
+      // REFLECTION
+      vec3 hr = (v + l);
+      hr = hr / length(hr);
+      float LdotH = abs(dot(l, hr));
+      float NdotH = abs(dot(n, hr));
+      float VdotH = abs(dot(v, hr));
+      auto brdfColor = RDM_brdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
+
+      // REFRACTION
+      hr = -intIOR * l - extIOR * v;
+      hr = hr / length(hr);
+      LdotH = abs(dot(l, hr));
+      NdotH = abs(dot(n, hr));
+      VdotH = abs(dot(v, hr));
+      auto btdfColor = RDM_btdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
+
+      // BSDF
+      ret += ( brdfColor + btdfColor ) * LdotN;
     }
-    else
-    {
-      extIOR = 1.f;
-      intIOR = mat->IOR;
-    }
-
-    // REFLECTION
-    vec3 hr = (v + l);
-    hr = hr / length(hr);
-    float LdotH = abs(dot(l, hr));
-    float NdotH = abs(dot(n, hr));
-    float VdotH = abs(dot(v, hr));
-    auto brdfColor = RDM_brdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
-
-    // REFRACTION
-    hr = -intIOR * l - extIOR * v;
-    hr = hr / length(hr);
-    LdotH = abs(dot(l, hr));
-    NdotH = abs(dot(n, hr));
-    VdotH = abs(dot(v, hr));
-    auto btdfColor = RDM_btdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
-
-    // BSDF
-    ret = lc * ( brdfColor + btdfColor ) * LdotN;
+    ret = lc * (ret / cpt) * intensity;
   }
   else
   {
-    float LdotN = dot(l, n);
-    if (LdotN > 0)
-    {
-      vec3 vl = v + l;
-      vec3 h = vl / length(vl);
-      float LdotH = dot(l, h);
-      float NdotH = dot(n, h);
-      float VdotH = dot(v, h);
-      float VdotN = dot(v, n);
-      ret = (lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex) * LdotN) * intensity;
+    float cpt = 0.f;
+    for(auto& sample : samples){
+      cpt++;
+      vec3 lp = sample - intersectionPos;
+      vec3 l = lp / length(lp);
+      float LdotN = dot(l, n);
+      if (LdotN > 0)
+      {
+        vec3 vl = v + l;
+        vec3 h = vl / length(vl);
+        float LdotH = dot(l, h);
+        float NdotH = dot(n, h);
+        float VdotH = dot(v, h);
+        float VdotN = dot(v, n);
+        ret += (RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex) * LdotN);
+      }
     }
+    ret = lc * (ret / cpt) * intensity;
   }
 
   return ret;
@@ -84,7 +98,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 10)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -93,11 +107,10 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     for (size_t i = 0; i < lightsCount; i++)
     {
       vec3 v = ray->dir * -1.0f;
-      vec3 lp = scene->lights[i]->getPosition() - intersection.position;
-      vec3 l = lp / length(lp);
       auto intensity = scene->lights[i]->intensityAt(intersection.position, scene, tree, v, &intersection); 
+      auto samples = scene->lights[i]->getSamples();
       if(intensity > 0.0f){
-        ret += shade(intersection.normal, v, l, scene->lights[i]->getColor(), intersection.mat, intersection.u, intersection.v, intersection.isOutside, intensity);
+        ret += shade(intersection.normal, v, intersection.position, scene->lights[i]->getColor(), intersection.mat, intersection.u, intersection.v, intersection.isOutside, intensity, samples);
       }
     }
 
