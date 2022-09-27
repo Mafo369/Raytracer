@@ -14,6 +14,7 @@ set(mrt_SRCS
   src/realtime/Camera.cpp
   src/realtime/Renderer.cpp
   src/example_scenes.cpp
+  src/Light.cpp
   )
 
 add_subdirectory(libs/Walnut/)

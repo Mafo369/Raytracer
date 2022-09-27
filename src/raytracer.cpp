@@ -18,7 +18,9 @@
 #include "intersection.hpp"
 #include "bsdf.hpp"
 
-color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float vTex, bool outside)
+#include "Light.h"
+
+color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float vTex, bool outside, float intensity)
 {
   color3 ret = color3(0.f);
 
@@ -70,7 +72,7 @@ color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float
       float NdotH = dot(n, h);
       float VdotH = dot(v, h);
       float VdotN = dot(v, n);
-      ret = lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex) * LdotN;
+      ret = (lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex) * LdotN) * intensity;
     }
   }
 
@@ -93,22 +95,10 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       vec3 v = ray->dir * -1.0f;
       vec3 lp = scene->lights[i]->getPosition() - intersection.position;
       vec3 l = lp / length(lp);
-
-      Ray ray_ombre;
-      rayInit(&ray_ombre, intersection.position + (acne_eps * l), l, 0.f, distance(intersection.position + (acne_eps * l), scene->lights[i]->getPosition()));
-      ray_ombre.shadow = true;
-
-      Intersection temp_inter;
-      if (!intersectKdTree(scene, tree, &ray_ombre, &temp_inter))
-      {
-        ret += shade(intersection.normal, v, l, scene->lights[i]->getColor(), intersection.mat, intersection.u, intersection.v, intersection.isOutside);
+      auto intensity = scene->lights[i]->intensityAt(intersection.position, scene, tree, v, &intersection); 
+      if(intensity > 0.0f){
+        ret += shade(intersection.normal, v, l, scene->lights[i]->getColor(), intersection.mat, intersection.u, intersection.v, intersection.isOutside, intensity);
       }
-      else
-      {
-        ret += color3(0.f);
-      }
-
-      //free(ray_ombre);
     }
 
     if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
@@ -256,7 +246,7 @@ void renderImage(RenderImage *img, Scene *scene)
     for (; cpt < 100; cpt += 5)
       printf(" ");
     printf("]\n");
-#pragma omp parallel for
+//#pragma omp parallel for
     for (size_t i = 0; i < img->width; i++)
     {
       color3 *ptr = getPixelPtr(img, i, j);
