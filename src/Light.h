@@ -29,6 +29,8 @@ class AreaLight : public Light {
     ~AreaLight();
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection);
     point3 pointOnLight(float u, float v);
+
+    void setup(Scene* scene);
   private:
     float intensity;
     vec3 m_corner;
@@ -37,6 +39,9 @@ class AreaLight : public Light {
     int m_usteps;
     int m_vsteps;
     int samples;
+
+    Object* m_t1;
+    Object* m_t2;
 };
 
 //

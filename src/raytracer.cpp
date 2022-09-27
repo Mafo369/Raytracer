@@ -84,7 +84,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 3)
+  if (ray->depth > 10)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -246,7 +246,7 @@ void renderImage(RenderImage *img, Scene *scene)
     for (; cpt < 100; cpt += 5)
       printf(" ");
     printf("]\n");
-//#pragma omp parallel for
+#pragma omp parallel for
     for (size_t i = 0; i < img->width; i++)
     {
       color3 *ptr = getPixelPtr(img, i, j);

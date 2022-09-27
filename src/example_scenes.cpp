@@ -76,11 +76,11 @@ Scene *initScene0() {
   //addLight(scene, initPointLight(point3(10, 10, 10), color3(1, 1, 1)));
   //addLight(scene, initPointLight(point3(4, 10, -2), color3(1, 1, 1)));
   
-  auto light = new AreaLight(vec3(7,7,7), vec3(6,3,0), 10, vec3(0,3,6), 10, color3(1,1,1));
+  auto light = new AreaLight(vec3(13,10,13), vec3(-6,0,0), 10, vec3(0,0,-6), 10, color3(1,1,1));
   addLight(scene, light);
 
-  light = new AreaLight(vec3(1,7,-5), vec3(6,3,0), 10, vec3(0,3,6), 10, color3(1,1,1));
-  addLight(scene, light);
+  //light = new AreaLight(vec3(1,7,-5), vec3(6,3,0), 10, vec3(0,3,6), 10, color3(1,1,1));
+  //addLight(scene, light);
 
   return scene;
 }
