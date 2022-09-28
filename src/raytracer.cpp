@@ -28,9 +28,7 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, flo
   //! lightcolor
 
   if (mat->mtype == DIELECTRIC){
-    float cpt = 0.f;
     for(auto& sample : samples){
-      cpt++;
       vec3 lp = sample - intersectionPos;
       vec3 l = lp / length(lp);
       float LdotN = abs(dot(l, n));
@@ -38,13 +36,13 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, flo
       float VdotN = abs(dot(v, n));
       float extIOR, intIOR;
       if(outside){
-        extIOR = mat->IOR;
-        intIOR = 1.f;
+        extIOR = 1.f;
+        intIOR = mat->IOR;
       }
       else
       {
-        extIOR = 1.f;
-        intIOR = mat->IOR;
+        extIOR = mat->IOR;
+        intIOR = 1.f;
       }
 
       // REFLECTION
@@ -56,7 +54,7 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, flo
       auto brdfColor = RDM_brdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
 
       // REFRACTION
-      hr = -intIOR * l - extIOR * v;
+      hr = -extIOR * l - intIOR * v;
       hr = hr / length(hr);
       LdotH = abs(dot(l, hr));
       NdotH = abs(dot(n, hr));
@@ -66,13 +64,11 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, flo
       // BSDF
       ret += ( brdfColor + btdfColor ) * LdotN;
     }
-    ret = lc * (ret / cpt) * intensity;
+    ret = lc * (ret / float(samples.size())) * intensity;
   }
   else
   {
-    float cpt = 0.f;
     for(auto& sample : samples){
-      cpt++;
       vec3 lp = sample - intersectionPos;
       vec3 l = lp / length(lp);
       float LdotN = dot(l, n);
@@ -87,7 +83,7 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, flo
         ret += (RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex) * LdotN);
       }
     }
-    ret = lc * (ret / cpt) * intensity;
+    ret = lc * (ret / float(samples.size())) * intensity;
   }
 
   return ret;
@@ -98,7 +94,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 3)
+  if (ray->depth > 5)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -130,7 +126,10 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       rayInit(&ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
       color3 reflectionColor = trace_ray(scene, &ray_ref, tree);
 
-      float LdotH = dot(ray_ref.dir, normal);
+      vec3 v = ray->dir * -1.0f;
+      vec3 h = v + ray_ref.dir;
+      h = h / length(h);
+      float LdotH = dot(ray_ref.dir, h);
 
       float refractionRatio = 
         intersection.isOutside ? (1.f/intersection.mat->IOR) : intersection.mat->IOR;
@@ -157,7 +156,10 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       rayInit(&ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
       color3 cr = trace_ray(scene, &ray_ref, tree);
-      float LdotH = dot(ray_ref.dir, intersection.normal);
+      vec3 v = ray->dir * -1.0f;
+      vec3 h = v + ray_ref.dir;
+      h = h / length(h);
+      float LdotH = dot(ray_ref.dir, h);
       float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
       reflectionColor = (f * cr * intersection.mat->specularColor);

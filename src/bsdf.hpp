@@ -12,3 +12,5 @@ color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
                   float VdotN, Material *m, float extIOR, float intIOR);
 
 float RDM_Fresnel(float LdotH, float extIOR, float intIOR);
+
+float schlick(float VdotN, float extIOR, float intIOR);

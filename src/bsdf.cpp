@@ -40,41 +40,67 @@ float RDM_Beckmann(float NdotH, float alpha)
 // Fresnel term computation. Implantation of the exact computation. we can use
 // the Schlick approximation
 // LdotH : Light . Half
-float RDM_Fresnel(float LdotH, float extIOR, float intIOR)
-{
+//float RDM_Fresnel(float LdotH, float extIOR, float intIOR)
+//{
+//
+//  //! \todo compute Fresnel term
+//  if (LdotH < 0)
+//  {
+//    LdotH = -LdotH;
+//  }
+//
+//  float n1_n2 = (extIOR / intIOR) * (extIOR / intIOR);
+//  float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
+//  if (sin2_t >= 1.0f)
+//  {
+//    return 1.0f;
+//  }
+//  float cos_t = sqrtf(1 - sin2_t);
+//
+//  float ncos_minus_it = (extIOR * LdotH - intIOR * cos_t);
+//  float ncos_minus2_it = ncos_minus_it * ncos_minus_it;
+//  float ncos_plus_it = (extIOR * LdotH + intIOR * cos_t);
+//  float ncos_plus2_it = ncos_plus_it * ncos_plus_it;
+//
+//  float ncos_minus_ti = (extIOR * cos_t - intIOR * LdotH);
+//  float ncos_minus2_ti = ncos_minus_ti * ncos_minus_ti;
+//  float ncos_plus_ti = (extIOR * cos_t + intIOR * LdotH);
+//  float ncos_plus2_ti = ncos_plus_ti * ncos_plus_ti;
+//
+//  float rs = ncos_minus2_it / ncos_plus2_it;
+//  float rp = ncos_minus2_ti / ncos_plus2_ti;
+//
+//  float f = (rs + rp) / 2;
+//
+//  return f;
+//}
 
-  //! \todo compute Fresnel term
-  if (LdotH < 0)
-  {
-    LdotH = -LdotH;
+// extIOR = etaI
+// intIOR = etaT
+float RDM_Fresnel(float LdotH, float extIOR, float intIOR){
+  LdotH = std::clamp(LdotH, -1.f, 1.f);
+  bool entering = LdotH > 0.f;
+  if(!entering){
+    std::swap(extIOR, intIOR);
+    LdotH = std::abs(LdotH);
   }
+  float sinThetaI = std::sqrt(std::max(0.f, 1.f - LdotH * LdotH));
+  float sinThetaT = extIOR / intIOR * sinThetaI;
+  if(sinThetaT >= 1)
+    return 1.f;
 
-  float n1_n2 = (extIOR / intIOR) * (extIOR / intIOR);
-  float sin2_t = n1_n2 * (1 - (LdotH * LdotH));
-  if (sin2_t >= 1.0f)
-  {
-    return 1.0f;
-  }
-  float cos_t = sqrtf(1 - sin2_t);
+  float cosThetaT = std::sqrt(std::max(0.f, 1.f - sinThetaT * sinThetaT));
 
-  float ncos_minus_it = (extIOR * LdotH - intIOR * cos_t);
-  float ncos_minus2_it = ncos_minus_it * ncos_minus_it;
-  float ncos_plus_it = (extIOR * LdotH + intIOR * cos_t);
-  float ncos_plus2_it = ncos_plus_it * ncos_plus_it;
-
-  float ncos_minus_ti = (extIOR * cos_t - intIOR * LdotH);
-  float ncos_minus2_ti = ncos_minus_ti * ncos_minus_ti;
-  float ncos_plus_ti = (extIOR * cos_t + intIOR * LdotH);
-  float ncos_plus2_ti = ncos_plus_ti * ncos_plus_ti;
-
-  float rs = ncos_minus2_it / ncos_plus2_it;
-  float rp = ncos_minus2_ti / ncos_plus2_ti;
-
-  float f = (rs + rp) / 2;
-
-  return f;
+  float Rparl = ((intIOR * LdotH) - (extIOR * cosThetaT)) /
+                ((intIOR * LdotH) + (extIOR * cosThetaT));
+  float Rperp = ((extIOR * LdotH) - (intIOR * cosThetaT)) /
+                ((extIOR * LdotH) + (intIOR * cosThetaT));
+  return (Rparl * Rparl + Rperp * Rperp) / 2.f;
 }
 
+// extIOR and intIOR are inversed here compared to fresnel
+// extIOR = etaT
+// intIOR = etaI
 float schlick(float VdotN, float extIOR, float intIOR){
   float cos = VdotN;
 
@@ -144,6 +170,7 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
 
   float d = RDM_Beckmann(NdotH, m->roughness);
   float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
+  //float f = schlick(LdotH, m->IOR, 1.f);
   float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
 
   return color3(m->specularColor * ((d * f * g) / (4 * LdotN * VdotN)));
@@ -154,13 +181,13 @@ color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
 {
 
   float d = RDM_Beckmann(NdotH, m->roughness);
-  //float f = RDM_Fresnel(LdotH, extIOR, intIOR);
-  float f = schlick(LdotH, extIOR, intIOR);
+  float f = RDM_Fresnel(LdotH, extIOR, intIOR);
+  //float f = schlick(LdotH, extIOR, intIOR);
   float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
 
-  float denom = (intIOR*LdotH + extIOR*VdotH);
+  float denom = (extIOR*LdotH + intIOR*VdotH);
 
-  float no = extIOR;
+  float no = intIOR;
   return color3(m->specularColor * (LdotH * VdotH)/(LdotN * VdotN)*((no*no)*(1.0f-f)*g*d)/(denom*denom));
 }
 
@@ -198,8 +225,8 @@ color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
     return color3(0,0,0);
 
   float d = RDM_Beckmann(NdotH, m->roughness);
-  //float f = RDM_Fresnel(LdotH, extIOR, intIOR);
-  float f = schlick(LdotH, extIOR, intIOR);
+  float f = RDM_Fresnel(LdotH, extIOR, intIOR);
+  //float f = schlick(LdotH, extIOR, intIOR);
   float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
 
   return m->specularColor * ((d * f * g) / (4.f * LdotN * VdotN));

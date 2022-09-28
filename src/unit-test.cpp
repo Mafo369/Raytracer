@@ -41,6 +41,7 @@ bool intersectAabb(Ray *theRay,  vec3 min, vec3 max) {
     return tmin>0 || tmax>0;
 }
 
+bool g_ApplicationRunning = true;
 
 
 int main(void){
