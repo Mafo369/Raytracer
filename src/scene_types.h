@@ -47,6 +47,11 @@ typedef struct geometry_s {
           vec3 normal;
           vec2 tex[3];
         }triangle;
+        struct
+        {
+          vec3 min;
+          vec3 max;
+        }cube;
         
     };
 } Geometry;

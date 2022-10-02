@@ -9,7 +9,7 @@
 
 class texture {
     public:
-        virtual color3 value(float u, float v) const = 0;
+        virtual color3 value(float u, float v, int face = -1) const = 0;
 };
 
 class solid_color : public texture {
@@ -20,7 +20,7 @@ class solid_color : public texture {
         solid_color(float red, float green, float blue)
           : solid_color(color3(red,green,blue)) {}
 
-        virtual color3 value(float u, float v) const override {
+        virtual color3 value(float u, float v, int face = -1) const override {
             return color_value;
         }
 
@@ -38,7 +38,7 @@ class checker_texture : public texture {
         checker_texture(color3 c1, color3 c2)
             : odd(std::make_shared<solid_color>(c2)), even(std::make_shared<solid_color>(c1)) {}
 
-        virtual color3 value(float u, float v) const override {
+        virtual color3 value(float u, float v, int face = -1) const override {
             int u2 = floor(u * width);
             int v2 = floor(v * height);
             if ( (u2 + v2) % 2 == 0)
@@ -62,7 +62,7 @@ class image_texture : public texture {
       m_image = loadPng(filename);
     }
 
-    virtual color3 value(float u, float v) const override {
+    virtual color3 value(float u, float v, int face = -1) const override {
       int u2 = floor((1.f-u) * (m_image->width-1));
       int v2 = floor((1.f-v) * (m_image->height-1));
       return *getPixelPtr(m_image, u2, v2);
@@ -72,3 +72,38 @@ class image_texture : public texture {
     RenderImage* m_image;
 };
 
+typedef struct s_FaceInfo{
+  color3 ul;
+  color3 ur;
+  color3 bl;
+  color3 br;
+  color3 main;
+}FaceInfo;
+
+class CubeMapTexture : public texture {
+  public:
+    CubeMapTexture(FaceInfo left, FaceInfo right, FaceInfo front, FaceInfo back, FaceInfo up, FaceInfo down){
+      m_faces.push_back(left);
+      m_faces.push_back(right);
+      m_faces.push_back(front);
+      m_faces.push_back(back);
+      m_faces.push_back(up);
+      m_faces.push_back(down);
+    }
+
+    virtual color3 value(float u, float v, int face) const override {
+      if( v > 0.8 ){
+        if( u < 0.2 ) return m_faces[face].ul;
+        if( u > 0.8 ) return m_faces[face].ur;
+      }
+      else if ( v < 0.2 )
+      {
+        if ( u < 0.2 ) return m_faces[face].bl;
+        if ( u > 0.8 ) return m_faces[face].br;
+      }
+      return m_faces[face].main;
+    }
+
+  private:
+    std::vector<FaceInfo> m_faces;
+};

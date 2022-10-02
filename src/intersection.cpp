@@ -257,3 +257,144 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
   }
   return hasIntersection;
 }
+
+void check_axis(float origin, float direction, float min, float max, float& tmin, float& tmax){
+  float tmin_numerator = (min - origin);
+  float tmax_numerator = (max - origin);
+
+  if(abs(direction) >= acne_eps){
+    tmin = tmin_numerator / direction;
+    tmax = tmax_numerator / direction;
+  }
+  else
+  {
+    tmin = tmin_numerator * INFINITY;
+    tmax = tmax_numerator * INFINITY;
+  }
+
+  if(tmin > tmax) std::swap(tmin, tmax);
+}
+
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+}
+
+vec3 computeCubeNormal(vec3 position, vec3 min, vec3 max){
+    auto center = (max + min) * 0.5f;
+    auto normal = vec3(position.x - center.x, position.y - center.y, position.z - center.z);
+    auto absNormal = abs(normal);
+
+    auto maxc = std::max(std::max(absNormal.x, absNormal.y), absNormal.z);
+    if(maxc == absNormal.x){
+      return normalize(vec3(normal.x, 0, 0));
+    }
+    else if(maxc == absNormal.y){
+      return normalize(vec3(0, normal.y, 0));
+    }
+    return normalize(vec3(0, 0, normal.z)); 
+}
+
+enum Side {RIGHT=0, LEFT, UP, DOWN, FRONT, BACK};
+
+Side faceFromPoint(point3 point){
+  point3 absPoint = abs(point);
+  float coord = std::max(std::max(absPoint.x, absPoint.y), absPoint.z);
+  if(coord == point.x) return RIGHT;
+  if(coord == -point.x) return LEFT;
+  if(coord == point.y) return UP;
+  if(coord == -point.y) return DOWN;
+  if(coord == point.z) return FRONT;
+  return BACK;
+}
+
+vec2 cube_uv_front(point3 point, vec3 max){
+  float u = abs(fmod(point.x + max.x, 2.0f) / 2.0f);
+  float v = abs(fmod(point.y + max.y, 2.0f) / 2.0f);
+  return vec2(u, v);
+}
+
+vec2 cube_uv_back(point3 point, vec3 max){
+  float u = abs(fmod(max.x - point.x, 2.0f) / 2.0f);
+  float v = abs(fmod(point.y + max.y, 2.0f) / 2.0f);
+  return vec2(u, v);
+}
+
+vec2 cube_uv_left(point3 point, vec3 max){
+  float u = abs(fmod(point.z + max.z, 2.0f) / 2.0f);
+  float v = abs(fmod(point.y + max.y, 2.0f) / 2.0f);
+  return vec2(u, v);
+}
+
+vec2 cube_uv_right(point3 point, vec3 max){
+  float u = abs(fmod(max.z - point.z, 2.0f) / 2.0f);
+  float v = abs(fmod(point.y + max.y, 2.0f) / 2.0f);
+  return vec2(u, v);
+}
+
+vec2 cube_uv_up(point3 point, vec3 max, vec3 min){
+  float u = abs(fmod(min.x - point.x, 2.0f) / 2.0f);
+  float v = abs(fmod(max.z - point.z, 2.0f) / 2.0f);
+  return vec2(u, v);
+}
+
+vec2 cube_uv_down(point3 point, vec3 max, vec3 min){
+  float u = abs(fmod(min.x - point.x, 2.0f) / 2.0f);
+  float v = abs(fmod(point.z + max.z, 2.0f) / 2.0f);
+  return vec2(u, v);
+}
+
+bool intersectCube(Ray* ray, Intersection* intersection, Object* obj){
+    float xtmin, xtmax;
+    check_axis(ray->orig.x, ray->dir.x, obj->geom.cube.min.x, obj->geom.cube.max.x, xtmin, xtmax);
+    float ytmin, ytmax;
+    check_axis(ray->orig.y, ray->dir.y, obj->geom.cube.min.y, obj->geom.cube.max.y, ytmin, ytmax);
+    float ztmin, ztmax;
+    check_axis(ray->orig.z, ray->dir.z, obj->geom.cube.min.z, obj->geom.cube.max.z, ztmin, ztmax);
+
+    float tmin = std::max(std::max(xtmin, ytmin), ztmin);
+    float tmax = std::min(std::min(xtmax, ytmax), ztmax);
+
+    if(tmin > tmax || tmin < ray->tmin || tmin > ray->tmax )
+      return false;
+
+    intersection->position = ray->orig + (tmin * ray->dir);
+    intersection->mat = &(obj->mat);
+    intersection->normal = computeCubeNormal(intersection->position, obj->geom.cube.min, obj->geom.cube.max);
+    intersection->isOutside = dot(ray->dir, intersection->normal) < 0;
+
+    vec2 uv;
+    int face;
+    vec3 absMax = glm::max(glm::abs(obj->geom.cube.max), glm::abs(obj->geom.cube.min));
+    vec3 absMin = (absMax == glm::abs(obj->geom.cube.max)) ? glm::abs(obj->geom.cube.min) : glm::abs(obj->geom.cube.max);
+    if(intersection->normal.x < 0){
+      uv = cube_uv_left(intersection->position, absMax);
+      face = 0;
+    }
+    else if(intersection->normal.x > 0){
+      uv = cube_uv_right(intersection->position, absMax);
+      face = 1;
+    }
+    else if(intersection->normal.z > 0) {
+      uv = cube_uv_front(intersection->position, absMax);
+      face = 2;
+    }
+    else if(intersection->normal.z < 0){
+      uv = cube_uv_back(intersection->position, absMax);
+      face = 3;
+    }
+    else if(intersection->normal.y > 0) {
+      uv = cube_uv_up(intersection->position, absMax, absMin);
+      face = 4;
+    }
+    else{
+      uv = cube_uv_down(intersection->position, absMax, absMin);
+      face = 5;
+    }
+    intersection->u = uv.x;
+    intersection->v = uv.y;
+    intersection->face = face;
+
+
+    ray->tmax = tmin;
+    return true;
+}

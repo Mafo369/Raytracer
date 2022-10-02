@@ -14,3 +14,5 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj);
 bool intersectTriangle(Ray *ray, Intersection *intersection, Object *obj);
 
 bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection);
+
+bool intersectCube(Ray* ray, Intersection* intersection, Object* obj);

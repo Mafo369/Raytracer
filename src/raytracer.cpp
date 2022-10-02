@@ -20,7 +20,7 @@
 
 #include "Light.h"
 
-color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, float uTex, float vTex, bool outside, float intensity, std::vector<vec3> &samples)
+color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, float uTex, float vTex, bool outside, float intensity, std::vector<vec3> &samples, int face)
 {
   color3 ret = color3(0.f);
 
@@ -80,7 +80,7 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, flo
         float NdotH = dot(n, h);
         float VdotH = dot(v, h);
         float VdotN = dot(v, n);
-        ret += (RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex) * LdotN);
+        ret += (RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex, face) * LdotN);
       }
     }
     ret = lc * (ret / float(samples.size())) * intensity;
@@ -94,7 +94,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 5)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -106,7 +106,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       auto intensity = scene->lights[i]->intensityAt(intersection.position, scene, tree, v, &intersection); 
       auto samples = scene->lights[i]->getSamples();
       if(intensity > 0.0f){
-        ret += shade(intersection.normal, v, intersection.position, scene->lights[i]->getColor(), intersection.mat, intersection.u, intersection.v, intersection.isOutside, intensity, samples);
+        ret += shade(intersection.normal, v, intersection.position, scene->lights[i]->getColor(), intersection.mat, intersection.u, intersection.v, intersection.isOutside, intensity, samples, intersection.face);
       }
     }
 

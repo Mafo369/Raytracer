@@ -76,8 +76,6 @@ Material mat_lib[] = {
 //    /* blue acrylic */
 //    {1.1153, 0.068, {0.012, 0.036, 0.106}, {1.0, 0.965, 1.07}}};
 
-
-
 Scene *initScene0() {
   Scene *scene = initScene();
   setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
@@ -101,51 +99,20 @@ Scene *initScene0() {
   addObject(scene, initSphere(point3(0, 0, 1), .25, mat));
 
   mat.diffuseColor = color3(0.6f);
+  mat.m_texture = nullptr;
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
   addLight(scene, initPointLight(point3(10, 10, 10), color3(1, 1, 1)));
   addLight(scene, initPointLight(point3(4, 10, -2), color3(1, 1, 1)));
+  
+  //auto light = new AreaLight(vec3(13,10,13), vec3(-6,0,0), 10, vec3(0,0,-6), 10, color3(1,1,1));
+  //addLight(scene, light);
+
+  //light = new AreaLight(vec3(1,7,-5), vec3(6,3,0), 10, vec3(0,3,6), 10, color3(1,1,1));
+  //addLight(scene, light);
 
   return scene;
 }
-
-//Scene *initScene0() {
-//  Scene *scene = initScene();
-//  setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
-//            (float)WIDTH / (float)HEIGHT);
-//  setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
-//  Material mat;
-//  mat.IOR = 1.3;
-//  mat.roughness = 0.1;
-//  mat.specularColor = color3(0.5f);
-//
-//  mat.diffuseColor = color3(.5f);
-//  addObject(scene, initSphere(point3(0, 0, 0), 0.25, mat));
-//
-//  mat.diffuseColor = color3(0.5f, 0.f, 0.f);
-//  addObject(scene, initSphere(point3(1, 0, 0), .25, mat));
-//
-//  mat.diffuseColor = color3(0.f, 0.5f, 0.5f);
-//  addObject(scene, initSphere(point3(0, 1, 0), .25, mat));
-//
-//  mat.diffuseColor = color3(0.f, 0.f, 0.5f);
-//  addObject(scene, initSphere(point3(0, 0, 1), .25, mat));
-//
-//  mat.diffuseColor = color3(0.6f);
-//  mat.m_texture = nullptr;
-//  addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
-//
-//  addLight(scene, initPointLight(point3(10, 10, 10), color3(1, 1, 1)));
-//  addLight(scene, initPointLight(point3(4, 10, -2), color3(1, 1, 1)));
-//  
-//  //auto light = new AreaLight(vec3(13,10,13), vec3(-6,0,0), 10, vec3(0,0,-6), 10, color3(1,1,1));
-//  //addLight(scene, light);
-//
-//  //light = new AreaLight(vec3(1,7,-5), vec3(6,3,0), 10, vec3(0,3,6), 10, color3(1,1,1));
-//  //addLight(scene, light);
-//
-//  return scene;
-//}
 
 Scene *initScene1() {
 
@@ -691,6 +658,9 @@ Scene *initScene8() {
   
   addObject(scene, initSphere(point3(24, 2, 24), 2.f, mat_lib[10]));
   addLight(scene, initPointLight(point3(5, 30, 5),color3(1, 1, 1)));
+
+  addLight(scene, initPointLight(point3(-5, 5, 0), color3(1,1,1)));
+  addLight(scene, initPointLight(point3(0, 5, -5), color3(1,1,1)));
   
   //auto light = new AreaLight(vec3(54,10,54), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
   //addLight(scene, light);
@@ -704,13 +674,36 @@ Scene *initScene8() {
   //addLight(scene, light);
 
   Material mats;
-  mats.diffuseColor = color3(0.f, 0.f, 0.5f);
-  mats.specularColor = color3(0.f, 0.f, 0.7f);
-  mats.roughness = 0.5f;
+  mats.diffuseColor = color3(1.0f, 0.f, 0);
+  mats.specularColor = color3(0.f, 0.f, 0);
+  mats.roughness = 2.2f;
+  mats.IOR = 1.1;
+  mats.mtype = DIFFUSE;
 
   addObject(scene, initSphere(point3(-5, 1.8, -5), 1.8f, mat_lib[8]));
   addObject(scene, initSphere(point3(18, 1.8, 26), 1.8f, mats));
   addObject(scene, initSphere(point3(26, 1.8, 18), 1.8f, mat_lib[8]));
+
+  addLight(scene, initPointLight(point3(0, 3, 0), color3(1,1,1)));
+
+  color3 red = color3(1, 0, 0);
+  color3 yellow = color3(1, 1, 0);
+  color3 brown = color3(1, 0.5, 0);
+  color3 green = color3(0, 1, 0);
+  color3 cyan = color3(0, 1, 1);
+  color3 blue = color3(0, 0, 1);
+  color3 purple = color3(1, 0, 1);
+  color3 white = color3(1, 1, 1);
+  FaceInfo left {cyan, red, blue, brown, yellow};
+  FaceInfo front {red, yellow, brown, green, cyan};
+  FaceInfo right {yellow, purple, green, white, red};
+  FaceInfo back {purple, cyan, white, blue, green};
+  FaceInfo up {cyan, purple, red, yellow, brown};
+  FaceInfo down {brown, green, blue, white, purple};
+
+  mats.m_texture = new CubeMapTexture(left, right, front, back, up, down);
+  addObject(scene, initCube(vec3(-3,5,-3), vec3(-1,7,-1), mats));
+  mats.m_texture = nullptr;
 
 
   Material mat;
@@ -721,7 +714,8 @@ Scene *initScene8() {
   mat.roughness = 1.2;
   mat.mtype = DIFFUSE;
   //mat.m_texture = new checker_texture(color3(0.2, 0.3, 0.1), color3(0.9, 0.9, 0.9));
-  mat.m_texture = new image_texture("../assets/chessboardtexture.png");
+  //mat.m_texture = new image_texture("../assets/chessboardtexture.png");
+  //mat.m_texture = new CubeMapTexture(color3(1,1,1), color3(1,0,0), color3(1,1,0), color3(0,1,0), color3(0,1,1));
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
   return scene;

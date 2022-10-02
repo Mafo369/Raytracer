@@ -26,11 +26,12 @@ typedef struct material_s {
   
 } Material;
 
-enum Etype {SPHERE=1, PLANE, TRIANGLE};
+enum Etype {SPHERE=1, PLANE, TRIANGLE, CUBE};
 
 
 //! create a new sphere structure
 Object* initSphere(point3 center, float radius, Material mat);
+Object *initCube(vec3 min, vec3 max, Material mat);
 Object* initPlane(vec3 normal, float d, Material mat);
 Object* initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat);
 Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, Material mat);

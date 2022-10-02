@@ -99,6 +99,10 @@ KdTree *initKdTree(Scene *scene)
     {
       tree->inTree.push_back(i);
     }
+    else if (scene->objects[i]->geom.type == CUBE)
+    {
+      tree->inTree.push_back(i);
+    }
   }
 
   tree->depthLimit = 40;
@@ -152,6 +156,15 @@ KdTree *initKdTree(Scene *scene)
         z_vector.push_back(pz[j]);
       }
     }
+    else if (scene->objects[tree->inTree[i]]->geom.type == CUBE)
+    {
+      x_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.min.x);
+      x_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.max.x);
+      y_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.min.y);
+      y_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.max.y);
+      z_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.min.z);
+      z_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.max.z);
+    }
   }
   float xmin = *std::min_element(x_vector.begin(), x_vector.end());
   float ymin = *std::min_element(y_vector.begin(), y_vector.end());
@@ -176,6 +189,36 @@ KdTree *initKdTree(Scene *scene)
   return tree;
 }
 
+// from http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
+static bool intersectAabb(Ray *theRay, vec3 min, vec3 max)
+{
+  float tmin, tmax, tymin, tymax, tzmin, tzmax;
+  vec3 bounds[2] = {min, max};
+  tmin = (bounds[theRay->sign[0]].x - theRay->orig.x) * theRay->invdir.x;
+  tmax = (bounds[1 - theRay->sign[0]].x - theRay->orig.x) * theRay->invdir.x;
+  tymin = (bounds[theRay->sign[1]].y - theRay->orig.y) * theRay->invdir.y;
+  tymax = (bounds[1 - theRay->sign[1]].y - theRay->orig.y) * theRay->invdir.y;
+  if ((tmin > tymax) || (tymin > tmax))
+    return false;
+  if (tymin > tmin)
+    tmin = tymin;
+  if (tymax < tmax)
+    tmax = tymax;
+  tzmin = (bounds[theRay->sign[2]].z - theRay->orig.z) * theRay->invdir.z;
+  tzmax = (bounds[1 - theRay->sign[2]].z - theRay->orig.z) * theRay->invdir.z;
+  if ((tmin > tzmax) || (tzmin > tmax))
+    return false;
+  if (tzmin > tmin)
+    tmin = tzmin;
+  if (tzmax < tmax)
+    tmax = tzmax;
+  if (tmin > theRay->tmin)
+    theRay->tmin = tmin;
+  if (tmax < theRay->tmax)
+    theRay->tmax = tmax;
+  return true;
+}
+
 bool intersectTriangleAabb(vec3 p1, vec3 p2, vec3 p3, vec3 normal, vec3 aabbMin, vec3 aabbMax)
 {
   float minx = min(p1.x, min(p2.x, p3.x));
@@ -188,6 +231,11 @@ bool intersectTriangleAabb(vec3 p1, vec3 p2, vec3 p3, vec3 normal, vec3 aabbMin,
   vec3 min = vec3(minx, miny, minz);
   vec3 max = vec3(maxx, maxy, maxz);
 
+  return !((min.x > aabbMax.x) || (max.x < aabbMin.x) || (min.y > aabbMax.y) || (max.y < aabbMin.y) || (min.z > aabbMax.z) || (max.z < aabbMin.z));
+}
+
+bool intersectCubeAabb(vec3 min, vec3 max, vec3 aabbMin, vec3 aabbMax)
+{
   return !((min.x > aabbMax.x) || (max.x < aabbMin.x) || (min.y > aabbMax.y) || (max.y < aabbMin.y) || (min.z > aabbMax.z) || (max.z < aabbMin.z));
 }
 
@@ -341,6 +389,10 @@ void findPlane(Scene *scene, KdTreeNode *node, float &p_, float &k_, float &c_)
       {
         clipSphereToBox(scene, node->objects[i], node->min, node->max, minb, maxb);
       }
+      else if(scene->objects[node->objects[i]]->geom.type == CUBE){
+        minb = scene->objects[node->objects[i]]->geom.cube.min;
+        maxb = scene->objects[node->objects[i]]->geom.cube.max;
+      }
       else
       {
         clipTriangleToBox(scene, node->objects[i], node->min, node->max, minb, maxb);
@@ -450,7 +502,7 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
     {
       bool left = intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius, node_left->min, node_left->max);
       bool right = intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius, node_right->min, node_right->max);
-      assert(left || right);
+      //assert(left || right);
       if (left)
       {
         node_left->objects.push_back(node->objects[i]);
@@ -464,7 +516,21 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
     {
       bool left = intersectTriangleAabb(scene->objects[node->objects[i]]->geom.triangle.p1, scene->objects[node->objects[i]]->geom.triangle.p2, scene->objects[node->objects[i]]->geom.triangle.p3, scene->objects[node->objects[i]]->geom.triangle.normal, node_left->min, node_left->max);
       bool right = intersectTriangleAabb(scene->objects[node->objects[i]]->geom.triangle.p1, scene->objects[node->objects[i]]->geom.triangle.p2, scene->objects[node->objects[i]]->geom.triangle.p3, scene->objects[node->objects[i]]->geom.triangle.normal, node_right->min, node_right->max);
-      assert(left || right);
+      //assert(left || right);
+      if (left)
+      {
+        node_left->objects.push_back(node->objects[i]);
+      }
+      if (right)
+      {
+        node_right->objects.push_back(node->objects[i]);
+      }
+    }
+    else if (scene->objects[node->objects[i]]->geom.type == CUBE)
+    {
+      bool left = intersectCubeAabb(scene->objects[node->objects[i]]->geom.cube.min, scene->objects[node->objects[i]]->geom.cube.max, node_left->min, node_left->max);
+      bool right = intersectCubeAabb(scene->objects[node->objects[i]]->geom.cube.min, scene->objects[node->objects[i]]->geom.cube.max, node_right->min, node_right->max);
+      //assert(left || right);
       if (left)
       {
         node_left->objects.push_back(node->objects[i]);
@@ -596,6 +662,31 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
           }
         }
       }
+      else if (scene->objects[currentNode.node->objects[i]]->geom.type == CUBE)
+      {
+        if (intersectCube(ray, &temp, scene->objects[currentNode.node->objects[i]]))
+        {
+          float temp_dist = ray->tmax;
+          if (hasIntersection)
+          {
+            if (temp_dist < dist)
+            {
+              dist = temp_dist;
+              *intersection = temp;
+            }
+          }
+          else
+          {
+            hasIntersection = true;
+            *intersection = temp;
+            dist = temp_dist;
+            if(ray->shadow){
+              ray->tmax = dist;
+              return true;
+            }
+          }
+        }
+      }
     }
     if (hasIntersection)
     { // If we find intersection we return true
@@ -604,36 +695,6 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
     }
   }
   return false;
-}
-
-// from http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
-static bool intersectAabb(Ray *theRay, vec3 min, vec3 max)
-{
-  float tmin, tmax, tymin, tymax, tzmin, tzmax;
-  vec3 bounds[2] = {min, max};
-  tmin = (bounds[theRay->sign[0]].x - theRay->orig.x) * theRay->invdir.x;
-  tmax = (bounds[1 - theRay->sign[0]].x - theRay->orig.x) * theRay->invdir.x;
-  tymin = (bounds[theRay->sign[1]].y - theRay->orig.y) * theRay->invdir.y;
-  tymax = (bounds[1 - theRay->sign[1]].y - theRay->orig.y) * theRay->invdir.y;
-  if ((tmin > tymax) || (tymin > tmax))
-    return false;
-  if (tymin > tmin)
-    tmin = tymin;
-  if (tymax < tmax)
-    tmax = tymax;
-  tzmin = (bounds[theRay->sign[2]].z - theRay->orig.z) * theRay->invdir.z;
-  tzmax = (bounds[1 - theRay->sign[2]].z - theRay->orig.z) * theRay->invdir.z;
-  if ((tmin > tzmax) || (tzmin > tmax))
-    return false;
-  if (tzmin > tmin)
-    tmin = tzmin;
-  if (tzmax < tmax)
-    tmax = tzmax;
-  if (tmin > theRay->tmin)
-    theRay->tmin = tmin;
-  if (tmax < theRay->tmax)
-    theRay->tmax = tmax;
-  return true;
 }
 
 bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *intersection)

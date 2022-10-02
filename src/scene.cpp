@@ -32,6 +32,16 @@ Object *initPlane(vec3 normal, float d, Material mat) {
     return ret;
 }
 
+Object *initCube(vec3 min, vec3 max, Material mat) {
+    Object *ret;
+    ret = (Object *)malloc(sizeof(Object));
+    ret->geom.type = CUBE;
+    ret->geom.cube.min = min;
+    ret->geom.cube.max = max;
+    memcpy(&(ret->mat), &mat, sizeof(Material));
+    return ret;
+}
+
 Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat){
     Object *ret;
     ret = (Object *)malloc(sizeof(Object));

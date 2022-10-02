@@ -8,37 +8,42 @@
 #include "scene.h"
 #include "raytracer.h"
 #include "image.h"
+#include "intersection.hpp"
 
 #include "expected.h"
 
-void validTest(const char *desc, bool value, bool expected){
-  printf("%s \t: [%s]\n", desc, value == expected ? "OK":"fail");
+// from http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
+static bool intersectAabb(Ray *theRay, vec3 min, vec3 max)
+{
+  float tmin, tmax, tymin, tymax, tzmin, tzmax;
+  vec3 bounds[2] = {min, max};
+  tmin = (bounds[theRay->sign[0]].x - theRay->orig.x) * theRay->invdir.x;
+  tmax = (bounds[1 - theRay->sign[0]].x - theRay->orig.x) * theRay->invdir.x;
+  tymin = (bounds[theRay->sign[1]].y - theRay->orig.y) * theRay->invdir.y;
+  tymax = (bounds[1 - theRay->sign[1]].y - theRay->orig.y) * theRay->invdir.y;
+  if ((tmin > tymax) || (tymin > tmax))
+    return false;
+  if (tymin > tmin)
+    tmin = tymin;
+  if (tymax < tmax)
+    tmax = tymax;
+  tzmin = (bounds[theRay->sign[2]].z - theRay->orig.z) * theRay->invdir.z;
+  tzmax = (bounds[1 - theRay->sign[2]].z - theRay->orig.z) * theRay->invdir.z;
+  if ((tmin > tzmax) || (tzmin > tmax))
+    return false;
+  if (tzmin > tmin)
+    tmin = tzmin;
+  if (tzmax < tmax)
+    tmax = tzmax;
+  if (tmin > theRay->tmin)
+    theRay->tmin = tmin;
+  if (tmax < theRay->tmax)
+    theRay->tmax = tmax;
+  return true;
 }
 
-
-
-
-
-
-// from http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
-bool intersectAabb(Ray *theRay,  vec3 min, vec3 max) {
-    float tmin, tmax, tymin, tymax, tzmin, tzmax;
-    vec3 bounds[2] = {min, max};
-    tmin = (bounds[theRay->sign[0]].x - theRay->orig.x) * theRay->invdir.x;
-    tmax = (bounds[1-theRay->sign[0]].x - theRay->orig.x) * theRay->invdir.x;
-    tymin = (bounds[theRay->sign[1]].y - theRay->orig.y) * theRay->invdir.y;
-    tymax = (bounds[1-theRay->sign[1]].y - theRay->orig.y) * theRay->invdir.y;
-    if ((tmin > tymax) || (tymin > tmax)) return false;
-    if (tymin > tmin) tmin = tymin;
-    if (tymax < tmax) tmax = tymax;
-    tzmin = (bounds[theRay->sign[2]].z - theRay->orig.z) * theRay->invdir.z;
-    tzmax = (bounds[1-theRay->sign[2]].z - theRay->orig.z) * theRay->invdir.z;
-    if ((tmin > tzmax) || (tzmin > tmax)) return false;
-    if (tzmin > tmin) tmin = tzmin;
-    if (tzmax < tmax) tmax = tzmax;
-    if (tmin > theRay->tmin) theRay->tmin = tmin;
-    if (tmax < theRay->tmax) theRay->tmax = tmax;
-    return tmin>0 || tmax>0;
+void validTest(const char *desc, bool value, bool expected){
+  printf("%s \t: [%s]\n", desc, value == expected ? "OK":"fail");
 }
 
 bool g_ApplicationRunning = true;

@@ -207,12 +207,16 @@ color3 RDM_bsdf_d(Material *m)
 // VdtoN : View . Norm
 // compute bsdf * cos(Oi)
 color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                Material *m, float uTex, float vTex)
+                Material *m, float uTex, float vTex, int face)
 {
 
   //! \todo compute bsdf diffuse and specular term
   if(m->m_texture != nullptr){
-    auto texColor = (m->m_texture->value(uTex, vTex));
+    color3 texColor;
+    if(face == -1)
+      texColor = (m->m_texture->value(uTex, vTex));
+    else
+      texColor = (m->m_texture->value(uTex, vTex, face));
     return color3((texColor / float(M_PI)) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
   }
   return color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
