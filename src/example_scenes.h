@@ -1,8 +1,8 @@
 #pragma once
 
 #include "scene_types.h"
-#define WIDTH 200
-#define HEIGHT 100
+#define WIDTH 800
+#define HEIGHT 600
 
 
 Scene *initScene0();

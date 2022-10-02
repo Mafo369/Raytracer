@@ -120,9 +120,10 @@ KdTree *initKdTree(Scene *scene)
     {
       float rad = scene->objects[tree->inTree[i]]->geom.sphere.radius;
 
-      float x = scene->objects[tree->inTree[i]]->geom.sphere.center.x;
-      float y = scene->objects[tree->inTree[i]]->geom.sphere.center.y;
-      float z = scene->objects[tree->inTree[i]]->geom.sphere.center.z;
+      auto spherePosition = scene->objects[tree->inTree[i]]->transform * vec4(0,0,0, 1);
+      float x = spherePosition.x;
+      float y = spherePosition.y;
+      float z = spherePosition.z;
 
       x_vector.push_back(x + rad);
       x_vector.push_back(x - rad);

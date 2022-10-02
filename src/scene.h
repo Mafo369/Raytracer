@@ -30,7 +30,8 @@ enum Etype {SPHERE=1, PLANE, TRIANGLE, CUBE};
 
 
 //! create a new sphere structure
-Object* initSphere(point3 center, float radius, Material mat);
+Object *initSphere(point3 center, float radius, Material mat);
+Object* initSphere(glm::mat4 transform, Material mat);
 Object *initCube(vec3 min, vec3 max, Material mat);
 Object* initPlane(vec3 normal, float d, Material mat);
 Object* initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat);

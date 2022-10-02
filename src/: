@@ -78,14 +78,13 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *obj)
     {
       intersection->position = ray->orig + (t * ray->dir);
       intersection->mat = &(obj->mat);
-      vec3 objectPoint = obj->invTransform * vec4(intersection->position, 1);
-      vec3 objectNormal = objectPoint - vec3(0,0,0);
-      glm::mat4 normalMatrix = glm::transpose(obj->invTransform);
-      vec4 normal4 = normalMatrix * vec4(objectNormal, 1);
-      vec3 normal = vec3(normal4.x, normal4.y, normal4.z);
-      intersection->isOutside = dot(transformedRay.dir, objectNormal) < 0;
-      intersection->transform = obj->transform;
-      intersection->normal = normalize(normal);
+    vec3 objectPoint = obj->invTransform * vec4(intersection->position, 1);
+    vec3 objectNormal = objectPoint - vec3(0,0,0);
+    glm::mat4 normalMatrix = glm::transpose(obj->invTransform);
+    vec3 normal = normalMatrix * vec4(objectNormal, 1);
+    intersection->isOutside = dot(transformedRay.dir, objectNormal) < 0;
+    intersection->transform = obj->transform;
+    intersection->normal = normalize(normal);
 
       float pi = M_PI;
       auto theta = acos(-normal.y);

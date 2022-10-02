@@ -4,13 +4,6 @@
 #include "scene.h"
 #include <vector>
 
-//! \file : internal types to describe a scene
-//typedef struct light_s {
-//    point3 position;
-//    color3 color;
-//} Light;
-
-
 typedef struct camera_s {
   point3 position; //! eye position
     vec3 zdir; //! view direction
@@ -57,16 +50,8 @@ typedef struct geometry_s {
 } Geometry;
 
 typedef struct object_s {
-  /** not used yet, but you should use it to transform ray before
-   *  computing intersection (and thu have a better control on 3D position
-   */
-  mat3 orientation; 
-  
-  /** not used yet, but you should use it to transform ray before
-   *  computing intersection (and thu have a better control on 3D position
-   */
-  vec3 tranlation; 
-  
+    glm::mat4 transform;
+    glm::mat4 invTransform;
     Geometry geom;
     Material mat;
 } Object;

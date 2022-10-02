@@ -16,9 +16,36 @@ Object *initSphere(point3 center, float radius, Material mat) {
     Object *ret;
     ret = (Object *)malloc(sizeof(Object));
     ret->geom.type = SPHERE;
-    ret->geom.sphere.center = center;
-    ret->geom.sphere.radius = radius;
+    ret->geom.sphere.center = point3(0,0,0);
+    ret->geom.sphere.radius = 0.25;
     memcpy(&(ret->mat), &mat, sizeof(Material));
+    return ret;
+}
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/norm.hpp>
+glm::vec3 extractScale(const glm::mat4 &m)
+{
+    // length2 returns length squared i.e. v·v
+    // no square root involved
+    return glm::vec3(glm::length2( glm::vec3(m[0]) ),
+                     glm::length2( glm::vec3(m[1]) ),
+                     glm::length2( glm::vec3(m[2]) ));
+}
+
+Object *initSphere(glm::mat4 transform, Material mat) {
+    Object *ret;
+    ret = (Object *)malloc(sizeof(Object));
+    ret->geom.type = SPHERE;
+    ret->geom.sphere.center = transform * vec4(0,0,0,1);
+    glm::vec3 scalesSq = extractScale(transform);
+    float const maxScaleSq = *std::max_element(&scalesSq[0], &scalesSq[0] + scalesSq.length());  // length gives the dimension here i.e. 3
+    // one sqrt when you know the largest of the three
+    float const largestScale = std::sqrt(maxScaleSq);
+    ret->geom.sphere.radius = largestScale;
+    memcpy(&(ret->mat), &mat, sizeof(Material));
+    ret->transform = transform;
+    ret->invTransform = glm::inverse(ret->transform);
     return ret;
 }
 
