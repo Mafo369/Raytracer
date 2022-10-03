@@ -3,30 +3,48 @@
 #include "defines.h"
 #include "tiny_obj_loader.h"
 
+//#include "Object.h"
 #include "textures.hpp"
 
 class Light;
 
 // SCENE
-typedef struct scene_s Scene;
-typedef struct object_s Object;
-//typedef struct light_s Light;
-typedef struct camera_s Camera;
+//typedef struct scene_s Scene;
+////typedef struct object_s Object;
+////typedef struct light_s Light;
+//typedef struct camera_s Camera;
 
-enum Mtype {DIFFUSE=1, DIELECTRIC};
+typedef struct camera_s {
+  point3 position; //! eye position
+    vec3 zdir; //! view direction
+    vec3 xdir; //! right direction
+    vec3 ydir; //! up direction
+    point3 center; //! center of the image plane
+  float fov;  //! field of view
+  float aspect; //! aspect ratio (typically use WIDTH/HEIGHT of the computed image
+} Camera;
 
-typedef struct material_s {
-  float IOR;	//! Index of refraction (for dielectric)
-  float roughness; //! 0.001 - 0.01 : very smooth finish with slight imperfections. 0.1 : relatively rough. 0.3-0.7 extremely rough 
-  color3 specularColor;	//! Specular "albedo"
-  color3 diffuseColor;	//! Base color
-  Mtype mtype = DIFFUSE;
-  
-  texture* m_texture = nullptr;
-  
-} Material;
 
-enum Etype {SPHERE=1, PLANE, TRIANGLE, CUBE};
+//typedef struct object_s {
+//    glm::mat4 transform;
+//    glm::mat4 invTransform;
+//    Geometry geom;
+//    Material mat;
+//} Object;
+
+class Object;
+
+typedef std::vector<Object*> Objects;
+typedef std::vector<Light*> Lights;
+
+typedef struct scene_s {
+  Lights lights; //! the scene have several lights
+  Objects objects; //! the scene have several objects
+  Camera cam; //! the scene have one camera
+  color3 skyColor; //! the sky color, could be extended to a sky function ;)
+} Scene;
+
+typedef struct material_s Material;
 
 
 //! create a new sphere structure

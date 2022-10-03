@@ -4,21 +4,25 @@
 #include <string>
 
 #include "scene.h"
-#include "scene_types.h"
+#include "Object.h"
 #include <string.h>
 #include <algorithm>
 
 //#include <glm/gtx/norm.hpp>
 
 #include "Light.h"
+#include "shapes/sphere.h"
+#include "shapes/triangle.h"
+#include "shapes/cube.h"
+#include "shapes/plane.h"
 
 Object *initSphere(point3 center, float radius, Material mat) {
     Object *ret;
-    ret = (Object *)malloc(sizeof(Object));
-    ret->geom.type = SPHERE;
-    ret->geom.sphere.center = point3(0,0,0);
-    ret->geom.sphere.radius = 0.25;
-    memcpy(&(ret->mat), &mat, sizeof(Material));
+    //ret = (Object *)malloc(sizeof(Object));
+    //ret->geom.type = SPHERE;
+    //ret->geom.sphere.center = point3(0,0,0);
+    //ret->geom.sphere.radius = 0.25;
+    //memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
 
@@ -34,8 +38,7 @@ glm::vec3 extractScale(const glm::mat4 &m)
 }
 
 Object *initSphere(Material mat, glm::mat4 transform ) {
-    Object *ret;
-    ret = (Object *)malloc(sizeof(Object));
+    auto ret = new Sphere(mat, transform);
     ret->geom.type = SPHERE;
     ret->geom.sphere.center = transform * vec4(0,0,0,1);
     glm::vec3 scalesSq = extractScale(transform);
@@ -43,37 +46,31 @@ Object *initSphere(Material mat, glm::mat4 transform ) {
     // one sqrt when you know the largest of the three
     float const largestScale = std::sqrt(maxScaleSq);
     ret->geom.sphere.radius = largestScale;
-    memcpy(&(ret->mat), &mat, sizeof(Material));
     ret->transform = transform;
     ret->invTransform = glm::inverse(transform);
     return ret;
 }
 
 Object *initPlane(vec3 normal, float d, Material mat) {
-    Object *ret;
-    ret = (Object *)malloc(sizeof(Object));
+    auto ret = new Plane(mat, glm::mat4(1.f));
     ret->geom.type = PLANE;
     ret->geom.plane.normal = normalize(normal);
     ret->geom.plane.dist = d;
-    memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
 
 Object *initCube(Material mat, glm::mat4 transform) {
-    Object *ret;
-    ret = (Object *)malloc(sizeof(Object));
+    auto ret = new Cube(mat, transform);
     ret->geom.type = CUBE;
     ret->transform = transform;
     ret->geom.cube.min = transform * vec4(-1,-1,-1, 1);
     ret->geom.cube.max = transform * vec4(1,1,1, 1);
     ret->invTransform = glm::inverse(transform);
-    memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
 
 Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat){
-    Object *ret;
-    ret = (Object *)malloc(sizeof(Object));
+    auto ret = new Triangle(mat, glm::mat4(1.f));
     ret->geom.type = TRIANGLE;
     ret->geom.triangle.p1 = p1;
     ret->geom.triangle.p2 = p2;
@@ -82,13 +79,11 @@ Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat)
     ret->geom.triangle.tex[0] = t[0];
     ret->geom.triangle.tex[1] = t[1];
     ret->geom.triangle.tex[2] = t[2];
-    memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
 
 Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, Material mat){
-    Object *ret;
-    ret = (Object *)malloc(sizeof(Object));
+    auto ret = new Triangle(mat, glm::mat4(1.f));
     ret->geom.type = TRIANGLE;
     ret->geom.triangle.p1 = p1;
     ret->geom.triangle.p2 = p2;
@@ -100,7 +95,6 @@ Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1
     ret->geom.triangle.tex[0] = t[0];
     ret->geom.triangle.tex[1] = t[1];
     ret->geom.triangle.tex[2] = t[2];
-    memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
 

@@ -8,7 +8,7 @@
 #include "scene.h"
 #include "raytracer.h"
 #include "image.h"
-#include "intersection.hpp"
+#include "Object.h"
 
 #include "expected.h"
 

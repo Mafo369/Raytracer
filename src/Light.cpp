@@ -1,5 +1,4 @@
 #include "Light.h"
-#include "intersection.hpp"
 #include "raytracer.h"
 #include "scene.h"
 

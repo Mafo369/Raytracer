@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <glm/glm.hpp>
+#include "Object.h"
 
 /* ---------------------------------------------------------------------------
  */
@@ -162,7 +163,7 @@ float RDM_Smith(float LdotH, float LdotN, float VdotH, float VdotN,
 // LdotN : Light . Norm
 // VdotN : View . Norm
 color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
-                  float VdotN, Material *m)
+                  float VdotN, const Material *m)
 {
 
   //! \todo specular term of the bsdf, using D = RDB_Beckmann, F = RDM_Fresnel, G
@@ -177,7 +178,7 @@ color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
 }
 
 color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
-                  float VdotN, Material *m, float extIOR, float intIOR)
+                  float VdotN, const Material *m, float extIOR, float intIOR)
 {
 
   float d = RDM_Beckmann(NdotH, m->roughness);
@@ -192,7 +193,7 @@ color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
 }
 
 // diffuse term of the cook torrance bsdf
-color3 RDM_bsdf_d(Material *m)
+color3 RDM_bsdf_d(const Material *m)
 {
 
   float pi = M_PI;
@@ -207,7 +208,7 @@ color3 RDM_bsdf_d(Material *m)
 // VdtoN : View . Norm
 // compute bsdf * cos(Oi)
 color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                Material *m, float uTex, float vTex, int face)
+                const Material *m, float uTex, float vTex, int face)
 {
 
   //! \todo compute bsdf diffuse and specular term
@@ -223,7 +224,7 @@ color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
 }
 
 color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                Material *m, float extIOR, float intIOR )
+                const Material *m, float extIOR, float intIOR )
 {
   if(VdotN == 0.f)
     return color3(0,0,0);

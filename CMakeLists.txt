@@ -9,12 +9,16 @@ set(mrt_SRCS
   src/main.cpp
   src/raytracer.cpp
   src/scene.cpp
-  src/intersection.cpp
   src/bsdf.cpp
   src/realtime/Camera.cpp
   src/realtime/Renderer.cpp
   src/example_scenes.cpp
   src/Light.cpp
+  src/Object.cpp
+  src/shapes/sphere.cpp
+  src/shapes/triangle.cpp
+  src/shapes/cube.cpp
+  src/shapes/plane.cpp
   )
 
 add_subdirectory(libs/Walnut/)
@@ -39,11 +43,16 @@ set(unit_test_SRCS
   src/example_scenes.cpp
   src/Light.cpp
   src/unit-test.cpp
+  src/Object.cpp
+  src/shapes/sphere.cpp
+  src/shapes/triangle.cpp
+  src/shapes/cube.cpp
+  src/shapes/plane.cpp
   )
 
-add_executable (unit-test ${unit_test_SRCS})
-target_link_libraries(unit-test PUBLIC walnut)
-target_include_directories (unit-test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libs/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/lodepng-master/ )
+#add_executable (unit-test ${unit_test_SRCS})
+#target_link_libraries(unit-test PUBLIC walnut)
+#target_include_directories (unit-test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libs/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/lodepng-master/ )
 
 
 set(make_test_SRCS

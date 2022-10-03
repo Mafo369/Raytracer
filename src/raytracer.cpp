@@ -15,12 +15,12 @@
 #include <omp.h>
 
 #include "textures.hpp"
-#include "intersection.hpp"
 #include "bsdf.hpp"
 
 #include "Light.h"
+#include "Object.h"
 
-color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, Material *mat, float uTex, float vTex, bool outside, float intensity, std::vector<vec3> &samples, int face)
+color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, const Material *mat, float uTex, float vTex, bool outside, float intensity, std::vector<vec3> &samples, int face)
 {
   color3 ret = color3(0.f);
 

@@ -14,8 +14,6 @@
 #include "../scene.h"
 #include "../textures.hpp"
 #include "../kdtree.h"
-#include "../scene_types.h"
-#include "../intersection.hpp"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

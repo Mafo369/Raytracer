@@ -1,6 +1,7 @@
 #pragma once
 
 #include "defines.h"
+#include "scene.h"
 #include "kdtree.h"
 
 class Light {

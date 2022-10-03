@@ -10,7 +10,7 @@
 typedef struct intersection_s { 
   vec3 normal; //! the normal of the intersection point
   point3 position; //! the intersection point
-  Material *mat; //! the material of th intersected object
+  const Material *mat; //! the material of th intersected object
 
   vec2 t;
   float u;
@@ -40,7 +40,7 @@ color3 trace_ray_4multisampling(Scene *scene, KdTree *tree, int indexI, int inde
                                vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y);
 color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
                                vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y);
-color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, Material *mat, float uTex, float vTex, bool outside, float intensity, int face);
+color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, const Material *mat, float uTex, float vTex, bool outside, float intensity, int face);
 
 float RDM_Beckmann(float NdotH, float alpha);
 float RDM_Fresnel(float LdotH, float extIOR, float intIOR);

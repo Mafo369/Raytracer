@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "Light.h"
+#include "Object.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 

@@ -1,7 +1,6 @@
 #include "kdtree.h"
 #include "defines.h"
 #include "scene.h"
-#include "scene_types.h"
 #include <stdio.h>
 
 #include <vector>
@@ -13,7 +12,7 @@
 
 #include <iostream>
 
-#include "intersection.hpp"
+#include "Object.h"
 
 #define COST_TRAVERSE 1.0
 #define COST_INTERSECT 1.5
@@ -87,19 +86,20 @@ KdTree *initKdTree(Scene *scene)
 
   for (size_t i = 0; i < scene->objects.size(); i++)
   {
-    if (scene->objects[i]->geom.type == PLANE)
+    auto& shape = scene->objects[i]->geom;
+    if (shape.type == PLANE)
     {
       tree->outOfTree.push_back(i);
     }
-    else if (scene->objects[i]->geom.type == SPHERE)
+    else if (shape.type == SPHERE)
     {
       tree->inTree.push_back(i);
     }
-    else if (scene->objects[i]->geom.type == TRIANGLE)
+    else if (shape.type == TRIANGLE)
     {
       tree->inTree.push_back(i);
     }
-    else if (scene->objects[i]->geom.type == CUBE)
+    else if (shape.type == CUBE)
     {
       tree->inTree.push_back(i);
     }
@@ -116,11 +116,12 @@ KdTree *initKdTree(Scene *scene)
 
   for (size_t i = 0; i < tree->inTree.size(); i++)
   {
-    if (scene->objects[tree->inTree[i]]->geom.type == SPHERE)
+    auto obj = scene->objects[tree->inTree[i]];
+    if (obj->geom.type == SPHERE)
     {
-      float rad = scene->objects[tree->inTree[i]]->geom.sphere.radius;
+      float rad = obj->geom.sphere.radius;
 
-      auto spherePosition = scene->objects[tree->inTree[i]]->transform * vec4(0,0,0, 1);
+      auto spherePosition = obj->transform * vec4(0,0,0, 1);
       float x = spherePosition.x;
       float y = spherePosition.y;
       float z = spherePosition.z;
@@ -132,23 +133,23 @@ KdTree *initKdTree(Scene *scene)
       z_vector.push_back(z + rad);
       z_vector.push_back(z - rad);
     }
-    else if (scene->objects[tree->inTree[i]]->geom.type == TRIANGLE)
+    else if (obj->geom.type == TRIANGLE)
     {
       std::vector<float> px;
       std::vector<float> py;
       std::vector<float> pz;
 
-      px.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p1.x);
-      px.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p2.x);
-      px.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p3.x);
+      px.push_back(obj->geom.triangle.p1.x);
+      px.push_back(obj->geom.triangle.p2.x);
+      px.push_back(obj->geom.triangle.p3.x);
 
-      py.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p1.y);
-      py.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p2.y);
-      py.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p3.y);
+      py.push_back(obj->geom.triangle.p1.y);
+      py.push_back(obj->geom.triangle.p2.y);
+      py.push_back(obj->geom.triangle.p3.y);
 
-      pz.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p1.z);
-      pz.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p2.z);
-      pz.push_back(scene->objects[tree->inTree[i]]->geom.triangle.p3.z);
+      pz.push_back(obj->geom.triangle.p1.z);
+      pz.push_back(obj->geom.triangle.p2.z);
+      pz.push_back(obj->geom.triangle.p3.z);
 
       for (int j = 0; j < 3; j++)
       {
@@ -157,14 +158,14 @@ KdTree *initKdTree(Scene *scene)
         z_vector.push_back(pz[j]);
       }
     }
-    else if (scene->objects[tree->inTree[i]]->geom.type == CUBE)
+    else if (obj->geom.type == CUBE)
     {
-      x_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.min.x);
-      x_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.max.x);
-      y_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.min.y);
-      y_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.max.y);
-      z_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.min.z);
-      z_vector.push_back(scene->objects[tree->inTree[i]]->geom.cube.max.z);
+      x_vector.push_back(obj->geom.cube.min.x);
+      x_vector.push_back(obj->geom.cube.max.x);
+      y_vector.push_back(obj->geom.cube.min.y);
+      y_vector.push_back(obj->geom.cube.max.y);
+      z_vector.push_back(obj->geom.cube.min.z);
+      z_vector.push_back(obj->geom.cube.max.z);
     }
   }
   float xmin = *std::min_element(x_vector.begin(), x_vector.end());
@@ -315,9 +316,10 @@ void sah(vec3 min, vec3 max, float p, int nl, int nr, int np, int k, float &c)
 
 void clipSphereToBox(Scene *scene, int sphere, vec3 min, vec3 max, vec3 &minb, vec3 &maxb)
 {
-  float radius = scene->objects[sphere]->geom.sphere.radius;
-  minb = vec3(scene->objects[sphere]->geom.sphere.center.x - radius, scene->objects[sphere]->geom.sphere.center.y - radius, scene->objects[sphere]->geom.sphere.center.z - radius);
-  maxb = vec3(scene->objects[sphere]->geom.sphere.center.x + radius, scene->objects[sphere]->geom.sphere.center.y + radius, scene->objects[sphere]->geom.sphere.center.z + radius);
+  auto& shape = scene->objects[sphere]->geom.sphere;
+  float radius = shape.radius;
+  minb = vec3(shape.center.x - radius, shape.center.y - radius, shape.center.z - radius);
+  maxb = vec3(shape.center.x + radius, shape.center.y + radius, shape.center.z + radius);
 
   for (int k = 0; k < 3; k++)
   {
@@ -334,9 +336,10 @@ void clipSphereToBox(Scene *scene, int sphere, vec3 min, vec3 max, vec3 &minb, v
 
 void clipTriangleToBox(Scene *scene, int triangle, vec3 min, vec3 max, vec3 &minb, vec3 &maxb)
 {
-  vec3 v0 = scene->objects[triangle]->geom.triangle.p1;
-  vec3 v1 = scene->objects[triangle]->geom.triangle.p2;
-  vec3 v2 = scene->objects[triangle]->geom.triangle.p3;
+  auto& shape = scene->objects[triangle]->geom.triangle;
+  vec3 v0 = shape.p1;
+  vec3 v1 = shape.p2;
+  vec3 v2 = shape.p3;
 
   const float minx = std::min(v0.x, std::min(v1.x, v2.x));
   const float maxx = std::max(v0.x, std::max(v1.x, v2.x));
@@ -499,10 +502,11 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
 
   for (size_t i = 0; i < node->objects.size(); i++)
   {
-    if (scene->objects[node->objects[i]]->geom.type == SPHERE)
+    auto& shape = scene->objects[node->objects[i]]->geom;
+    if (shape.type == SPHERE)
     {
-      bool left = intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius, node_left->min, node_left->max);
-      bool right = intersectSphereAabb(scene->objects[node->objects[i]]->geom.sphere.center, scene->objects[node->objects[i]]->geom.sphere.radius, node_right->min, node_right->max);
+      bool left = intersectSphereAabb(shape.sphere.center, shape.sphere.radius, node_left->min, node_left->max);
+      bool right = intersectSphereAabb(shape.sphere.center, shape.sphere.radius, node_right->min, node_right->max);
       //assert(left || right);
       if (left)
       {
@@ -513,10 +517,10 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
         node_right->objects.push_back(node->objects[i]);
       }
     }
-    else if (scene->objects[node->objects[i]]->geom.type == TRIANGLE)
+    else if (shape.type == TRIANGLE)
     {
-      bool left = intersectTriangleAabb(scene->objects[node->objects[i]]->geom.triangle.p1, scene->objects[node->objects[i]]->geom.triangle.p2, scene->objects[node->objects[i]]->geom.triangle.p3, scene->objects[node->objects[i]]->geom.triangle.normal, node_left->min, node_left->max);
-      bool right = intersectTriangleAabb(scene->objects[node->objects[i]]->geom.triangle.p1, scene->objects[node->objects[i]]->geom.triangle.p2, scene->objects[node->objects[i]]->geom.triangle.p3, scene->objects[node->objects[i]]->geom.triangle.normal, node_right->min, node_right->max);
+      bool left = intersectTriangleAabb(shape.triangle.p1, shape.triangle.p2, shape.triangle.p3, shape.triangle.normal, node_left->min, node_left->max);
+      bool right = intersectTriangleAabb(shape.triangle.p1, shape.triangle.p2, shape.triangle.p3, shape.triangle.normal, node_right->min, node_right->max);
       //assert(left || right);
       if (left)
       {
@@ -527,10 +531,10 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
         node_right->objects.push_back(node->objects[i]);
       }
     }
-    else if (scene->objects[node->objects[i]]->geom.type == CUBE)
+    else if (shape.type == CUBE)
     {
-      bool left = intersectCubeAabb(scene->objects[node->objects[i]]->geom.cube.min, scene->objects[node->objects[i]]->geom.cube.max, node_left->min, node_left->max);
-      bool right = intersectCubeAabb(scene->objects[node->objects[i]]->geom.cube.min, scene->objects[node->objects[i]]->geom.cube.max, node_right->min, node_right->max);
+      bool left = intersectCubeAabb(shape.cube.min, shape.cube.max, node_left->min, node_left->max);
+      bool right = intersectCubeAabb(shape.cube.min, shape.cube.max, node_right->min, node_right->max);
       //assert(left || right);
       if (left)
       {
@@ -613,78 +617,25 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
     for (size_t i = 0; i < currentNode.node->objects.size(); i++)
     {
       Intersection temp;
-      if (scene->objects[currentNode.node->objects[i]]->geom.type == SPHERE)
-      {
-        if (intersectSphere(ray, &temp, scene->objects[currentNode.node->objects[i]]))
+      auto obj = scene->objects[currentNode.node->objects[i]];
+      if(obj->intersect(ray, &temp)){
+        float temp_dist = ray->tmax;
+        if (hasIntersection)
         {
-          float temp_dist = ray->tmax;
-          if (hasIntersection)
+          if (temp_dist < dist)
           {
-            if (temp_dist < dist)
-            {
-              dist = temp_dist;
-              *intersection = temp;
-            }
-          }
-          else
-          {
-            hasIntersection = true;
-            *intersection = temp;
             dist = temp_dist;
-            if(ray->shadow){
-              ray->tmax = dist;
-              return true;
-            }
+            *intersection = temp;
           }
         }
-      }
-      else if (scene->objects[currentNode.node->objects[i]]->geom.type == TRIANGLE)
-      {
-        if (intersectTriangle(ray, &temp, scene->objects[currentNode.node->objects[i]]))
+        else
         {
-          float temp_dist = ray->tmax;
-          if (hasIntersection)
-          {
-            if (temp_dist < dist)
-            {
-              dist = temp_dist;
-              *intersection = temp;
-            }
-          }
-          else
-          {
-            hasIntersection = true;
-            *intersection = temp;
-            dist = temp_dist;
-            if(ray->shadow){
-              ray->tmax = dist;
-              return true;
-            }
-          }
-        }
-      }
-      else if (scene->objects[currentNode.node->objects[i]]->geom.type == CUBE)
-      {
-        if (intersectCube(ray, &temp, scene->objects[currentNode.node->objects[i]]))
-        {
-          float temp_dist = ray->tmax;
-          if (hasIntersection)
-          {
-            if (temp_dist < dist)
-            {
-              dist = temp_dist;
-              *intersection = temp;
-            }
-          }
-          else
-          {
-            hasIntersection = true;
-            *intersection = temp;
-            dist = temp_dist;
-            if(ray->shadow){
-              ray->tmax = dist;
-              return true;
-            }
+          hasIntersection = true;
+          *intersection = temp;
+          dist = temp_dist;
+          if(ray->shadow){
+            ray->tmax = dist;
+            return true;
           }
         }
       }
@@ -729,8 +680,7 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
   for (size_t i = 0; i < tree->outOfTree.size(); i++)
   { // Iterate through plane objects to find intersection
     Intersection temp;
-    if (intersectPlane(&ray_backup, &temp, scene->objects[tree->outOfTree[i]]))
-    {
+    if(scene->objects[tree->outOfTree[i]]->intersect(&ray_backup, &temp)){
       float temp_dist = ray_backup.tmax;
       if (hasIntersection)
       {
