@@ -659,12 +659,12 @@ Scene *initScene8() {
   addLight(scene, initPointLight(point3(0, 50, 0), color3(1, 1, 1)));
   
   glm::mat4 glassSphereT = glm::translate(glm::mat4(1.f), vec3(24,2,24)) *glm::scale(glm::mat4(1.f), vec3(2,2,2));
-  addObject(scene, initSphere(glassSphereT, mat_lib[10]));
+  //addObject(scene, initSphere(mat_lib[10], glassSphereT));
 
   addLight(scene, initPointLight(point3(5, 30, 5),color3(1, 1, 1)));
 
-  //addLight(scene, initPointLight(point3(-5, 5, 0), color3(1,1,1)));
-  //addLight(scene, initPointLight(point3(0, 5, -5), color3(1,1,1)));
+ addLight(scene, initPointLight(point3(-5, 5, 0), color3(1,1,1)));
+ addLight(scene, initPointLight(point3(0, 5, -5), color3(1,1,1)));
   
   //auto light = new AreaLight(vec3(54,10,54), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
   //addLight(scene, light);
@@ -680,20 +680,22 @@ Scene *initScene8() {
   Material mats;
   mats.diffuseColor = color3(0.f, 0.f, 0.5f);
   mats.specularColor = color3(0.f, 0.f, 0.7f);
-  mats.roughness = 0.5f;
+  mats.roughness = 2.f;
+  mats.IOR = 1.3;
+  mats.mtype = DIFFUSE;
 
   //addObject(scene, initSphere(point3(-5, 1.8, -5), 1.8f, mat_lib[8]));
   //addObject(scene, initSphere(point3(18, 1.8, 26), 1.8f, mats));
   //addObject(scene, initSphere(point3(26, 1.8, 18), 1.8f, mat_lib[8]));
   //
   glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), vec3(-5,1.8,-5)) *glm::scale(glm::mat4(1.f), vec3(1.8,1.8,1.8));
-  addObject(scene, initSphere(modelMatrix, mat_lib[8]));
+  addObject(scene, initSphere(mat_lib[8], modelMatrix));
   glm::mat4 transform1 = glm::translate(glm::mat4(1.f), vec3(18, 1.8, 26))*glm::scale(glm::mat4(1.f), vec3(1.8,1.8,1.8));
-  addObject(scene, initSphere(transform1, mats));
+  addObject(scene, initSphere(mats, transform1));
   glm::mat4 transform2 = glm::translate(glm::mat4(1.f), vec3(26, 1.8, 18))*glm::scale(glm::mat4(1.f), vec3(1.8,1.8,1.8));
-  addObject(scene, initSphere(transform2, mat_lib[8]));
+  addObject(scene, initSphere(mat_lib[8], transform2));
 
-  //addLight(scene, initPointLight(point3(0, 3, 0), color3(1,1,1)));
+  addLight(scene, initPointLight(point3(0, 3.5, 0), color3(1,1,1)));
 
   color3 red = color3(1, 0, 0);
   color3 yellow = color3(1, 1, 0);
@@ -711,7 +713,8 @@ Scene *initScene8() {
   FaceInfo down {brown, green, blue, white, purple};
 
   mats.m_texture = new CubeMapTexture(left, right, front, back, up, down);
-  //addObject(scene, initCube(vec3(-3,5,-3), vec3(-1,7,-1), mats));
+  glm::mat4 transform = glm::translate(glm::mat4(1.f), vec3(-2,5,-3));
+  addObject(scene, initCube(mats, transform));
   mats.m_texture = nullptr;
 
 

@@ -33,7 +33,7 @@ glm::vec3 extractScale(const glm::mat4 &m)
                      glm::length2( glm::vec3(m[2]) ));
 }
 
-Object *initSphere(glm::mat4 transform, Material mat) {
+Object *initSphere(Material mat, glm::mat4 transform ) {
     Object *ret;
     ret = (Object *)malloc(sizeof(Object));
     ret->geom.type = SPHERE;
@@ -45,7 +45,7 @@ Object *initSphere(glm::mat4 transform, Material mat) {
     ret->geom.sphere.radius = largestScale;
     memcpy(&(ret->mat), &mat, sizeof(Material));
     ret->transform = transform;
-    ret->invTransform = glm::inverse(ret->transform);
+    ret->invTransform = glm::inverse(transform);
     return ret;
 }
 
@@ -59,12 +59,14 @@ Object *initPlane(vec3 normal, float d, Material mat) {
     return ret;
 }
 
-Object *initCube(vec3 min, vec3 max, Material mat) {
+Object *initCube(Material mat, glm::mat4 transform) {
     Object *ret;
     ret = (Object *)malloc(sizeof(Object));
     ret->geom.type = CUBE;
-    ret->geom.cube.min = min;
-    ret->geom.cube.max = max;
+    ret->transform = transform;
+    ret->geom.cube.min = transform * vec4(-1,-1,-1, 1);
+    ret->geom.cube.max = transform * vec4(1,1,1, 1);
+    ret->invTransform = glm::inverse(transform);
     memcpy(&(ret->mat), &mat, sizeof(Material));
     return ret;
 }
