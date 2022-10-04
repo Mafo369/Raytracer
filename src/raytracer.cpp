@@ -20,6 +20,40 @@
 #include "Light.h"
 #include "Object.h"
 
+bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
+{
+  bool hasIntersection = false;
+  size_t objectCount = scene->objects.size();
+
+  //!\todo loop on each object of the scene to compute intersection
+
+  float dist;
+
+  for (size_t i = 0; i < objectCount; i++)
+  {
+    Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
+    if(scene->objects[i]->intersect(ray, temp)){
+      float temp_dist = ray->tmax;
+      if (hasIntersection)
+      {
+        if (temp_dist < dist)
+        {
+          dist = temp_dist;
+          *intersection = *temp;
+        }
+      }
+      else
+      {
+        hasIntersection = true;
+        *intersection = *temp;
+        dist = temp_dist;
+      }
+
+    }
+  }
+  return hasIntersection;
+}
+
 color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, const Material *mat, float uTex, float vTex, bool outside, float intensity, std::vector<vec3> &samples, int face)
 {
   color3 ret = color3(0.f);
@@ -94,11 +128,13 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 3)
+  if (ray->depth > 8)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
   {
+    if(intersection.face != -1)
+      return intersection.mat->m_texture->value(intersection.u, intersection.v, intersection.face); 
     size_t lightsCount = scene->lights.size();
     for (size_t i = 0; i < lightsCount; i++)
     {

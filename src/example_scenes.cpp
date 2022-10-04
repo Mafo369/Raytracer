@@ -649,7 +649,7 @@ Scene *initScene7() {
 
 Scene *initScene8() {
   Scene *scene = initScene();
-  setCamera(scene, point3(28, 1, 28), vec3(0, 1, 0), vec3(0, 1, 0), 60,
+  setCamera(scene, point3(12, 3, -6), vec3(0, 1, -4), vec3(0, 1, 0), 60,
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.4, 0.9, 0.9));
 
@@ -659,14 +659,20 @@ Scene *initScene8() {
 
   addLight(scene, initPointLight(point3(0, 50, 0), color3(1, 1, 1)));
   
-  glm::mat4 glassSphereT = glm::translate(glm::mat4(1.f), vec3(24,2,24)) *glm::scale(glm::mat4(1.f), vec3(2,2,2));
-  //addObject(scene, initSphere(mat_lib[10], glassSphereT));
+  glm::mat4 glassSphereT = glm::translate(glm::mat4(1.f), vec3(3,2,-2)) *glm::scale(glm::mat4(1.f), vec3(2,2,2));
+  addObject(scene, initSphere(mat_lib[10], glassSphereT));
 
   addLight(scene, initPointLight(point3(5, 30, 5),color3(1, 1, 1)));
 
  addLight(scene, initPointLight(point3(-5, 5, 0), color3(1,1,1)));
  addLight(scene, initPointLight(point3(0, 5, -5), color3(1,1,1)));
   
+
+ addLight(scene, initPointLight(point3(19, 19, 19), color3(1,1,1)));
+ addLight(scene, initPointLight(point3(-19, 19, -19), color3(1,1,1)));
+ addLight(scene, initPointLight(point3(-19, 19, 19), color3(1,1,1)));
+ addLight(scene, initPointLight(point3(19, 19, -19), color3(1,1,1)));
+ addLight(scene, initPointLight(point3(0, 1, -19), color3(1,1,1)));
   //auto light = new AreaLight(vec3(54,10,54), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
   //addLight(scene, light);
   //light = new AreaLight(vec3(54,10,18), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
@@ -698,23 +704,17 @@ Scene *initScene8() {
 
   addLight(scene, initPointLight(point3(0, 3.5, 0), color3(1,1,1)));
 
-  color3 red = color3(1, 0, 0);
-  color3 yellow = color3(1, 1, 0);
-  color3 brown = color3(1, 0.5, 0);
-  color3 green = color3(0, 1, 0);
-  color3 cyan = color3(0, 1, 1);
-  color3 blue = color3(0, 0, 1);
-  color3 purple = color3(1, 0, 1);
-  color3 white = color3(1, 1, 1);
-  FaceInfo left {cyan, red, blue, brown, yellow};
-  FaceInfo front {red, yellow, brown, green, cyan};
-  FaceInfo right {yellow, purple, green, white, red};
-  FaceInfo back {purple, cyan, white, blue, green};
-  FaceInfo up {cyan, purple, red, yellow, brown};
-  FaceInfo down {brown, green, blue, white, purple};
+  auto left = new image_texture("../assets/negx.png");
+  auto right = new image_texture("../assets/posx.png");
+  auto front = new image_texture("../assets/negz.png");
+  auto back = new image_texture("../assets/posz.png");
+  auto up = new image_texture("../assets/posy.png");
+  auto down = new image_texture("../assets/negy.png");
 
   mats.m_texture = new CubeMapTexture(left, right, front, back, up, down);
-  glm::mat4 transform = glm::translate(glm::mat4(1.f), vec3(-2,5,-3));
+  mats.diffuseColor = color3(0,0,0);
+  mats.specularColor = color3(0,0,0);
+  glm::mat4 transform = glm::scale(glm::mat4(1.f), vec3(20,20,20));
   addObject(scene, initCube(mats, transform));
   mats.m_texture = nullptr;
 
@@ -729,7 +729,7 @@ Scene *initScene8() {
   //mat.m_texture = new checker_texture(color3(0.2, 0.3, 0.1), color3(0.9, 0.9, 0.9));
   mat.m_texture = new image_texture("../assets/chessboardtexture.png");
   //mat.m_texture = new CubeMapTexture(color3(1,1,1), color3(1,0,0), color3(1,1,0), color3(0,1,0), color3(0,1,1));
-  addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
+  //addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
   return scene;
 }

@@ -175,8 +175,10 @@ KdTree *initKdTree(Scene *scene)
   float ymax = *std::max_element(y_vector.begin(), y_vector.end());
   float zmax = *std::max_element(z_vector.begin(), z_vector.end());
 
-  root->min = vec3(xmin, ymin, zmin);
-  root->max = vec3(xmax, ymax, zmax);
+  auto min = vec3(xmin, ymin, zmin);
+  auto max = vec3(xmax, ymax, zmax);
+  root->min = min * 1.1f;
+  root->max = max * 1.1f;
 
   std::cout << "xmin: " << xmin << " " << ymin << "" << zmin << std::endl;
   std::cout << "xmax: " << xmax << " " << ymax << "" << zmax << std::endl;

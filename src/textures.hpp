@@ -80,9 +80,9 @@ typedef struct s_FaceInfo{
   color3 main;
 }FaceInfo;
 
-class CubeMapTexture : public texture {
+class AlignCheck : public texture {
   public:
-    CubeMapTexture(FaceInfo left, FaceInfo right, FaceInfo front, FaceInfo back, FaceInfo up, FaceInfo down){
+    AlignCheck(FaceInfo left, FaceInfo right, FaceInfo front, FaceInfo back, FaceInfo up, FaceInfo down){
       m_faces.push_back(left);
       m_faces.push_back(right);
       m_faces.push_back(front);
@@ -106,4 +106,22 @@ class CubeMapTexture : public texture {
 
   private:
     std::vector<FaceInfo> m_faces;
+};
+
+class CubeMapTexture : public texture {
+  public:
+    CubeMapTexture(texture* left, texture* right, texture* front, texture* back, texture* up, texture* down){
+      m_faces.push_back(left);
+      m_faces.push_back(right);
+      m_faces.push_back(front);
+      m_faces.push_back(back);
+      m_faces.push_back(up);
+      m_faces.push_back(down);
+    }
+    virtual color3 value(float u, float v, int face) const override {
+      return m_faces[face]->value(u, v);
+    }
+
+  private:
+    std::vector<texture*> m_faces;
 };

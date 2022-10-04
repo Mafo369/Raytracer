@@ -78,6 +78,9 @@ bool Cube::intersect(Ray *ray, Intersection *intersection) const {
   float tmin = std::max(std::max(xtmin, ytmin), ztmin);
   float tmax = std::min(std::min(xtmax, ytmax), ztmax);
 
+  if(tmin < 0)
+    tmin = tmax;
+
   if(tmin > tmax || tmin < ray->tmin || tmin > ray->tmax)
     return false;
 
