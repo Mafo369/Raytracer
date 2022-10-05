@@ -687,7 +687,7 @@ Scene *initScene8() {
  addLight(scene, initPointLight(point3(0, 1, -19), color3(1,1,1)));
  
   auto light = new AreaLight(vec3(5,4,-5), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
-  //addLight(scene, light);
+  addLight(scene, light);
   //light = new AreaLight(vec3(54,10,18), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
   //addLight(scene, light);
   //light = new AreaLight(vec3(18,10,54), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
