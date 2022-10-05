@@ -16,7 +16,7 @@
 
 Material mat_lib[] = {
     /* bunny glass */
-    {1.05, 2.2, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, DIELECTRIC },
+    {1.05, 2.2, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, TRANSPARENT },
 
     /* specular black phenolic */
     {1.072, 0.0588, {1.0, 0.824, 0.945}, {0.002, 0.002, 0.003}},
@@ -45,7 +45,7 @@ Material mat_lib[] = {
     /* blue acrylic */
     {1.1153, 0.068, {0.012, 0.036, 0.106}, {1.0, 0.965, 1.07}},
 
-    {1.51, 2.2, {1.0, 1.0, 1.0}, {1.0, .0, .0}, DIELECTRIC },
+    {1.51, 2.2, {1.0, 1.0, 1.0}, {1.0, .0, .0}, TRANSPARENT },
 };
 
 //Material mat_lib[] = {
@@ -87,26 +87,32 @@ Scene *initScene0() {
   Material mat;
   mat.IOR = 1.3;
   mat.roughness = 0.1;
-  mat.specularColor = color3(0.5f);
 
-  mat.diffuseColor = color3(.5f);
-  addObject(scene, initSphere(point3(0, 0, 0), 0.25, mat));
+  mat.specularColor = color3(1.0f);
+  mat.diffuseColor = color3(1.0f);
+  auto scale = glm::scale(glm::mat4(1.f), vec3(0.25,0.25,0.25));
+  addObject(scene, initSphere(mat, glm::mat4(1.f) * scale));
 
-  mat.diffuseColor = color3(0.5f, 0.f, 0.f);
-  addObject(scene, initSphere(point3(1, 0, 0), .25, mat));
+  mat.specularColor = color3(1.f, 0.f, 0.f);
+  mat.diffuseColor = color3(1.f, 0.f, 0.f);
+  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(1,0,0))* scale));
 
-  mat.diffuseColor = color3(0.f, 0.5f, 0.5f);
-  addObject(scene, initSphere(point3(0, 1, 0), .25, mat));
+  mat.specularColor = color3(0.f, 1.f, 1.f);
+  mat.diffuseColor = color3(0.f, 1.f, 1.f);
+  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(0,1,0)) * scale));
 
-  mat.diffuseColor = color3(0.f, 0.f, 0.5f);
-  addObject(scene, initSphere(point3(0, 0, 1), .25, mat));
+  mat.specularColor = color3(0.f, 0.f, 1.f);
+  mat.diffuseColor = color3(0.f, 0.f, 1.f);
+  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(0,0,1)) * scale));
 
+  mat.specularColor = color3(0.6f);
   mat.diffuseColor = color3(0.6f);
   mat.m_texture = nullptr;
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
   addLight(scene, initPointLight(point3(10, 10, 10), color3(1, 1, 1)));
   addLight(scene, initPointLight(point3(4, 10, -2), color3(1, 1, 1)));
+  //addLight(scene, initPointLight(point3(4, 5, 0), color3(3, 3, 3)));
   
   //auto light = new AreaLight(vec3(13,10,13), vec3(-6,0,0), 10, vec3(0,0,-6), 10, color3(1,1,1));
   //addLight(scene, light);
@@ -227,38 +233,44 @@ Scene *initScene3() {
   mat.specularColor = color3(0.7, 0.882, 0.786);
   mat.IOR = 6;
   mat.roughness = 0.0181;
-  addObject(scene, initSphere(point3(0, 0.1, 0), .3, mat));
+  auto transform = glm::translate(glm::mat4(1.f), vec3(0,0.1,0)) * glm::scale(glm::mat4(1.f), vec3(0.3,0.3,0.3));
+  addObject(scene, initSphere(mat, transform));
 
   mat.diffuseColor = color3(0.26, 0.036, 0.014);
   mat.specularColor = color3(1.0, 0.852, 1.172);
   mat.IOR = 1.3771;
   mat.roughness = 0.01589;
-  addObject(scene, initSphere(point3(1, -.05, 0), .15, mat));
+  transform = glm::translate(glm::mat4(1.f), vec3(1,-.05,0)) * glm::scale(glm::mat4(1.f), vec3(0.15,0.15,0.15));
+  addObject(scene, initSphere(mat, transform));
 
   mat.diffuseColor = color3(0.014, 0.012, 0.012);
   mat.specularColor = color3(0.7, 0.882, 0.786);
   mat.IOR = 3;
   mat.roughness = 0.00181;
-  addObject(scene, initSphere(point3(3, 0.05, 2), .25, mat));
+  transform = glm::translate(glm::mat4(1.f), vec3(3,0.05,2)) * glm::scale(glm::mat4(1.f), vec3(0.25,0.25,0.25));
+  addObject(scene, initSphere(mat, transform));
 
   mat.diffuseColor = color3(0.46, 0.136, 0.114);
   mat.specularColor = color3(0.8, 0.852, 0.8172);
   mat.IOR = 1.5771;
   mat.roughness = 0.01589;
-  addObject(scene, initSphere(point3(1.3, 0., 2.6), 0.215, mat));
+  transform = glm::translate(glm::mat4(1.f), vec3(1.3,0.,2.6)) * glm::scale(glm::mat4(1.f), vec3(0.215,0.215,0.215));
+  addObject(scene, initSphere(mat, transform));
 
   mat.diffuseColor = color3(0.06, 0.26, 0.22);
   mat.specularColor = color3(0.70, 0.739, 0.721);
   mat.IOR = 1.3051;
   mat.roughness = 0.567;
-  addObject(scene, initSphere(point3(1.9, 0.05, 2.2), .25, mat));
+  transform = glm::translate(glm::mat4(1.f), vec3(1.9,0.05,2.2)) * glm::scale(glm::mat4(1.f), vec3(0.25,0.25,0.25));
+  addObject(scene, initSphere(mat, transform));
 
   mat.diffuseColor = color3(0.012, 0.036, 0.406);
   mat.specularColor = color3(1.0, 0.965, 1.07);
   mat.IOR = 1.1153;
   mat.roughness = 0.068;
   mat.roughness = 0.18;
-  addObject(scene, initSphere(point3(0, 0, 1), .20, mat));
+  transform = glm::translate(glm::mat4(1.f), vec3(0,0,1)) * glm::scale(glm::mat4(1.f), vec3(0.2,0.2,0.2));
+  addObject(scene, initSphere(mat, transform));
 
   mat.diffuseColor = color3(.2, 0.4, .3);
   mat.specularColor = color3(.2, 0.2, .2);
@@ -653,27 +665,28 @@ Scene *initScene8() {
             (float)WIDTH / (float)HEIGHT);
   setSkyColor(scene, color3(0.4, 0.9, 0.9));
 
-  addLight(scene, initPointLight(point3(52, 10, 52), color3(1, 1, 1)));
-  addLight(scene, initPointLight(point3(52, 10, 16), color3(1, 1, 1)));
-  addLight(scene, initPointLight(point3(16, 10, 52), color3(1, 1, 1)));
+  //addLight(scene, initPointLight(point3(52, 10, 52), color3(1, 1, 1)));
+  //addLight(scene, initPointLight(point3(52, 10, 16), color3(1, 1, 1)));
+  //addLight(scene, initPointLight(point3(16, 10, 52), color3(1, 1, 1)));
 
-  addLight(scene, initPointLight(point3(0, 50, 0), color3(1, 1, 1)));
+  //addLight(scene, initPointLight(point3(0, 50, 0), color3(1, 1, 1)));
   
   glm::mat4 glassSphereT = glm::translate(glm::mat4(1.f), vec3(3,2,-2)) *glm::scale(glm::mat4(1.f), vec3(2,2,2));
   addObject(scene, initSphere(mat_lib[10], glassSphereT));
 
-  addLight(scene, initPointLight(point3(5, 30, 5),color3(1, 1, 1)));
+  //addLight(scene, initPointLight(point3(5, 30, 5),color3(1, 1, 1)));
 
- addLight(scene, initPointLight(point3(-5, 5, 0), color3(1,1,1)));
- addLight(scene, initPointLight(point3(0, 5, -5), color3(1,1,1)));
+ //addLight(scene, initPointLight(point3(-5, 5, 0), color3(1,1,1)));
+ //addLight(scene, initPointLight(point3(0, 5, -5), color3(1,1,1)));
   
 
- addLight(scene, initPointLight(point3(19, 19, 19), color3(1,1,1)));
- addLight(scene, initPointLight(point3(-19, 19, -19), color3(1,1,1)));
- addLight(scene, initPointLight(point3(-19, 19, 19), color3(1,1,1)));
- addLight(scene, initPointLight(point3(19, 19, -19), color3(1,1,1)));
- addLight(scene, initPointLight(point3(0, 1, -19), color3(1,1,1)));
-  //auto light = new AreaLight(vec3(54,10,54), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
+ //addLight(scene, initPointLight(point3(19, 19, 19), color3(1,1,1)));
+ //addLight(scene, initPointLight(point3(-19, 19, -19), color3(1,1,1)));
+ //addLight(scene, initPointLight(point3(-19, 19, 19), color3(1,1,1)));
+ //addLight(scene, initPointLight(point3(19, 19, -19), color3(1,1,1)));
+ //addLight(scene, initPointLight(point3(0, 1, -19), color3(1,1,1)));
+ 
+  auto light = new AreaLight(vec3(5,4,-5), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
   //addLight(scene, light);
   //light = new AreaLight(vec3(54,10,18), vec3(-4,0,0), 2, vec3(0,0,-4), 2, color3(1,1,1));
   //addLight(scene, light);
@@ -687,8 +700,8 @@ Scene *initScene8() {
   Material mats;
   mats.diffuseColor = color3(0.f, 0.f, 0.5f);
   mats.specularColor = color3(0.f, 0.f, 0.7f);
-  mats.roughness = 2.f;
-  mats.IOR = 1.3;
+  mats.roughness = 0.005;
+  mats.IOR = 0.01;
   mats.mtype = DIFFUSE;
 
   //addObject(scene, initSphere(point3(-5, 1.8, -5), 1.8f, mat_lib[8]));
@@ -697,12 +710,12 @@ Scene *initScene8() {
   //
   glm::mat4 modelMatrix = glm::translate(glm::mat4(1.f), vec3(-5,1.8,-5)) *glm::scale(glm::mat4(1.f), vec3(1.8,1.8,1.8));
   addObject(scene, initSphere(mat_lib[8], modelMatrix));
-  glm::mat4 transform1 = glm::translate(glm::mat4(1.f), vec3(18, 1.8, 26))*glm::scale(glm::mat4(1.f), vec3(1.8,1.8,1.8));
+  glm::mat4 transform1 = glm::translate(glm::mat4(1.f), vec3(3, 2, -7))*glm::scale(glm::mat4(1.f), vec3(1.05,1.05,1.05));
   addObject(scene, initSphere(mats, transform1));
-  glm::mat4 transform2 = glm::translate(glm::mat4(1.f), vec3(26, 1.8, 18))*glm::scale(glm::mat4(1.f), vec3(1.8,1.8,1.8));
-  addObject(scene, initSphere(mat_lib[8], transform2));
+  //glm::mat4 transform2 = glm::translate(glm::mat4(1.f), vec3(26, 1.8, 18))*glm::scale(glm::mat4(1.f), vec3(1.8,1.8,1.8));
+  //addObject(scene, initSphere(mat_lib[8], transform2));
 
-  addLight(scene, initPointLight(point3(0, 3.5, 0), color3(1,1,1)));
+  //addLight(scene, initPointLight(point3(0, 3.5, 0), color3(1,1,1)));
 
   auto left = new image_texture("../assets/negx.png");
   auto right = new image_texture("../assets/posx.png");

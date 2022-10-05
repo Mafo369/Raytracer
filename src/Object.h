@@ -4,7 +4,7 @@
 #include "textures.hpp"
 #include "raytracer.h"
 
-enum Mtype {DIFFUSE=1, DIELECTRIC};
+enum Mtype {DIFFUSE=1, TRANSPARENT};
 enum Etype {SPHERE=1, PLANE, TRIANGLE, CUBE};
 
 typedef struct material_s {

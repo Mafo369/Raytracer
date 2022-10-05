@@ -61,7 +61,7 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, const Material *ma
   //! \todo compute bsdf, return the shaded color taking into account the
   //! lightcolor
 
-  if (mat->mtype == DIELECTRIC){
+  if (mat->mtype == TRANSPARENT){
     for(auto& sample : samples){
       vec3 lp = sample - intersectionPos;
       vec3 l = lp / length(lp);
@@ -105,17 +105,17 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, const Material *ma
     for(auto& sample : samples){
       vec3 lp = sample - intersectionPos;
       vec3 l = lp / length(lp);
-      float LdotN = dot(l, n);
-      if (LdotN > 0)
-      {
-        vec3 vl = v + l;
-        vec3 h = vl / length(vl);
-        float LdotH = dot(l, h);
-        float NdotH = dot(n, h);
-        float VdotH = dot(v, h);
-        float VdotN = dot(v, n);
-        ret += (RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex, face) * LdotN);
-      }
+      float LdotN = abs(dot(l, n));
+      vec3 vl = v + l;
+      vec3 h = vl;
+      if(h.x == 0 && h.y == 0 && h.z == 0) 
+        continue;
+      h = normalize(h);
+      float LdotH = dot(l, h);
+      float NdotH = dot(n, h);
+      float VdotH = dot(v, h);
+      float VdotN = abs(dot(v, n));
+      ret += RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex, face) * LdotN;
     }
     ret = lc * (ret / float(samples.size())) * intensity;
   }
@@ -128,13 +128,13 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 8)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
   {
-    if(intersection.face != -1)
-      return intersection.mat->m_texture->value(intersection.u, intersection.v, intersection.face); 
+    //if(intersection.face != -1)
+    //  return intersection.mat->m_texture->value(intersection.u, intersection.v, intersection.face); 
     size_t lightsCount = scene->lights.size();
     for (size_t i = 0; i < lightsCount; i++)
     {
@@ -146,13 +146,13 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       }
     }
 
-    if (ret.r > 1.f && ret.g > 1.f && ret.b > 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
+    if (ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
       return color3(1.f);
 
     color3 reflectionColor = color3(0.0f);
     color3 refractionColor = color3(0.0f);
 
-    if(intersection.mat->mtype == DIELECTRIC) {
+    if(intersection.mat->mtype == TRANSPARENT) {
       // REFRACTION + REFLECTION
 
       vec3 normal = intersection.isOutside ? intersection.normal : -intersection.normal;
@@ -208,7 +208,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     ret = scene->skyColor;
   }
 
-  return ret;
+  return glm::clamp(ret, color3(0,0,0), color3(1,1,1));
 }
 
 
@@ -234,7 +234,7 @@ color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int index
       pixelColor += trace_ray(scene, &rx, tree);
     }
   }
-  return (pixelColor / 9.f);
+  return pixelColor / 9.f;
 }
 
 color3 trace_ray_4multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
