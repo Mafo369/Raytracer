@@ -11,6 +11,7 @@
 //#include <glm/gtx/norm.hpp>
 
 #include "Light.h"
+#include "Camera.h"
 #include "shapes/sphere.h"
 #include "shapes/triangle.h"
 #include "shapes/cube.h"
@@ -121,14 +122,8 @@ void freeScene(Scene *scene) {
     delete scene;
 }
 
-void setCamera(Scene *scene, point3 position, point3 at, vec3 up, float fov, float aspect) {
-    scene->cam.fov = fov;
-    scene->cam.aspect = aspect;
-    scene->cam.position = position;
-    scene->cam.zdir = normalize(at-position);
-    scene->cam.xdir = normalize(cross(up, scene->cam.zdir));
-    scene->cam.ydir = normalize(cross(scene->cam.zdir, scene->cam.xdir));
-    scene->cam.center = 1.f / tanf ((scene->cam.fov * glm::pi<float>() / 180.f) * 0.5f) * scene->cam.zdir;
+void setCamera(Scene *scene, point3 position, point3 at, vec3 up, float fov, float aspect, float aperture, float dist_to_focus) {
+    scene->cam = new Camera(position, at, up, fov, aspect, aperture, dist_to_focus);
 }
 
 void addObject(Scene *scene, Object *obj) {

@@ -6,6 +6,7 @@
 //#include "Object.h"
 #include "textures.hpp"
 
+class Camera;
 class Light;
 
 // SCENE
@@ -14,15 +15,15 @@ class Light;
 ////typedef struct light_s Light;
 //typedef struct camera_s Camera;
 
-typedef struct camera_s {
-  point3 position; //! eye position
-    vec3 zdir; //! view direction
-    vec3 xdir; //! right direction
-    vec3 ydir; //! up direction
-    point3 center; //! center of the image plane
-  float fov;  //! field of view
-  float aspect; //! aspect ratio (typically use WIDTH/HEIGHT of the computed image
-} Camera;
+//typedef struct camera_s {
+//  point3 position; //! eye position
+//    vec3 zdir; //! view direction
+//    vec3 xdir; //! right direction
+//    vec3 ydir; //! up direction
+//    point3 center; //! center of the image plane
+//  float fov;  //! field of view
+//  float aspect; //! aspect ratio (typically use WIDTH/HEIGHT of the computed image
+//} Camera;
 
 
 //typedef struct object_s {
@@ -40,7 +41,7 @@ typedef std::vector<Light*> Lights;
 typedef struct scene_s {
   Lights lights; //! the scene have several lights
   Objects objects; //! the scene have several objects
-  Camera cam; //! the scene have one camera
+  Camera* cam; //! the scene have one camera
   color3 skyColor; //! the sky color, could be extended to a sky function ;)
 } Scene;
 
@@ -68,7 +69,7 @@ void freeLight(Light *);
 Scene *initScene();
 void freeScene(Scene *scene);
 
-void setCamera(Scene *scene, point3 position, vec3 at, vec3 up, float fov, float aspect);
+void setCamera(Scene *scene, point3 position, vec3 at, vec3 up, float fov, float aspect, float aperture = 0.01, float dist_to_focus = 1);
 
 //! take ownership of obj freeScene will free obj) ... typically use addObject(scene, initPlane()
 void addObject(Scene *scene, Object *obj);

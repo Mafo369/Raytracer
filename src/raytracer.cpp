@@ -19,6 +19,7 @@
 
 #include "Light.h"
 #include "Object.h"
+#include "Camera.h"
 
 bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
 {
@@ -128,13 +129,13 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 3)
+  if (ray->depth > 10)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
   {
-    //if(intersection.face != -1)
-    //  return intersection.mat->m_texture->value(intersection.u, intersection.v, intersection.face); 
+    if(intersection.face != -1)
+      return intersection.mat->m_texture->value(intersection.u, intersection.v, intersection.face); 
     size_t lightsCount = scene->lights.size();
     for (size_t i = 0; i < lightsCount; i++)
     {
@@ -212,62 +213,66 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
 }
 
 
-color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
-                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
-{
+//color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
+//                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
+//{
+//
+//  color3 pixelColor = color3(0.f);
+//
+//  // We use the same process as for one ray:
+//  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+//                     float(i) * dx + float(j) * dy*/
+//  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
+//  // from which we will use the average.
+//  for (int i = 0; i < 3; i++)
+//  {
+//    for (int j = 0; j < 3; j++)
+//    {
+//      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+//                     (indexI + float(i) / 3.f) * dx + (indexJ + float(j) / 3.f) * dy;
+//      Ray rx;
+//      rayInit(&rx, scene->cam.position, normalize(ray_dir));
+//      pixelColor += trace_ray(scene, &rx, tree);
+//    }
+//  }
+//  return pixelColor / 9.f;
+//}
+//
+//color3 trace_ray_4multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
+//                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
+//{
+//
+//  color3 pixelColor = color3(0.f);
+//
+//  // We use the same process as for one ray:
+//  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+//                     float(i) * dx + float(j) * dy*/
+//  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
+//  // from which we will use the average.
+//  for (int i = 1; i <= 3; i+=2)
+//  {
+//    for (int j = 1; j <= 3; j+=2)
+//    {
+//      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
+//                     (indexI + float(i) / 4.f) * dx + (indexJ + float(j) / 4.f) * dy;
+//      Ray rx;
+//      rayInit(&rx, scene->cam.position, normalize(ray_dir));
+//      pixelColor += trace_ray(scene, &rx, tree);
+//    }
+//  }
+//  return (pixelColor / 4.f);
+//}
 
-  color3 pixelColor = color3(0.f);
-
-  // We use the same process as for one ray:
-  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     float(i) * dx + float(j) * dy*/
-  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
-  // from which we will use the average.
-  for (int i = 0; i < 3; i++)
-  {
-    for (int j = 0; j < 3; j++)
-    {
-      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     (indexI + float(i) / 3.f) * dx + (indexJ + float(j) / 3.f) * dy;
-      Ray rx;
-      rayInit(&rx, scene->cam.position, normalize(ray_dir));
-      pixelColor += trace_ray(scene, &rx, tree);
-    }
-  }
-  return pixelColor / 9.f;
-}
-
-color3 trace_ray_4multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
-                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
-{
-
-  color3 pixelColor = color3(0.f);
-
-  // We use the same process as for one ray:
-  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     float(i) * dx + float(j) * dy*/
-  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
-  // from which we will use the average.
-  for (int i = 1; i <= 3; i+=2)
-  {
-    for (int j = 1; j <= 3; j+=2)
-    {
-      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-                     (indexI + float(i) / 4.f) * dx + (indexJ + float(j) / 4.f) * dy;
-      Ray rx;
-      rayInit(&rx, scene->cam.position, normalize(ray_dir));
-      pixelColor += trace_ray(scene, &rx, tree);
-    }
-  }
-  return (pixelColor / 4.f);
-}
+static std::minstd_rand engineSamples(time(NULL));
+static std::uniform_real_distribution<float> m_unifDistributionSamples{0.0f, 1.0f};
 
 void renderImage(RenderImage *img, Scene *scene)
 {
 
+  auto samplesPerPixel = 50;
+
   //! This function is already operational, you might modify it for antialiasing
   //! and kdtree initializaion
-  float aspect = 1.f / scene->cam.aspect;
 
   KdTree *tree = initKdTree(scene);
 
@@ -275,15 +280,15 @@ void renderImage(RenderImage *img, Scene *scene)
 
   //! \todo initialize KdTree
 
-  float delta_y = 1.f / (img->height * 0.5f);   //! one pixel size
-  vec3 dy = delta_y * aspect * scene->cam.ydir; //! one pixel step
-  vec3 ray_delta_y = (0.5f - img->height * 0.5f) / (img->height * 0.5f) *
-                     aspect * scene->cam.ydir;
+  //float delta_y = 1.f / (img->height * 0.5f);   //! one pixel size
+  //vec3 dy = delta_y * aspect * scene->cam.ydir; //! one pixel step
+  //vec3 ray_delta_y = (0.5f - img->height * 0.5f) / (img->height * 0.5f) *
+  //                   aspect * scene->cam.ydir;
 
-  float delta_x = 1.f / (img->width * 0.5f);
-  vec3 dx = delta_x * scene->cam.xdir;
-  vec3 ray_delta_x =
-      (0.5f - img->width * 0.5f) / (img->width * 0.5f) * scene->cam.xdir;
+  //float delta_x = 1.f / (img->width * 0.5f);
+  //vec3 dx = delta_x * scene->cam.xdir;
+  //vec3 ray_delta_x =
+  //    (0.5f - img->width * 0.5f) / (img->width * 0.5f) * scene->cam.xdir;
 
   for (size_t j = 0; j < img->height; j++)
   {
@@ -300,8 +305,21 @@ void renderImage(RenderImage *img, Scene *scene)
 #pragma omp parallel for
     for (size_t i = 0; i < img->width; i++)
     {
-      color3 *ptr = getPixelPtr(img, i, j);
-      *ptr = trace_ray_4multisampling(scene, tree, i, j, dx, dy, ray_delta_x, ray_delta_y);
+      color3 pixel_color(0,0,0);
+      color3 *ptr = getPixelPtr(img, (img->width-i-1), j);
+      for (int s = 0; s < samplesPerPixel; ++s) {
+        auto u = (i + m_unifDistributionSamples(engineSamples)) / (img->width-1);
+        auto v = (j + m_unifDistributionSamples(engineSamples)) / (img->height-1);
+        Ray r;
+        scene->cam->get_ray(u, v, &r);
+        pixel_color += trace_ray(scene, &r, tree);
+      }
+      // Divide the color by the number of samples and gamma-correct for gamma=2.0.
+      pixel_color /= samplesPerPixel;
+      //pixel_color = glm::sqrt(pixel_color);
+      pixel_color = glm::clamp(pixel_color, 0.0f, 1.0f);
+
+      *ptr = pixel_color;
     }
   }
 }
