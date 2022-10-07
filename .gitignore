@@ -1,0 +1,101 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# Backup files and other machine-local stuff
+*.user
+*.svn
+*.autosave
+*.dropbox.attr
+*~
+*.orig
+*.swp
+*.old
+.idea/
+\#*\#
+\.\#*
+\.*
+!.gitignore
+!.gitmodules
+
+# Binary asset files
+*.obj
+*.mtl
+*.fbx
+*.dae
+
+# Texture asset files
+*.tga
+*.jpeg
+*.jpg
+*.png
+*.gif
+*.tif
+!Assets/**
+
+# Compressed asset files
+*.zip
+*.rar
+*.7z
+*.tar.gz
+
+# Misc
+*Thumbs.db
+
+# Output Directories
+build-*/
+build/
+bin-debug/
+lib-debug/
+bin/
+lib/
+Bundle-*
+installed-*
+
+# Mercurial stuff (e.g from Eigen)
+.hg*
+
+# Scripts
+*.bat
+
+
+# Json
+
+# Auto-generated plugins registration file
+src/MainApplication/Systems.cpp
+src/MainApplication/Version.cpp
+
+# Symlinks
+./Shaders
+.clang-format
+
+tests/external/Catch2
+
+*.data
+*.old
+*.prof
+.cache/
+
+compile_commands.json
