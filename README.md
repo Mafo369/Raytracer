@@ -1,8 +1,8 @@
 # Raytracer
 
-# :hammer: WIP :hammer:
+[Kd-tree implemented](https://my.eng.utah.edu/~cs6965/papers/kdtree.pdf)
 
-# [Kd-tree implemented](https://my.eng.utah.edu/~cs6965/papers/kdtree.pdf)
+# :hammer: WIP :hammer:
 
 ![alt text](results/test8_dof.png)
 ![alt text](results/test6_tex2.png)
