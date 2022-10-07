@@ -1,6 +1,6 @@
 # Raytracer
 
-[Kd-tree implemented](https://my.eng.utah.edu/~cs6965/papers/kdtree.pdf)
+[Kd-tree with SAH implemented](https://my.eng.utah.edu/~cs6965/papers/kdtree.pdf)
 
 # :hammer: WIP :hammer:
 
