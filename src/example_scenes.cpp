@@ -81,37 +81,37 @@ Material mat_lib[] = {
 
 Scene *initScene0() {
   Scene *scene = initScene();
-  setCamera(scene, point3(3, 1, 0), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
-            (float)WIDTH / (float)HEIGHT);
-  setSkyColor(scene, color3(0.1f, 0.3f, 0.5f));
+  setCamera(scene, point3(1, 0.75, 1), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+            (float)WIDTH / (float)HEIGHT, 0.01, glm::length(point3(3,1,0) - vec3(0,0.3,0)));
+  setSkyColor(scene, color3(0.f, 0.f, 0.f));
   Material mat;
-  mat.IOR = 1.3;
-  mat.roughness = 0.1;
+  mat.IOR = 4.0;
+  mat.roughness = 0.05;
 
   mat.specularColor = color3(1.0f);
   mat.diffuseColor = color3(1.0f);
   auto scale = glm::scale(glm::mat4(1.f), vec3(0.25,0.25,0.25));
-  addObject(scene, initSphere(mat, glm::mat4(1.f) * scale));
+  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(0,0.25,0)) * scale));
 
   mat.specularColor = color3(1.f, 0.f, 0.f);
   mat.diffuseColor = color3(1.f, 0.f, 0.f);
-  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(1,0,0))* scale));
+  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(0.5,0.25,0))* scale));
 
   mat.specularColor = color3(0.f, 1.f, 1.f);
   mat.diffuseColor = color3(0.f, 1.f, 1.f);
-  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(0,1,0)) * scale));
+  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(0,0.75,0)) * scale));
 
   mat.specularColor = color3(0.f, 0.f, 1.f);
   mat.diffuseColor = color3(0.f, 0.f, 1.f);
-  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(0,0,1)) * scale));
+  addObject(scene, initSphere(mat, glm::translate(glm::mat4(1.f), vec3(0,0.25,0.5)) * scale));
 
   mat.specularColor = color3(0.6f);
   mat.diffuseColor = color3(0.6f);
   mat.m_texture = nullptr;
   addObject(scene, initPlane(vec3(0, 1, 0), 0, mat));
 
-  addLight(scene, initPointLight(point3(10, 10, 10), color3(1, 1, 1)));
-  addLight(scene, initPointLight(point3(4, 10, -2), color3(1, 1, 1)));
+  addLight(scene, initPointLight(point3(1, 5, 1), color3(1, 1, 1)));
+  //addLight(scene, initPointLight(point3(4, 10, -2), color3(1, 1, 1)));
   //addLight(scene, initPointLight(point3(4, 5, 0), color3(3, 3, 3)));
   
   //auto light = new AreaLight(vec3(13,10,13), vec3(-6,0,0), 10, vec3(0,0,-6), 10, color3(1,1,1));
@@ -747,6 +747,26 @@ Scene *initScene8() {
   return scene;
 }
 
+Scene *initScene9() {
+  Scene *scene = initScene();
+  setCamera(scene, point3(-0.23, 2.585, 4.3), vec3(-0.23, 2.585, -2.8), vec3(0, 0.01, 0), 60,
+            float(WIDTH) / float(HEIGHT), 0);
+  setSkyColor(scene, color3(0.2, 0.8, 0.7)); 
+
+  Material mat;
+  mat.diffuseColor = color3(0.5);
+  mat.specularColor = color3(0.5);
+  mat.IOR = 1.5;
+  mat.roughness = 0.0681;
+  mat.mtype = DIFFUSE;
+  addObjectsFromFile("../assets/cornell-box.obj", scene, mat);
+
+  addLight(scene, initPointLight(point3(-0.23, 5, -3), color3(1, 1, 1)));
+  //auto light = new AreaLight(vec3(-0.88,5,-3.57), vec3(0.64,0,0), 4, vec3(0,0,-1), 4, color3(1,1,1));
+  //addLight(scene, light);
+  return scene;
+}
+
 Scene* parseScene(int sceneId){
   Scene *scene = NULL;
   switch (sceneId) {
@@ -776,6 +796,9 @@ Scene* parseScene(int sceneId){
     break;
   case 8:
     scene = initScene8();
+    break;
+  case 9:
+    scene = initScene9();
     break;
 
   default:

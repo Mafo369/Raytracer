@@ -1,7 +1,7 @@
 #pragma once
 
 #include "scene.h"
-#define WIDTH 1200
+#define WIDTH 800
 #define HEIGHT 800
 
 

@@ -9,6 +9,7 @@
 #include <cmath>
 #include <string.h>
 #include <iostream>
+#include <chrono>
 
 #include <glm/gtc/epsilon.hpp>
 #include <random>
@@ -100,6 +101,47 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, const Material *ma
       ret += ( brdfColor + btdfColor ) * LdotN;
     }
     ret = lc * (ret / float(samples.size())) * intensity;
+  } else if (mat->mtype == TORSPAR){
+    for(auto& sample : samples){
+      vec3 lp = sample - intersectionPos;
+      vec3 l = lp / length(lp);
+      float LdotN = abs(dot(l, n));
+      float VdotN = abs(dot(v, n));
+      if(LdotN == 0.0f || VdotN == 0.0f) continue;
+      float extIOR, intIOR;
+      if(outside){
+        extIOR = 1.f;
+        intIOR = mat->IOR;
+      }
+      else
+      {
+        extIOR = mat->IOR;
+        intIOR = 1.f;
+      }
+
+      // REFLECTION
+      vec3 hr = (v + l);
+      if(hr.x == 0.0f && hr.y == 0.0f && hr.z == 0) continue;
+      hr = hr / length(hr);
+      float LdotH = abs(dot(l, hr));
+      float NdotH = abs(dot(n, hr));
+      float VdotH = abs(dot(v, hr));
+      auto brdfColor = RDM_brdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
+
+      // REFRACTION
+      //hr = -extIOR * l - intIOR * v;
+      //hr = hr / length(hr);
+      //LdotH = abs(dot(l, hr));
+      //NdotH = abs(dot(n, hr));
+      //VdotH = abs(dot(v, hr));
+      //auto btdfColor = RDM_btdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, extIOR, intIOR);
+
+      //// BSDF
+      //ret += ( brdfColor + btdfColor ) * LdotN;
+
+      ret += brdfColor * LdotN;
+    }
+    ret = lc * (ret / float(samples.size())) * intensity;
   }
   else
   {
@@ -116,12 +158,21 @@ color3 shade(vec3 n, vec3 v, vec3 intersectionPos, color3 lc, const Material *ma
       float NdotH = dot(n, h);
       float VdotH = dot(v, h);
       float VdotN = abs(dot(v, n));
-      ret += RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex, face) * LdotN;
+      ret += lc * RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, mat, uTex, vTex, face) * LdotN;
     }
-    ret = lc * (ret / float(samples.size())) * intensity;
+    ret = (ret / float(samples.size())) * intensity;
   }
 
   return ret;
+}
+
+vec3 sphereRand(){
+  while(true){
+    vec3 p(m_unifDistributionRand(engine), m_unifDistributionRand(engine), 
+          m_unifDistributionRand(engine));
+    if (glm::length_sq(p) >= 1) continue;
+    return p;
+  }
 }
 
 color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
@@ -129,7 +180,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 10)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -150,7 +201,6 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     if (ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
       return color3(1.f);
 
-    color3 reflectionColor = color3(0.0f);
     color3 refractionColor = color3(0.0f);
 
     if(intersection.mat->mtype == TRANSPARENT) {
@@ -187,21 +237,41 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     } 
     else
     {
-      // REFLECTION
+      //// REFLECTION
       vec3 r = reflect(ray->dir, intersection.normal);
-      Ray ray_ref;
-      rayInit(&ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+      //Ray ray_ref;
+      //rayInit(&ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
-      color3 cr = trace_ray(scene, &ray_ref, tree);
+      //color3 cr = trace_ray(scene, &ray_ref, tree);
       vec3 v = ray->dir * -1.0f;
-      vec3 h = v + ray_ref.dir;
-      h = h / length(h);
-      float LdotH = dot(ray_ref.dir, h);
-      float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+      //vec3 h = v + ray_ref.dir;
+      //h = h / length(h);
+      //float LdotH = dot(ray_ref.dir, h);
+      //float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
-      reflectionColor = (f * cr * intersection.mat->specularColor);
-      
-      ret += reflectionColor;
+      //ret += (f * cr * intersection.mat->specularColor);
+
+      auto indirectColor = color3(0.f);
+      float fuzz = 0.0f;
+      for(int i = 0; i < 5; i++){
+        Ray scattered;
+        rayInit(&scattered, intersection.position+(acne_eps*r), normalize(r + fuzz * sphereRand()), 0, 10000, ray->depth+1);
+
+        if(dot(scattered.invdir, intersection.normal) <= 0)
+          continue;
+
+        vec3 cr = trace_ray(scene, &scattered, tree);
+        vec3 h = v + scattered.dir;
+        h = h / length(h);
+        float LdotH = dot(scattered.dir, h);
+        float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+
+        indirectColor += (f * cr * intersection.mat->specularColor);
+      }
+      indirectColor /= 5.f;
+
+      ret += indirectColor;
+
     }
   }
   else
@@ -212,83 +282,17 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   return glm::clamp(ret, color3(0,0,0), color3(1,1,1));
 }
 
-
-//color3 trace_ray_multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
-//                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
-//{
-//
-//  color3 pixelColor = color3(0.f);
-//
-//  // We use the same process as for one ray:
-//  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-//                     float(i) * dx + float(j) * dy*/
-//  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
-//  // from which we will use the average.
-//  for (int i = 0; i < 3; i++)
-//  {
-//    for (int j = 0; j < 3; j++)
-//    {
-//      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-//                     (indexI + float(i) / 3.f) * dx + (indexJ + float(j) / 3.f) * dy;
-//      Ray rx;
-//      rayInit(&rx, scene->cam.position, normalize(ray_dir));
-//      pixelColor += trace_ray(scene, &rx, tree);
-//    }
-//  }
-//  return pixelColor / 9.f;
-//}
-//
-//color3 trace_ray_4multisampling(Scene *scene, KdTree *tree, int indexI, int indexJ, vec3 dx,
-//                               vec3 dy, vec3 ray_delta_x, vec3 ray_delta_y)
-//{
-//
-//  color3 pixelColor = color3(0.f);
-//
-//  // We use the same process as for one ray:
-//  /* vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-//                     float(i) * dx + float(j) * dy*/
-//  // We simply need to add a coefficient to i and j to subdivide the pixel in 9 different points/rays
-//  // from which we will use the average.
-//  for (int i = 1; i <= 3; i+=2)
-//  {
-//    for (int j = 1; j <= 3; j+=2)
-//    {
-//      vec3 ray_dir = scene->cam.center + ray_delta_x + ray_delta_y +
-//                     (indexI + float(i) / 4.f) * dx + (indexJ + float(j) / 4.f) * dy;
-//      Ray rx;
-//      rayInit(&rx, scene->cam.position, normalize(ray_dir));
-//      pixelColor += trace_ray(scene, &rx, tree);
-//    }
-//  }
-//  return (pixelColor / 4.f);
-//}
-
 static std::minstd_rand engineSamples(time(NULL));
 static std::uniform_real_distribution<float> m_unifDistributionSamples{0.0f, 1.0f};
 
 void renderImage(RenderImage *img, Scene *scene)
 {
 
-  auto samplesPerPixel = 50;
-
-  //! This function is already operational, you might modify it for antialiasing
-  //! and kdtree initializaion
+  auto samplesPerPixel = 10;
 
   KdTree *tree = initKdTree(scene);
 
-  printf("End building tree\n");
-
-  //! \todo initialize KdTree
-
-  //float delta_y = 1.f / (img->height * 0.5f);   //! one pixel size
-  //vec3 dy = delta_y * aspect * scene->cam.ydir; //! one pixel step
-  //vec3 ray_delta_y = (0.5f - img->height * 0.5f) / (img->height * 0.5f) *
-  //                   aspect * scene->cam.ydir;
-
-  //float delta_x = 1.f / (img->width * 0.5f);
-  //vec3 dx = delta_x * scene->cam.xdir;
-  //vec3 ray_delta_x =
-  //    (0.5f - img->width * 0.5f) / (img->width * 0.5f) * scene->cam.xdir;
+  auto startTime = std::chrono::system_clock::now();
 
   for (size_t j = 0; j < img->height; j++)
   {
@@ -322,4 +326,7 @@ void renderImage(RenderImage *img, Scene *scene)
       *ptr = pixel_color;
     }
   }
+  auto stopTime = std::chrono::system_clock::now();
+  std::cout << "Rendering took "<< std::chrono::duration_cast<std::chrono::duration<double>>(
+                    stopTime - startTime).count() << "s" << std::endl;
 }

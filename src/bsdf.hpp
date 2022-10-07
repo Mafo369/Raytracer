@@ -5,6 +5,9 @@
 color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
                 const Material *m, float uTex, float vTex, int face);
 
+color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
+                  float VdotN, const Material *m);
+
 color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
                 const Material *m, float extIOR, float intIOR );
 

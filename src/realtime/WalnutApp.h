@@ -6,8 +6,11 @@
 
 #include "Renderer.h"
 #include "Camera.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "../example_scenes.h"
+#include "../Object.h"
 
 using namespace Walnut;
 
@@ -33,6 +36,21 @@ public:
 			Render();
 		}
 		ImGui::End();
+
+    ImGui::Begin("Scene");
+    for(size_t i = 0; i < m_Renderer.scene->objects.size(); i++){
+      ImGui::PushID(i);
+
+      auto& obj = m_Renderer.scene->objects[i];
+      ImGui::DragFloat("ior", &obj->mat.IOR, 0.1, 1.0, 4.0);
+      ImGui::DragFloat("roughness", &obj->mat.roughness, 0.01, 0.0, 3.0);
+      ImGui::ColorEdit3("dif", glm::value_ptr(obj->mat.diffuseColor));
+      ImGui::ColorEdit3("spec", glm::value_ptr(obj->mat.specularColor));
+
+      ImGui::Separator();
+      ImGui::PopID();
+    }
+    ImGui::End();
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::Begin("Viewport");

@@ -31,6 +31,8 @@ public:
 
   void setScene(Scene* renderScene){ scene = renderScene; 
                                       tree = initKdTree(scene);}
+
+  Scene* scene; 
 private:
 	glm::vec4 TraceRay(const Ray& ray);
 private:
@@ -39,5 +41,4 @@ private:
 
   KdTree* tree;
   RenderImage* img;
-  Scene* scene; 
 };
