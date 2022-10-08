@@ -12,7 +12,10 @@ class Light {
     vec3 getPosition() { return m_position; }
     virtual float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) = 0;
     virtual std::vector<vec3> getSamples() { return m_samples; }
+    bool isAmbient() { return m_ambient; }
+    void setAmbient(bool ambient) { m_ambient = ambient; }
   protected:
+    bool m_ambient = false;
     color3 m_color;
     vec3 m_position;
     std::vector<vec3> m_samples;
@@ -23,6 +26,14 @@ class PointLight : public Light {
     PointLight(vec3 position , color3 color);
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection);
     ~PointLight();
+  private:
+};
+
+class AmbientLight : public Light {
+  public:
+    AmbientLight(vec3 position , color3 color);
+    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection);
+    ~AmbientLight();
   private:
 };
 

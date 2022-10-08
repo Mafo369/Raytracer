@@ -2,12 +2,12 @@
 #include "raytracer.h"
 #include "scene.h"
 
-bool is_shadowed(vec3 lightPosition, vec3 point, Scene* scene, KdTree* tree){
+bool is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree){
   Intersection temp_inter;
   Ray ray;
   vec3 dir = (lightPosition - point);
   dir = dir / length(dir);
-  rayInit(&ray, point + (acne_eps * dir), dir, 0.f, distance(point + (acne_eps * dir), lightPosition));
+  rayInit(&ray, point + (acne_eps * normal), dir, 0.f, distance(point + (acne_eps * normal), lightPosition));
   ray.shadow = true;
   if(intersectKdTree(scene, tree, &ray, &temp_inter)){
     return true;
@@ -27,7 +27,22 @@ PointLight::~PointLight(){
 }
 
 float PointLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection){
-  return is_shadowed(m_position, intersection->position, scene, tree) ? 0.f : 1.f;
+  return is_shadowed(m_position, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f;
+}
+
+AmbientLight::AmbientLight(vec3 position, color3 color){
+  m_position = position;
+  m_color = color;
+  m_samples.push_back(position);
+  m_ambient = true;
+}
+
+float AmbientLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection){
+  return 0.0;
+}
+
+AmbientLight::~AmbientLight(){
+
 }
 
 AreaLight::AreaLight(vec3 corner, vec3 full_uvec, int usteps, vec3 full_vvec, int vsteps, vec3 color){
@@ -54,7 +69,7 @@ static std::uniform_real_distribution<float> m_unifDistributionRand{0.f, 1.0f};
 float AreaLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection){
   float intensity = 0.0f;
   for(auto& sample : m_samples) {
-    if(!is_shadowed(sample, intersection->position, scene, tree)){
+    if(!is_shadowed(sample, intersection->normal, intersection->position, scene, tree)){
       intensity += 1.0;
     }
   }

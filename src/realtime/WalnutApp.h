@@ -8,6 +8,8 @@
 #include "Camera.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 
 #include "../example_scenes.h"
 #include "../Object.h"
@@ -38,11 +40,13 @@ public:
 		ImGui::End();
 
     ImGui::Begin("Scene");
+    const std::string cameraPos = glm::to_string(m_Camera.GetPosition());
+    ImGui::Text(cameraPos.c_str());
     for(size_t i = 0; i < m_Renderer.scene->objects.size(); i++){
       ImGui::PushID(i);
 
       auto& obj = m_Renderer.scene->objects[i];
-      ImGui::DragFloat("ior", &obj->mat.IOR, 0.1, 1.0, 4.0);
+      ImGui::DragFloat("ior", &obj->mat.IOR, 0.1, 1.0, 6.0);
       ImGui::DragFloat("roughness", &obj->mat.roughness, 0.01, 0.0, 3.0);
       ImGui::ColorEdit3("dif", glm::value_ptr(obj->mat.diffuseColor));
       ImGui::ColorEdit3("spec", glm::value_ptr(obj->mat.specularColor));

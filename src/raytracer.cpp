@@ -33,21 +33,21 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
 
   for (size_t i = 0; i < objectCount; i++)
   {
-    Intersection *temp = (Intersection *)malloc(sizeof(Intersection));
-    if(scene->objects[i]->intersect(ray, temp)){
+    Intersection temp;
+    if(scene->objects[i]->intersect(ray, &temp)){
       float temp_dist = ray->tmax;
       if (hasIntersection)
       {
         if (temp_dist < dist)
         {
           dist = temp_dist;
-          *intersection = *temp;
+          *intersection = temp;
         }
       }
       else
       {
         hasIntersection = true;
-        *intersection = *temp;
+        *intersection = temp;
         dist = temp_dist;
       }
 
@@ -180,7 +180,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
   color3 ret = color3(0, 0, 0);
   Intersection intersection;
 
-  if (ray->depth > 3)
+  if (ray->depth > 10)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, &intersection))
@@ -191,6 +191,10 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     for (size_t i = 0; i < lightsCount; i++)
     {
       vec3 v = ray->dir * -1.0f;
+      if(scene->lights[i]->isAmbient()){
+        ret += intersection.mat->diffuseColor * scene->lights[i]->getColor();
+        continue;
+      }
       auto intensity = scene->lights[i]->intensityAt(intersection.position, scene, tree, v, &intersection); 
       auto samples = scene->lights[i]->getSamples();
       if(intensity > 0.0f){
@@ -239,38 +243,38 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
     {
       //// REFLECTION
       vec3 r = reflect(ray->dir, intersection.normal);
-      //Ray ray_ref;
-      //rayInit(&ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+      Ray ray_ref;
+      rayInit(&ray_ref, intersection.position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
-      //color3 cr = trace_ray(scene, &ray_ref, tree);
+      color3 cr = trace_ray(scene, &ray_ref, tree);
       vec3 v = ray->dir * -1.0f;
-      //vec3 h = v + ray_ref.dir;
-      //h = h / length(h);
-      //float LdotH = dot(ray_ref.dir, h);
-      //float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+      vec3 h = v + ray_ref.dir;
+      h = h / length(h);
+      float LdotH = dot(ray_ref.dir, h);
+      float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
-      //ret += (f * cr * intersection.mat->specularColor);
+      ret += (f * cr * intersection.mat->specularColor);
 
-      auto indirectColor = color3(0.f);
-      float fuzz = 0.0f;
-      for(int i = 0; i < 5; i++){
-        Ray scattered;
-        rayInit(&scattered, intersection.position+(acne_eps*r), normalize(r + fuzz * sphereRand()), 0, 10000, ray->depth+1);
+      //auto indirectColor = color3(0.f);
+      //float fuzz = 0.0f;
+      //for(int i = 0; i < 5; i++){
+      //  Ray scattered;
+      //  rayInit(&scattered, intersection.position+(acne_eps*r), normalize(r + fuzz * sphereRand()), 0, 10000, ray->depth+1);
 
-        if(dot(scattered.invdir, intersection.normal) <= 0)
-          continue;
+      //  if(dot(scattered.invdir, intersection.normal) <= 0)
+      //    continue;
 
-        vec3 cr = trace_ray(scene, &scattered, tree);
-        vec3 h = v + scattered.dir;
-        h = h / length(h);
-        float LdotH = dot(scattered.dir, h);
-        float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
+      //  vec3 cr = trace_ray(scene, &scattered, tree);
+      //  vec3 h = v + scattered.dir;
+      //  h = h / length(h);
+      //  float LdotH = dot(scattered.dir, h);
+      //  float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
 
-        indirectColor += (f * cr * intersection.mat->specularColor);
-      }
-      indirectColor /= 5.f;
+      //  indirectColor += (f * cr * intersection.mat->specularColor);
+      //}
+      //indirectColor /= 5.f;
 
-      ret += indirectColor;
+      //ret += indirectColor;
 
     }
   }
@@ -310,7 +314,7 @@ void renderImage(RenderImage *img, Scene *scene)
     for (size_t i = 0; i < img->width; i++)
     {
       color3 pixel_color(0,0,0);
-      color3 *ptr = getPixelPtr(img, (img->width-i-1), j);
+      color3 *ptr = getPixelPtr(img, i, j);
       for (int s = 0; s < samplesPerPixel; ++s) {
         auto u = (i + m_unifDistributionSamples(engineSamples)) / (img->width-1);
         auto v = (j + m_unifDistributionSamples(engineSamples)) / (img->height-1);

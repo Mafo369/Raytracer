@@ -767,6 +767,63 @@ Scene *initScene9() {
   return scene;
 }
 
+Scene *initScene10() {
+  Scene *scene = initScene();
+  setCamera(scene, point3(0., -60, 12), vec3(0, 0, 12), vec3(0, 0.0, 1), 30,
+            float(WIDTH) / float(HEIGHT), 0);
+  setSkyColor(scene, color3(0., 0., 0.)); 
+
+  Material mat;
+  mat.diffuseColor = color3(1);
+  mat.specularColor = color3(0);
+  mat.IOR = 1.0;
+  mat.roughness = 1;
+  mat.mtype = DIFFUSE;
+
+  glm::mat4 boxT = glm::translate(mat4(1.f), vec3(0,0,12));
+
+  glm::mat4 modelMatrix = glm::translate(boxT, vec3(0,0,-12)) *glm::scale(glm::mat4(1.f), vec3(32,32,1));
+  addObject(scene, initSphere(mat, modelMatrix));
+
+  modelMatrix = glm::translate(boxT, vec3(0,0,12)) *glm::scale(glm::mat4(1.f), vec3(32,32,1));
+  addObject(scene, initSphere(mat, modelMatrix));
+
+  modelMatrix = glm::translate(boxT, vec3(0,20,0)) *glm::scale(glm::mat4(1.f), vec3(32,1,32));
+  addObject(scene, initSphere(mat, modelMatrix));
+
+  mat.diffuseColor = color3(1, 0.5, 0.5);
+
+  modelMatrix = glm::translate(boxT, vec3(-15,0,0)) *glm::scale(glm::mat4(1.f), vec3(1,32,32));
+  addObject(scene, initSphere(mat, modelMatrix));
+
+  mat.diffuseColor = color3(0.5, 0.5, 1.0);
+
+  modelMatrix = glm::translate(boxT, vec3(15,0,0)) *glm::scale(glm::mat4(1.f), vec3(1,32,32));
+  addObject(scene, initSphere(mat, modelMatrix));
+
+  mat.diffuseColor = color3(0.8, 0.2, 0.2);
+  mat.specularColor = color3(0.7f);
+  mat.IOR = 4.0;
+  mat.roughness = 0.7;
+
+  modelMatrix = glm::translate(glm::mat4(1.f), vec3(-5,10,6.5)) *glm::scale(glm::mat4(1.f), vec3(6,6,6));
+  addObject(scene, initSphere(mat, modelMatrix));
+
+  mat.diffuseColor = color3(0.1, 0.1, 0.9);
+  mat.specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
+  mat.IOR = 1.52;
+  mat.roughness = 0.2;
+  mat.mtype = TRANSPARENT;
+
+  modelMatrix = glm::translate(glm::mat4(1.f), vec3(7,-5,6.5)) * glm::rotate(glm::mat4(1.f), 30.f, vec3(0,1,0)) * glm::scale(glm::mat4(1.f), vec3(6,6,6));
+  addObject(scene, initSphere(mat, modelMatrix));
+
+
+  addLight(scene, initPointLight(point3(0, 0, 22), color3(1.f)));
+  addLight(scene, initAmbientLight(color3(0.1)));
+  return scene;
+}
+
 Scene* parseScene(int sceneId){
   Scene *scene = NULL;
   switch (sceneId) {
@@ -799,6 +856,9 @@ Scene* parseScene(int sceneId){
     break;
   case 9:
     scene = initScene9();
+    break;
+  case 10:
+    scene = initScene10();
     break;
 
   default:

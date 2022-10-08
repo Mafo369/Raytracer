@@ -2,7 +2,7 @@
 
 #include "scene.h"
 #define WIDTH 800
-#define HEIGHT 800
+#define HEIGHT 600
 
 
 Scene *initScene0();

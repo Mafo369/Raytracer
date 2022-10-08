@@ -62,6 +62,8 @@ void freeObject(Object *obj);
 //! init a new light at position with a give color (no special unit here for the moment)
 Light* initPointLight(point3 position, color3 color);
 
+Light* initAmbientLight(color3 color);
+
 //! release memory for the light
 void freeLight(Light *);
 

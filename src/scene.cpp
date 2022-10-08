@@ -108,6 +108,11 @@ Light *initPointLight(point3 position, color3 color) {
     return light;
 }
 
+Light *initAmbientLight(color3 color) {
+    Light *light = new AmbientLight(vec3(0,0,0), color);
+    return light;
+}
+
 void freeLight(Light *light) {
     delete light;
 }
