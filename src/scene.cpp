@@ -17,16 +17,6 @@
 #include "shapes/cube.h"
 #include "shapes/plane.h"
 
-Object *initSphere(point3 center, float radius, Material mat) {
-    Object *ret;
-    //ret = (Object *)malloc(sizeof(Object));
-    //ret->geom.type = SPHERE;
-    //ret->geom.sphere.center = point3(0,0,0);
-    //ret->geom.sphere.radius = 0.25;
-    //memcpy(&(ret->mat), &mat, sizeof(Material));
-    return ret;
-}
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 glm::vec3 extractScale(const glm::mat4 &m)
@@ -38,7 +28,7 @@ glm::vec3 extractScale(const glm::mat4 &m)
                      glm::length2( glm::vec3(m[2]) ));
 }
 
-Object *initSphere(Material mat, glm::mat4 transform ) {
+Object *initSphere(std::shared_ptr<Material> mat, glm::mat4 transform ) {
     auto ret = new Sphere(mat, transform);
     ret->geom.type = SPHERE;
     ret->geom.sphere.center = transform * vec4(0,0,0,1);
@@ -52,7 +42,7 @@ Object *initSphere(Material mat, glm::mat4 transform ) {
     return ret;
 }
 
-Object *initPlane(vec3 normal, float d, Material mat) {
+Object *initPlane(vec3 normal, float d, std::shared_ptr<Material> mat) {
     auto ret = new Plane(mat, glm::mat4(1.f));
     ret->geom.type = PLANE;
     ret->geom.plane.normal = normalize(normal);
@@ -60,7 +50,7 @@ Object *initPlane(vec3 normal, float d, Material mat) {
     return ret;
 }
 
-Object *initCube(Material mat, glm::mat4 transform) {
+Object *initCube(std::shared_ptr<Material> mat, glm::mat4 transform) {
     auto ret = new Cube(mat, transform);
     ret->geom.type = CUBE;
     ret->transform = transform;
@@ -70,7 +60,7 @@ Object *initCube(Material mat, glm::mat4 transform) {
     return ret;
 }
 
-Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat){
+Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], std::shared_ptr<Material> mat){
     auto ret = new Triangle(mat, glm::mat4(1.f));
     ret->geom.type = TRIANGLE;
     ret->geom.triangle.p1 = p1;
@@ -83,7 +73,7 @@ Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat)
     return ret;
 }
 
-Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, Material mat){
+Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, std::shared_ptr<Material> mat){
     auto ret = new Triangle(mat, glm::mat4(1.f));
     ret->geom.type = TRIANGLE;
     ret->geom.triangle.p1 = p1;

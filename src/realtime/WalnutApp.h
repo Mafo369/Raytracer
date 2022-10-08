@@ -45,11 +45,11 @@ public:
     for(size_t i = 0; i < m_Renderer.scene->objects.size(); i++){
       ImGui::PushID(i);
 
-      auto& obj = m_Renderer.scene->objects[i];
-      ImGui::DragFloat("ior", &obj->mat.IOR, 0.1, 1.0, 6.0);
-      ImGui::DragFloat("roughness", &obj->mat.roughness, 0.01, 0.0, 3.0);
-      ImGui::ColorEdit3("dif", glm::value_ptr(obj->mat.diffuseColor));
-      ImGui::ColorEdit3("spec", glm::value_ptr(obj->mat.specularColor));
+      auto objMat = std::dynamic_pointer_cast<CookTorrance>(m_Renderer.scene->objects[i]->mat);
+      ImGui::DragFloat("ior", &objMat->m_IOR, 0.1, 1.0, 6.0);
+      ImGui::DragFloat("roughness", &objMat->m_roughness, 0.01, 0.0, 3.0);
+      ImGui::ColorEdit3("dif", glm::value_ptr(objMat->m_diffuseColor));
+      ImGui::ColorEdit3("spec", glm::value_ptr(objMat->m_specularColor));
 
       ImGui::Separator();
       ImGui::PopID();

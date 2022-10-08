@@ -32,7 +32,7 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
   if (t >= ray->tmin && t <= ray->tmax)
   {
     intersection->position = ray->orig + (t * ray->dir);
-    intersection->mat = &(mat);
+    intersection->mat = mat;
     intersection->isOutside = dot(ray->dir, geom.triangle.normal) < 0;
     //intersection->normal = intersection->isOutside ? obj->geom.triangle.normal : -obj->geom.triangle.normal;
     auto uv = geom.triangle.tex[1] * u + geom.triangle.tex[2] * v + geom.triangle.tex[0] * (1.f - u - v);

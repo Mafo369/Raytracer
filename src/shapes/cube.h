@@ -3,7 +3,7 @@
 
 class Cube : public Object {
   public:
-    Cube(Material mat, glm::mat4 transform) : Object(mat, transform) {}
+    Cube(std::shared_ptr<Material> mat, glm::mat4 transform) : Object(mat, transform) {}
     bool intersect(Ray* ray, Intersection* intersection) const;
     
     void check_axis(float origin, float direction, float& tmin, float& tmax) const;

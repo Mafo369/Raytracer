@@ -9,60 +9,65 @@
 
 class texture {
     public:
-        virtual color3 value(float u, float v, int face = -1) const = 0;
+      texture() = default;
+      virtual ~texture() = default;
+      virtual color3 value(float u, float v, int face = -1) const = 0;
 };
 
 class solid_color : public texture {
     public:
-        solid_color() {}
-        solid_color(color3 c) : color_value(c) {}
+      solid_color(color3 c) : color_value(c) {}
+      ~solid_color() {}
 
-        solid_color(float red, float green, float blue)
-          : solid_color(color3(red,green,blue)) {}
+      solid_color(float red, float green, float blue)
+        : solid_color(color3(red,green,blue)) {}
 
-        virtual color3 value(float u, float v, int face = -1) const override {
-            return color_value;
-        }
+      color3 value(float u, float v, int face = -1) const override {
+          return color_value;
+      }
 
     private:
         color3 color_value;
 };
 
 class checker_texture : public texture {
-    public:
-        checker_texture() {}
+  public:
 
-        checker_texture(std::shared_ptr<texture> _even, std::shared_ptr<texture> _odd)
-            : odd(_odd), even(_even) {}
+      checker_texture(std::shared_ptr<texture> _even, std::shared_ptr<texture> _odd)
+          : odd(_odd), even(_even) {}
 
-        checker_texture(color3 c1, color3 c2)
-            : odd(std::make_shared<solid_color>(c2)), even(std::make_shared<solid_color>(c1)) {}
+      checker_texture(color3 c1, color3 c2)
+          : odd(std::make_shared<solid_color>(c2)), even(std::make_shared<solid_color>(c1)) {}
 
-        virtual color3 value(float u, float v, int face = -1) const override {
-            int u2 = floor(u * width);
-            int v2 = floor(v * height);
-            if ( (u2 + v2) % 2 == 0)
-              return odd->value(u, v);
-            else
-              return even->value(u, v);
-        }
+      ~checker_texture() {}
 
-    public:
-        std::shared_ptr<texture> odd;
-        std::shared_ptr<texture> even;
-        int width = 2;
-        int height = 2;
+      color3 value(float u, float v, int face = -1) const override {
+          int u2 = floor(u * width);
+          int v2 = floor(v * height);
+          if ( (u2 + v2) % 2 == 0)
+            return odd->value(u, v);
+          else
+            return even->value(u, v);
+      }
+
+  public:
+      std::shared_ptr<texture> odd;
+      std::shared_ptr<texture> even;
+      int width = 2;
+      int height = 2;
 };
 
 class image_texture : public texture {
   public:
-    image_texture() {}
-
     image_texture(const char* filename) {
       m_image = loadPng(filename);
     }
+    
+    ~image_texture(){
+      delete m_image;
+    }
 
-    virtual color3 value(float u, float v, int face = -1) const override {
+    color3 value(float u, float v, int face = -1) const override {
       int u2 = floor((1.f-u) * (m_image->width-1));
       int v2 = floor((1.f-v) * (m_image->height-1));
       return *getPixelPtr(m_image, u2, v2);
@@ -91,7 +96,9 @@ class AlignCheck : public texture {
       m_faces.push_back(down);
     }
 
-    virtual color3 value(float u, float v, int face) const override {
+    ~AlignCheck() {}
+
+    color3 value(float u, float v, int face) const override {
       if( v > 0.8 ){
         if( u < 0.2 ) return m_faces[face].ul;
         if( u > 0.8 ) return m_faces[face].ur;
@@ -118,7 +125,10 @@ class CubeMapTexture : public texture {
       m_faces.push_back(up);
       m_faces.push_back(down);
     }
-    virtual color3 value(float u, float v, int face) const override {
+
+    ~CubeMapTexture() {}
+
+    color3 value(float u, float v, int face) const override {
       return m_faces[face]->value(u, v);
     }
 

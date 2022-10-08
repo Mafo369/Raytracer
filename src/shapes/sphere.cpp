@@ -17,7 +17,7 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     if (t >= ray->tmin && t <= ray->tmax)
     {
       intersection->position = ray->orig + (t * ray->dir);
-      intersection->mat = &(mat);
+      intersection->mat = mat;
       vec3 objectPoint = invTransform * vec4(intersection->position, 1);
       vec3 objectNormal = objectPoint - vec3(0.f,0.f,0.f);
       glm::mat4 normalMatrix = glm::transpose(invTransform);
@@ -62,7 +62,7 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       return false;
     }
     intersection->position = ray->orig + (t * ray->dir);
-    intersection->mat = &(mat);
+    intersection->mat = mat;
     vec3 objectPoint = invTransform * vec4(intersection->position, 1);
     vec3 objectNormal = objectPoint - vec3(0,0,0);
     glm::mat4 normalMatrix = glm::transpose(invTransform);

@@ -1,7 +1,7 @@
 #include "Object.h"
 
-Object::Object(Material mat, glm::mat4 transform)
-  : transform(transform), invTransform(glm::inverse(transform)), mat(mat) {}
+Object::Object(std::shared_ptr<Material> material, glm::mat4 transform)
+  : transform(transform), invTransform(glm::inverse(transform)), mat(material) {}
 
 Object::~Object() {}
 

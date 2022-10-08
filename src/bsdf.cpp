@@ -163,41 +163,41 @@ float RDM_Smith(float LdotH, float LdotN, float VdotH, float VdotN,
 // LdotN : Light . Norm
 // VdotN : View . Norm
 color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
-                  float VdotN, const Material *m)
+                  float VdotN, float roughness, float IOR, color3 specularColor)
 {
 
   //! \todo specular term of the bsdf, using D = RDB_Beckmann, F = RDM_Fresnel, G
   //! = RDM_Smith
 
-  float d = RDM_Beckmann(NdotH, m->roughness);
-  float f = RDM_Fresnel(LdotH, 1.f, m->IOR);
+  float d = RDM_Beckmann(NdotH, roughness);
+  float f = RDM_Fresnel(LdotH, 1.f, IOR);
   //float f = schlick(LdotH, m->IOR, 1.f);
-  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
+  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, roughness);
 
-  return color3(m->specularColor * ((d * f * g) / (4 * LdotN * VdotN)));
+  return color3(specularColor * ((d * f * g) / (4.f * LdotN * VdotN)));
 }
 
 color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
-                  float VdotN, const Material *m, float extIOR, float intIOR)
+                  float VdotN, float extIOR, float intIOR, float roughness, color3 specularColor)
 {
 
-  float d = RDM_Beckmann(NdotH, m->roughness);
+  float d = RDM_Beckmann(NdotH, roughness);
   float f = RDM_Fresnel(LdotH, extIOR, intIOR);
   //float f = schlick(LdotH, extIOR, intIOR);
-  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
+  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, roughness);
 
   float denom = (extIOR*LdotH + intIOR*VdotH);
 
   float no = intIOR;
-  return color3(m->specularColor * (LdotH * VdotH)/(LdotN * VdotN)*((no*no)*(1.0f-f)*g*d)/(denom*denom));
+  return color3(specularColor * (LdotH * VdotH)/(LdotN * VdotN)*((no*no)*(1.0f-f)*g*d)/(denom*denom));
 }
 
 // diffuse term of the cook torrance bsdf
-color3 RDM_bsdf_d(const Material *m)
+color3 RDM_bsdf_d(color3 diffuseColor)
 {
 
   float pi = M_PI;
-  return color3(m->diffuseColor / pi);
+  return color3(diffuseColor / pi);
 }
 
 // The full evaluation of bsdf(wi, wo) * cos (thetai)
@@ -208,31 +208,31 @@ color3 RDM_bsdf_d(const Material *m)
 // VdtoN : View . Norm
 // compute bsdf * cos(Oi)
 color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                const Material *m, float uTex, float vTex, int face)
+                texture* texture, color3 diffuseColor, color3 specularColor, float roughness, float IOR, float uTex, float vTex, int face)
 {
 
   //! \todo compute bsdf diffuse and specular term
-  if(m->m_texture != nullptr){
+  if(texture != nullptr){
     color3 texColor;
     if(face == -1)
-      texColor = (m->m_texture->value(uTex, vTex));
+      texColor = (texture->value(uTex, vTex));
     else
-      texColor = (m->m_texture->value(uTex, vTex, face));
-    return color3((texColor / float(M_PI)) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
+      texColor = (texture->value(uTex, vTex, face));
+    return color3((texColor / float(M_PI)) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, roughness, IOR, specularColor));
   }
-  return color3(RDM_bsdf_d(m) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, m));
+  return color3(RDM_bsdf_d(diffuseColor) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, roughness, IOR, specularColor));
 }
 
-color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                const Material *m, float extIOR, float intIOR )
+color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN,
+                  float VdotN, float extIOR, float intIOR, float roughness, color3 specularColor)
 {
   if(VdotN == 0.f)
     return color3(0,0,0);
 
-  float d = RDM_Beckmann(NdotH, m->roughness);
+  float d = RDM_Beckmann(NdotH, roughness);
   float f = RDM_Fresnel(LdotH, extIOR, intIOR);
   //float f = schlick(LdotH, extIOR, intIOR);
-  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, m->roughness);
+  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, roughness);
 
-  return m->specularColor * ((d * f * g) / (4.f * LdotN * VdotN));
+  return specularColor * ((d * f * g) / (4.f * LdotN * VdotN));
 }

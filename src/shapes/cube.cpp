@@ -85,7 +85,7 @@ bool Cube::intersect(Ray *ray, Intersection *intersection) const {
     return false;
 
   intersection->position = ray->orig + (tmin * ray->dir);
-  intersection->mat = &(mat);
+  intersection->mat = mat;
 
   vec3 objectPoint = invTransform * vec4(intersection->position, 1);
   vec3 objectNormal = computeCubeNormal(objectPoint);

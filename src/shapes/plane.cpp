@@ -17,7 +17,7 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
     if (t >= ray->tmin && t <= ray->tmax)
     {
       intersection->position = ray->orig + (t * ray->dir);
-      intersection->mat = &(mat);
+      intersection->mat = mat;
       intersection->normal = n;
       intersection->u = abs(fmod(intersection->position.x, 1.0f));
       intersection->v = abs(fmod(intersection->position.z, 1.0f));

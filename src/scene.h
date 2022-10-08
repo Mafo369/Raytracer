@@ -8,32 +8,8 @@
 
 class Camera;
 class Light;
-
-// SCENE
-//typedef struct scene_s Scene;
-////typedef struct object_s Object;
-////typedef struct light_s Light;
-//typedef struct camera_s Camera;
-
-//typedef struct camera_s {
-//  point3 position; //! eye position
-//    vec3 zdir; //! view direction
-//    vec3 xdir; //! right direction
-//    vec3 ydir; //! up direction
-//    point3 center; //! center of the image plane
-//  float fov;  //! field of view
-//  float aspect; //! aspect ratio (typically use WIDTH/HEIGHT of the computed image
-//} Camera;
-
-
-//typedef struct object_s {
-//    glm::mat4 transform;
-//    glm::mat4 invTransform;
-//    Geometry geom;
-//    Material mat;
-//} Object;
-
 class Object;
+class Material;
 
 typedef std::vector<Object*> Objects;
 typedef std::vector<Light*> Lights;
@@ -45,16 +21,12 @@ typedef struct scene_s {
   color3 skyColor; //! the sky color, could be extended to a sky function ;)
 } Scene;
 
-typedef struct material_s Material;
-
-
 //! create a new sphere structure
-Object *initSphere(point3 center, float radius, Material mat);
-Object* initSphere(Material mat, glm::mat4 transform = glm::mat4(1.f));
-Object *initCube(Material mat, glm::mat4 transform = glm::mat4(1.f));
-Object* initPlane(vec3 normal, float d, Material mat);
-Object* initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Material mat);
-Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, Material mat);
+Object* initSphere(std::shared_ptr<Material> mat, glm::mat4 transform = glm::mat4(1.f));
+Object *initCube(std::shared_ptr<Material> mat, glm::mat4 transform = glm::mat4(1.f));
+Object* initPlane(vec3 normal, float d, std::shared_ptr<Material> mat);
+Object* initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], std::shared_ptr<Material> mat);
+Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, std::shared_ptr<Material> mat);
 
 //! release memory for the object obj
 void freeObject(Object *obj);

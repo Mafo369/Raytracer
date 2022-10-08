@@ -3,21 +3,9 @@
 #include "defines.h"
 #include "textures.hpp"
 #include "raytracer.h"
+#include "Material.h"
 
-enum Mtype {DIFFUSE=1, TRANSPARENT, TORSPAR};
 enum Etype {SPHERE=1, PLANE, TRIANGLE, CUBE};
-
-typedef struct material_s {
-  float IOR;	//! Index of refraction (for dielectric)
-  float roughness; //! 0.001 - 0.01 : very smooth finish with slight imperfections. 0.1 : relatively rough. 0.3-0.7 extremely rough 
-  color3 specularColor;	//! Specular "albedo"
-  color3 diffuseColor;	//! Base color
-  Mtype mtype = DIFFUSE;
-  
-  texture* m_texture = nullptr;
-  
-} Material;
-
 
 typedef struct geometry_s {
   Etype type; //! what kind of geometry we have, this value allows to determine which part of the union is valid;
@@ -56,7 +44,7 @@ typedef struct geometry_s {
 
 class Object {
   public:
-    Object(Material mat, glm::mat4 transform);
+    Object(std::shared_ptr<Material> material, glm::mat4 transform);
     virtual ~Object();
     virtual bool intersect(Ray* ray, Intersection* intersection) const = 0;
 
@@ -65,6 +53,6 @@ class Object {
     glm::mat4 transform;
     glm::mat4 invTransform;
     Geometry geom;
-    Material mat;
+    std::shared_ptr<Material> mat;
 };
 

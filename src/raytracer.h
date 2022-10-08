@@ -10,7 +10,7 @@
 typedef struct intersection_s { 
   vec3 normal; //! the normal of the intersection point
   point3 position; //! the intersection point
-  const Material *mat; //! the material of th intersected object
+  std::shared_ptr<Material> mat; //! the material of th intersected object
 
   vec2 t;
   float u;
@@ -36,11 +36,3 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *sphere);
 
 void renderImage(RenderImage *img, Scene *scene);
 color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree);
-color3 shade(vec3 n, vec3 v, vec3 l, color3 lc, const Material *mat, float uTex, float vTex, bool outside, float intensity, int face);
-
-float RDM_Beckmann(float NdotH, float alpha);
-float RDM_Fresnel(float LdotH, float extIOR, float intIOR);
-color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN, Material *m);
-color3 RDM_bsdf_d(Material *m);
-color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN, Material *m);
-
