@@ -15,7 +15,8 @@ set(mrt_SRCS
   src/example_scenes.cpp
   src/Light.cpp
   src/Object.cpp
-  src/Material.cpp
+  src/materials/CookTorrance.cpp
+  src/materials/Blinn.cpp
   src/shapes/sphere.cpp
   src/shapes/triangle.cpp
   src/shapes/cube.cpp

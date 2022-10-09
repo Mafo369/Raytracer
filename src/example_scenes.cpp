@@ -11,6 +11,7 @@
 #include <string.h>
 #include "Light.h"
 #include "Object.h"
+#include "materials/Blinn.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -783,11 +784,15 @@ Scene *initScene10() {
             float(WIDTH) / float(HEIGHT), 0);
   setSkyColor(scene, color3(0., 0., 0.)); 
 
-  auto mat = std::make_shared<CookTorrance>(false);
+  //auto mat = std::make_shared<CookTorrance>(false);
+  //mat->m_diffuseColor = color3(1);
+  //mat->m_specularColor = color3(0);
+  //mat->m_IOR = 1.0;
+  //mat->m_roughness = 1;
+
+  auto mat = std::make_shared<Blinn>();
   mat->m_diffuseColor = color3(1);
   mat->m_specularColor = color3(0);
-  mat->m_IOR = 1.0;
-  mat->m_roughness = 1;
 
   glm::mat4 boxT = glm::translate(glm::mat4(1.f), vec3(0,0,12));
 
@@ -800,44 +805,66 @@ Scene *initScene10() {
   modelMatrix = glm::translate(boxT, vec3(0,20,0)) *glm::scale(glm::mat4(1.f), vec3(32,1,32));
   addObject(scene, initSphere(mat, modelMatrix));
 
-  auto mat1 = std::make_shared<CookTorrance>(false);
+  //auto mat1 = std::make_shared<CookTorrance>(false);
+  //mat1->m_diffuseColor = color3(1, 0.5, 0.5);
+  //mat1->m_specularColor = color3(0);
+  //mat1->m_IOR = 1.0;
+  //mat1->m_roughness = 1;
+  //
+  auto mat1 = std::make_shared<Blinn>();
   mat1->m_diffuseColor = color3(1, 0.5, 0.5);
   mat1->m_specularColor = color3(0);
-  mat1->m_IOR = 1.0;
-  mat1->m_roughness = 1;
 
   modelMatrix = glm::translate(boxT, vec3(-15,0,0)) *glm::scale(glm::mat4(1.f), vec3(1,32,32));
   addObject(scene, initSphere(mat1, modelMatrix));
 
-  auto mat2 = std::make_shared<CookTorrance>(false);
+  //auto mat2 = std::make_shared<CookTorrance>(false);
+  //mat2->m_specularColor = color3(0);
+  //mat2->m_IOR = 1.0;
+  //mat2->m_roughness = 1;
+  //mat2->m_diffuseColor = color3(0.5, 0.5, 1.0);
+
+  auto mat2 = std::make_shared<Blinn>();
   mat2->m_specularColor = color3(0);
-  mat2->m_IOR = 1.0;
-  mat2->m_roughness = 1;
   mat2->m_diffuseColor = color3(0.5, 0.5, 1.0);
 
   modelMatrix = glm::translate(boxT, vec3(15,0,0)) *glm::scale(glm::mat4(1.f), vec3(1,32,32));
   addObject(scene, initSphere(mat2, modelMatrix));
 
-  auto mat3 = std::make_shared<CookTorrance>(false);
+  //auto mat3 = std::make_shared<CookTorrance>(false);
+  //mat3->m_diffuseColor = color3(0.8, 0.2, 0.2);
+  //mat3->m_specularColor = color3(0.7f);
+  //mat3->m_IOR = 4.0;
+  //mat3->m_roughness = 0.7;
+
+  auto mat3 = std::make_shared<Blinn>();
   mat3->m_diffuseColor = color3(0.8, 0.2, 0.2);
   mat3->m_specularColor = color3(0.7f);
-  mat3->m_IOR = 4.0;
-  mat3->m_roughness = 0.7;
+  mat3->m_shininess = 20;
+  mat3->m_reflection = vec3(0.7);
 
   modelMatrix = glm::translate(glm::mat4(1.f), vec3(-5,10,6.5)) *glm::scale(glm::mat4(1.f), vec3(6,6,6));
   addObject(scene, initSphere(mat3, modelMatrix));
 
-  auto mat4 = std::make_shared<CookTorrance>(true);
+  //auto mat4 = std::make_shared<CookTorrance>(true);
+  //mat4->m_diffuseColor = color3(0.1, 0.1, 0.9);
+  //mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
+  //mat4->m_IOR = 1.52;
+  //mat4->m_roughness = 0.2;
+
+  auto mat4 = std::make_shared<Blinn>();
   mat4->m_diffuseColor = color3(0.1, 0.1, 0.9);
   mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
   mat4->m_IOR = 1.52;
-  mat4->m_roughness = 0.2;
+  mat4->m_shininess = 10;
+  mat4->m_refraction = vec3(0.8);
+  mat4->m_absorption = color3(0.01, 0.001, 0.0001);
 
   modelMatrix = glm::translate(glm::mat4(1.f), vec3(7,-5,6.5)) * glm::rotate(glm::mat4(1.f), 30.f, vec3(0,1,0)) * glm::scale(glm::mat4(1.f), vec3(6,6,6));
   addObject(scene, initSphere(mat4, modelMatrix));
 
 
-  addLight(scene, initPointLight(point3(0, 0, 22), color3(1.f)));
+  addLight(scene, initPointLight(point3(0, 0, 22), color3(0.5f)));
   addLight(scene, initAmbientLight(color3(0.1)));
   return scene;
 }

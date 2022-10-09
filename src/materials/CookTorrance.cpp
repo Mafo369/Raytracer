@@ -1,5 +1,5 @@
-#include "Material.h"
-#include "bsdf.hpp"
+#include "CookTorrance.h"
+#include "../bsdf.hpp"
 
 CookTorrance::CookTorrance(bool transparent){
   m_IOR = 1.0;
@@ -102,7 +102,8 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     Ray ray_ref;
 
     rayInit(&ray_ref, intersection->position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
-    color3 reflectionColor = trace_ray(scene, &ray_ref, tree);
+    Intersection inter;
+    color3 reflectionColor = trace_ray(scene, &ray_ref, tree, &inter);
 
     vec3 v = ray->dir * -1.0f;
     vec3 h = v + ray_ref.dir;
@@ -122,7 +123,8 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
       Ray ray_refr;
       rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
 
-      refractionColor = trace_ray(scene, &ray_refr, tree);
+      Intersection refInter;
+      refractionColor = trace_ray(scene, &ray_refr, tree, &refInter);
     }
     
     ret += ( reflectionColor * f * m_specularColor ) + refractionColor * (1.0f - f);
@@ -134,7 +136,8 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     Ray ray_ref;
     rayInit(&ray_ref, intersection->position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
 
-    color3 cr = trace_ray(scene, &ray_ref, tree);
+    Intersection inter;
+    color3 cr = trace_ray(scene, &ray_ref, tree, &inter);
     vec3 v = ray->dir * -1.0f;
     vec3 h = v + ray_ref.dir;
     h = h / length(h);

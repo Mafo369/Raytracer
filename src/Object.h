@@ -3,7 +3,7 @@
 #include "defines.h"
 #include "textures.hpp"
 #include "raytracer.h"
-#include "Material.h"
+#include "materials/CookTorrance.h"
 
 enum Etype {SPHERE=1, PLANE, TRIANGLE, CUBE};
 

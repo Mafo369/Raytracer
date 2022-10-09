@@ -35,4 +35,4 @@ bool intersectSphere(Ray *ray, Intersection *intersection, Object *sphere);
 bool intersectTriangle(Ray *ray, Intersection *intersection, Object *sphere);
 
 void renderImage(RenderImage *img, Scene *scene);
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree);
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection);

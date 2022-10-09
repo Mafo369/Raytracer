@@ -65,34 +65,32 @@ vec3 sphereRand(){
   }
 }
 
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection)
 {
   color3 ret = color3(0, 0, 0);
-  Intersection intersection;
 
   if (ray->depth > 3)
     return color3(0.f);
 
-  if (intersectKdTree(scene, tree, ray, &intersection))
+  if (intersectKdTree(scene, tree, ray, intersection))
   {
     // if skybox return directly the corresponding color
-    if(intersection.face != -1)
-      return intersection.mat->textureColor(intersection.u, intersection.v, intersection.face);
+    if(intersection->face != -1)
+      return intersection->mat->textureColor(intersection->u, intersection->v, intersection->face);
 
     // shading
     size_t lightsCount = scene->lights.size();
     for (size_t i = 0; i < lightsCount; i++)
     {
       vec3 v = ray->dir * -1.0f;
-      if(scene->lights[i]->isAmbient()){
-        //ret += intersection.mat->diffuseColor * scene->lights[i]->getColor();
-        ret += intersection.mat->ambientColor(scene->lights[i]->getColor());
+      if(scene->lights[i]->isAmbient() && intersection->isOutside){
+        ret += intersection->mat->ambientColor(scene->lights[i]->getColor());
         continue;
       }
-      auto intensity = scene->lights[i]->intensityAt(intersection.position, scene, tree, v, &intersection); 
+      auto intensity = scene->lights[i]->intensityAt(intersection->position, scene, tree, v, intersection); 
       auto samples = scene->lights[i]->getSamples();
       if(intensity > 0.0f){
-        ret += intersection.mat->shade(&intersection, v, scene->lights[i]->getColor(), intensity, samples);
+        ret += intersection->mat->shade(intersection, v, scene->lights[i]->getColor(), intensity, samples);
       }
     }
 
@@ -100,7 +98,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree)
       return color3(1.f);
 
     // Scatter
-    ret += intersection.mat->scatterColor(scene, tree, ray, &intersection);
+    ret += intersection->mat->scatterColor(scene, tree, ray, intersection);
   }
   else
   {
@@ -144,7 +142,8 @@ void renderImage(RenderImage *img, Scene *scene)
         auto v = (j + m_unifDistributionSamples(engineSamples)) / (img->height-1);
         Ray r;
         scene->cam->get_ray(u, v, &r);
-        pixel_color += trace_ray(scene, &r, tree);
+        Intersection intersection;
+        pixel_color += trace_ray(scene, &r, tree, &intersection);
       }
       // Divide the color by the number of samples and gamma-correct for gamma=2.0.
       pixel_color /= samplesPerPixel;
