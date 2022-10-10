@@ -73,8 +73,8 @@ Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], std::shared_p
     return ret;
 }
 
-Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, std::shared_ptr<Material> mat){
-    auto ret = new Triangle(mat, glm::mat4(1.f));
+Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, glm::mat4 transform, std::shared_ptr<Material> mat){
+    auto ret = new Triangle(mat, transform);
     ret->geom.type = TRIANGLE;
     ret->geom.triangle.p1 = p1;
     ret->geom.triangle.p2 = p2;

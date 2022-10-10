@@ -3,8 +3,8 @@
 
 Blinn::Blinn(){
   m_IOR = 1.0;
-  m_specularColor = color3(0.f);
-  m_diffuseColor = color3(0.f);
+  m_specularColor = color3(0.7f);
+  m_diffuseColor = color3(0.5f);
   m_shininess = 20.f;
   m_reflection = vec3(0,0,0);
   m_refraction = vec3(0,0,0);
@@ -29,7 +29,7 @@ color3 Blinn::shade(Intersection *intersection, vec3 v, color3 lc, float intensi
       float s = std::pow(NdotH, m_shininess);
 
       if(LdotN > 0){
-        ret += lc * LdotN * ( m_diffuseColor + s * m_specularColor) ;
+        ret += lc *  (LdotN * m_diffuseColor + s * m_specularColor) ;
       }
     }
     ret = (ret / float(samples.size())) * intensity;

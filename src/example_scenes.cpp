@@ -12,6 +12,8 @@
 #include "Light.h"
 #include "Object.h"
 #include "materials/Blinn.h"
+#include "shapes/plane.h"
+#include "Camera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -413,7 +415,7 @@ Scene *initScene5() {
   return scene;
 }
 
-void addObjectsFromFile(const char *filename, Scene *scene, std::shared_ptr<Material> default_mat){
+void addObjectsFromFile(const char *filename, Scene *scene, std::shared_ptr<Material> default_mat, glm::mat4 transform){
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
@@ -483,10 +485,10 @@ void addObjectsFromFile(const char *filename, Scene *scene, std::shared_ptr<Mate
           mat->m_specularColor.g = materials[matIndex].specular[1];
           mat->m_specularColor.b = materials[matIndex].specular[2];
         }
-        addObject(scene, initSmoothTriangle(v0, v1, v2, n, textures, normals[0], normals[1], normals[2],mat));
+        addObject(scene, initSmoothTriangle(v0, v1, v2, n, textures, normals[0], normals[1], normals[2], transform, mat));
       }
       else{
-        addObject(scene, initSmoothTriangle(v0, v1, v2, n, textures, normals[0], normals[1], normals[2], default_mat));
+        addObject(scene, initSmoothTriangle(v0, v1, v2, n, textures, normals[0], normals[1], normals[2], transform, default_mat));
       }
     }
   }
@@ -780,8 +782,10 @@ Scene *initScene9() {
 
 Scene *initScene10() {
   Scene *scene = initScene();
-  setCamera(scene, point3(0., -60, 12), vec3(0, 0, 12), vec3(0, 0.0, 1), 30,
-            float(WIDTH) / float(HEIGHT), 0);
+  auto from = point3(0., -60, 12);
+  auto at = vec3(0, 0, 12);
+  setCamera(scene, from, at, vec3(0, 0.0, 1), 30,
+            float(WIDTH) / float(HEIGHT), 0.001, glm::distance(from, at));
   setSkyColor(scene, color3(0., 0., 0.)); 
 
   //auto mat = std::make_shared<CookTorrance>(false);
@@ -796,14 +800,31 @@ Scene *initScene10() {
 
   glm::mat4 boxT = glm::translate(glm::mat4(1.f), vec3(0,0,12));
 
-  glm::mat4 modelMatrix = glm::translate(boxT, vec3(0,0,-12)) *glm::scale(glm::mat4(1.f), vec3(32,32,1));
-  addObject(scene, initSphere(mat, modelMatrix));
+  glm::mat4 modelMatrix = glm::translate(boxT, vec3(0,0,-12)) * 
+                          glm::scale(glm::mat4(1.f), vec3(32,32,32));
+  //addObject(scene, initSphere(mat, modelMatrix));
+  auto ret = new Plane(mat, modelMatrix);
+  ret->geom.type = PLANE;
+  ret->invTransform = glm::inverse(modelMatrix);
+  addObject(scene, ret);
 
-  modelMatrix = glm::translate(boxT, vec3(0,0,12)) *glm::scale(glm::mat4(1.f), vec3(32,32,1));
-  addObject(scene, initSphere(mat, modelMatrix));
+  modelMatrix = glm::translate(boxT, vec3(0,0,12)) * 
+                glm::rotate(glm::mat4(1.f), degrees_to_radians(180.f), vec3(1,0,0)) *
+                glm::scale(glm::mat4(1.f), vec3(32,32,32));
+  //addObject(scene, initSphere(mat, modelMatrix));
+  ret = new Plane(mat, modelMatrix);
+  ret->geom.type = PLANE;
+  ret->invTransform = glm::inverse(modelMatrix);
+  addObject(scene, ret);
 
-  modelMatrix = glm::translate(boxT, vec3(0,20,0)) *glm::scale(glm::mat4(1.f), vec3(32,1,32));
-  addObject(scene, initSphere(mat, modelMatrix));
+  modelMatrix = glm::translate(boxT, vec3(0,20,0)) * 
+                glm::rotate(glm::mat4(1.f), degrees_to_radians(90.f), vec3(1,0,0)) *
+                glm::scale(glm::mat4(1.f), vec3(32,32,32));
+  //addObject(scene, initSphere(mat, modelMatrix));
+  ret = new Plane(mat, modelMatrix);
+  ret->geom.type = PLANE;
+  ret->invTransform = glm::inverse(modelMatrix);
+  addObject(scene, ret);
 
   //auto mat1 = std::make_shared<CookTorrance>(false);
   //mat1->m_diffuseColor = color3(1, 0.5, 0.5);
@@ -815,8 +836,14 @@ Scene *initScene10() {
   mat1->m_diffuseColor = color3(1, 0.5, 0.5);
   mat1->m_specularColor = color3(0);
 
-  modelMatrix = glm::translate(boxT, vec3(-15,0,0)) *glm::scale(glm::mat4(1.f), vec3(1,32,32));
-  addObject(scene, initSphere(mat1, modelMatrix));
+  modelMatrix = glm::translate(boxT, vec3(-15,0,0));
+  modelMatrix = glm::rotate(modelMatrix, degrees_to_radians(90.f), vec3(0,1,0));
+  modelMatrix = glm::scale(modelMatrix, vec3(32,32,32));
+  //addObject(scene, initSphere(mat1, modelMatrix));
+  ret = new Plane(mat1, modelMatrix);
+  ret->geom.type = PLANE;
+  ret->invTransform = glm::inverse(modelMatrix);
+  addObject(scene, ret);
 
   //auto mat2 = std::make_shared<CookTorrance>(false);
   //mat2->m_specularColor = color3(0);
@@ -828,8 +855,14 @@ Scene *initScene10() {
   mat2->m_specularColor = color3(0);
   mat2->m_diffuseColor = color3(0.5, 0.5, 1.0);
 
-  modelMatrix = glm::translate(boxT, vec3(15,0,0)) *glm::scale(glm::mat4(1.f), vec3(1,32,32));
-  addObject(scene, initSphere(mat2, modelMatrix));
+  modelMatrix = glm::translate(boxT, vec3(15,0,0)) *
+                glm::rotate(glm::mat4(1.f), degrees_to_radians(-90.f), vec3(0,1,0)) *
+                glm::scale(glm::mat4(1.f), vec3(32,32,32));
+  //addObject(scene, initSphere(mat2, modelMatrix));
+  ret = new Plane(mat2, modelMatrix);
+  ret->geom.type = PLANE;
+  ret->invTransform = glm::inverse(modelMatrix);
+  addObject(scene, ret);
 
   //auto mat3 = std::make_shared<CookTorrance>(false);
   //mat3->m_diffuseColor = color3(0.8, 0.2, 0.2);
@@ -843,8 +876,9 @@ Scene *initScene10() {
   mat3->m_shininess = 20;
   mat3->m_reflection = vec3(0.7);
 
-  modelMatrix = glm::translate(glm::mat4(1.f), vec3(-5,10,6.5)) *glm::scale(glm::mat4(1.f), vec3(6,6,6));
-  addObject(scene, initSphere(mat3, modelMatrix));
+  //modelMatrix = glm::translate(glm::mat4(1.f), vec3(-5,10,6.5)) *
+  //              glm::scale(glm::mat4(1.f), vec3(6,6,6));
+  //addObject(scene, initSphere(mat3, modelMatrix));
 
   //auto mat4 = std::make_shared<CookTorrance>(true);
   //mat4->m_diffuseColor = color3(0.1, 0.1, 0.9);
@@ -860,8 +894,20 @@ Scene *initScene10() {
   mat4->m_refraction = vec3(0.8);
   mat4->m_absorption = color3(0.01, 0.001, 0.0001);
 
-  modelMatrix = glm::translate(glm::mat4(1.f), vec3(7,-5,6.5)) * glm::rotate(glm::mat4(1.f), 30.f, vec3(0,1,0)) * glm::scale(glm::mat4(1.f), vec3(6,6,6));
+  modelMatrix = glm::translate(glm::mat4(1.f), vec3(-8,-6,4)) *
+                glm::rotate(glm::mat4(1.f), degrees_to_radians(30.f), vec3(0,1,0)) *
+                glm::scale(glm::mat4(1.f), vec3(4));
   addObject(scene, initSphere(mat4, modelMatrix));
+
+  modelMatrix = glm::translate(glm::mat4(1.f), vec3(2,5,0)) *
+                glm::rotate(glm::mat4(1.f), degrees_to_radians(-30.f), vec3(0,0,1)) *
+                glm::scale(glm::mat4(1.f), vec3(0.8));
+  addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix);
+
+  modelMatrix = glm::translate(glm::mat4(1.f), vec3(5,-6,0)) *
+                glm::rotate(glm::mat4(1.f), degrees_to_radians(-60.f), vec3(0,0,1)) *
+                glm::scale(glm::mat4(1.f), vec3(0.3));
+  addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix);
 
 
   addLight(scene, initPointLight(point3(0, 0, 22), color3(0.5f)));

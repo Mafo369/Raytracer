@@ -21,7 +21,7 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       vec3 objectPoint = invTransform * vec4(intersection->position, 1);
       vec3 objectNormal = objectPoint - vec3(0.f,0.f,0.f);
       glm::mat4 normalMatrix = glm::transpose(invTransform);
-      vec4 normal4 = normalMatrix * vec4(objectNormal, 1.f);
+      vec4 normal4 = normalMatrix * vec4(objectNormal, 0.f);
       vec3 normal = vec3(normal4.x, normal4.y, normal4.z);
       intersection->isOutside = dot(transformedRay.dir, objectNormal) < 0;
       intersection->transform = transform;
@@ -66,7 +66,7 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     vec3 objectPoint = invTransform * vec4(intersection->position, 1);
     vec3 objectNormal = objectPoint - vec3(0,0,0);
     glm::mat4 normalMatrix = glm::transpose(invTransform);
-    vec3 normal = normalMatrix * vec4(objectNormal, 1);
+    vec3 normal = normalMatrix * vec4(objectNormal, 0);
     intersection->isOutside = dot(transformedRay.dir, objectNormal) < 0;
     intersection->transform = transform;
     intersection->normal = normalize(normal);

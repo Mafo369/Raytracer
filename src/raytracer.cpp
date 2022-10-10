@@ -138,8 +138,8 @@ void renderImage(RenderImage *img, Scene *scene)
       color3 pixel_color(0,0,0);
       color3 *ptr = getPixelPtr(img, i, j);
       for (int s = 0; s < samplesPerPixel; ++s) {
-        auto u = (i + m_unifDistributionSamples(engineSamples)) / (img->width-1);
-        auto v = (j + m_unifDistributionSamples(engineSamples)) / (img->height-1);
+        auto u = (i + m_unifDistributionSamples(engineSamples)) / (img->width);
+        auto v = (j + m_unifDistributionSamples(engineSamples)) / (img->height);
         Ray r;
         scene->cam->get_ray(u, v, &r);
         Intersection intersection;
