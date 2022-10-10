@@ -9,7 +9,7 @@ class CookTorrance : public Material {
 
     color3 shade(Intersection *intersection, vec3 v, color3 lc, float intensity, std::vector<vec3> &samples) override;
     color3 textureColor(float u, float v, int face) override;
-    color3 ambientColor(color3 lightColor) override;
+    color3 ambientColor(Intersection* intersection, color3 lightColor) override;
     color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) override;
 
     float m_IOR;	//! Index of refraction (for dielectric)

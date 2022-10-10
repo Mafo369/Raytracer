@@ -88,7 +88,9 @@ color3 CookTorrance::textureColor(float u, float v, int face) {
   return m_texture->value(u, v, face);
 }
 
-color3 CookTorrance::ambientColor(color3 lightColor) {
+color3 CookTorrance::ambientColor(Intersection* intersection, color3 lightColor) {
+  if(m_texture != nullptr)
+    return m_texture->value(intersection->u, intersection->v) * lightColor;
   return m_diffuseColor * lightColor;
 }
 

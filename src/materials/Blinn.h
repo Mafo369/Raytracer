@@ -9,7 +9,7 @@ class Blinn : public Material {
 
     color3 shade(Intersection *intersection, vec3 v, color3 lc, float intensity, std::vector<vec3> &samples) override;
     color3 textureColor(float u, float v, int face) override;
-    color3 ambientColor(color3 lightColor) override;
+    color3 ambientColor(Intersection* intersection, color3 lightColor) override;
     color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) override;
 
     color3 m_diffuseColor;
@@ -19,5 +19,7 @@ class Blinn : public Material {
     vec3 m_refraction;
     vec3 m_absorption;
     float m_IOR;
+
+    texture* m_texture = nullptr;
 
 };

@@ -84,7 +84,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
     {
       vec3 v = ray->dir * -1.0f;
       if(scene->lights[i]->isAmbient() && intersection->isOutside){
-        ret += intersection->mat->ambientColor(scene->lights[i]->getColor());
+        ret += intersection->mat->ambientColor(intersection, scene->lights[i]->getColor());
         continue;
       }
       auto intensity = scene->lights[i]->intensityAt(intersection->position, scene, tree, v, intersection); 

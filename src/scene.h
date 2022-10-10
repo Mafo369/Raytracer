@@ -33,6 +33,7 @@ void freeObject(Object *obj);
 
 //! init a new light at position with a give color (no special unit here for the moment)
 Light* initPointLight(point3 position, color3 color);
+Light *initDirectLight(vec3 direction, color3 color);
 
 Light* initAmbientLight(color3 color);
 

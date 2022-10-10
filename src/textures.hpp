@@ -68,8 +68,8 @@ class image_texture : public texture {
     }
 
     color3 value(float u, float v, int face = -1) const override {
-      int u2 = floor((1.f-u) * (m_image->width-1));
-      int v2 = floor((1.f-v) * (m_image->height-1));
+      int u2 = floor(u * (m_image->width-1));
+      int v2 = floor(v * (m_image->height-1));
       return *getPixelPtr(m_image, u2, v2);
     }
 

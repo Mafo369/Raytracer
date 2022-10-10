@@ -28,11 +28,20 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       intersection->normal = normalize(normal);
 
       float pi = M_PI;
-      auto theta = acos(-normal.y);
-      auto phi = atan2(-normal.z, normal.x) + pi;
+      //auto theta = acos(-normal.y);
+      //auto phi = atan2(-normal.z, normal.x) + pi;
 
-      intersection->u = phi / (2*pi);
-      intersection->v = theta / pi;
+      //intersection->u = phi / (2*pi);
+      //intersection->v = theta / pi;
+
+      auto theta = glm::atan(objectPoint.x, objectPoint.z);
+      auto vec = glm::vec3(objectPoint.x, objectPoint.y, objectPoint.z);
+      auto radius = glm::length(vec);
+
+      auto phi = acos(objectPoint.y / radius);
+      auto raw_u = theta / (2 * pi);
+      intersection->u = 1 - (raw_u + 0.5);
+      intersection->v = 1 - phi / pi;
 
       ray->tmax = t;
       return true;
@@ -72,10 +81,19 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     intersection->normal = normalize(normal);
 
     float pi = M_PI;
-    auto theta = acos(-normal.y);
-    auto phi = atan2(-normal.z, normal.x) + pi;
-    intersection->u = phi / (2*pi);
-    intersection->v = theta / pi;
+    //auto theta = acos(-normal.y);
+    //auto phi = atan2(-normal.z, normal.x) + pi;
+    //intersection->u = phi / (2*pi);
+    //intersection->v = theta / pi;
+    //
+    auto theta = glm::atan(objectPoint.x, objectPoint.z);
+    auto vec = glm::vec3(objectPoint.x, objectPoint.y, objectPoint.z);
+    auto radius = glm::length(vec);
+
+    auto phi = acos(objectPoint.y / radius);
+    auto raw_u = theta / (2 * pi);
+    intersection->u = 1 - (raw_u + 0.5);
+    intersection->v = 1 - phi / pi;
 
 
     ray->tmax = t;

@@ -103,6 +103,11 @@ Light *initAmbientLight(color3 color) {
     return light;
 }
 
+Light *initDirectLight(vec3 direction, color3 color) {
+    Light *light = new DirectLight(direction, color);
+    return light;
+}
+
 void freeLight(Light *light) {
     delete light;
 }

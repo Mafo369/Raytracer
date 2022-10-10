@@ -914,6 +914,46 @@ Scene *initScene10() {
   addLight(scene, initAmbientLight(color3(0.1)));
   return scene;
 }
+ 
+Scene *initScene11() {
+  Scene *scene = initScene();
+  auto from = point3(0., -70, 15);
+  auto at = vec3(2, 0, 3);
+  setCamera(scene, from, at, vec3(0, 0.0, 1), 30,
+            float(WIDTH) / float(HEIGHT), 0.001, glm::distance(from, at));
+  setSkyColor(scene, color3(0.2,0.2,0.8)); 
+
+
+  auto mat = std::make_shared<Blinn>();
+  mat->m_diffuseColor = color3(1,1,1);
+  mat->m_texture = new checker_texture(color3(0.2, 0.2, 0.2), color3(0.6, 0.6, 0.6));
+  mat->m_specularColor = color3(0);
+  mat->m_reflection = vec3(0.5);
+  auto modelMatrix = glm::rotate(glm::mat4(1.f), degrees_to_radians(30), vec3(0,0,1)) * glm::scale(glm::mat4(1.f), vec3(1000));
+
+  auto ret = new Plane(mat, modelMatrix);
+  ret->geom.type = PLANE;
+  addObject(scene, ret);
+
+  auto mat1 = std::make_shared<Blinn>();
+  mat1->m_texture = new image_texture("../assets/bricks.png");
+  mat1->m_specularColor = color3(0.3);
+  mat1->m_shininess = 10;
+
+
+  modelMatrix = glm::translate(glm::mat4(1.f), vec3(2,-5,0)) *
+                glm::rotate(glm::mat4(1.f), degrees_to_radians(-50.f), vec3(0,0,1)) *
+                glm::scale(glm::mat4(1.f), vec3(0.8));
+  addObjectsFromFile("../assets/teapot.obj", scene, mat1, modelMatrix);
+
+  addLight(scene, initAmbientLight(color3(0.2)));
+  addLight(scene, initDirectLight(vec3(-1, 0.2, -1), color3(0.6)));
+  addLight(scene, initDirectLight(vec3(1, 0.3, -1), color3(0.4)));
+
+
+  return scene;
+}
+
 
 Scene* parseScene(int sceneId){
   Scene *scene = NULL;
@@ -950,6 +990,9 @@ Scene* parseScene(int sceneId){
     break;
   case 10:
     scene = initScene10();
+    break;
+  case 11:
+    scene = initScene11();
     break;
 
   default:

@@ -73,6 +73,10 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
   intersection->transform = transform;
   intersection->normal = normalize(normal);
   ray->tmax = t;
+
+  intersection->u = abs(fmod(intersection->position.x, 1.0f));
+  intersection->v = abs(fmod(intersection->position.z, 1.0f));
+
 	// Set uv Info
 	//vec3 uvw;
 	//uvw.x = (1 + intersection.p.x) / 2.f;

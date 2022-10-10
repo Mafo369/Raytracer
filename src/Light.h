@@ -10,10 +10,12 @@ class Light {
     Light() = default;
     vec3 getColor() { return m_color; } 
     vec3 getPosition() { return m_position; }
+    virtual vec3 getDirection(point3 p) = 0;
     virtual float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) = 0;
     virtual std::vector<vec3> getSamples() { return m_samples; }
     bool isAmbient() { return m_ambient; }
     void setAmbient(bool ambient) { m_ambient = ambient; }
+    bool is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree);
   protected:
     bool m_ambient = false;
     color3 m_color;
@@ -24,7 +26,8 @@ class Light {
 class PointLight : public Light {
   public:
     PointLight(vec3 position , color3 color);
-    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection);
+    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
+    vec3 getDirection(point3 p) override;
     ~PointLight();
   private:
 };
@@ -32,8 +35,18 @@ class PointLight : public Light {
 class AmbientLight : public Light {
   public:
     AmbientLight(vec3 position , color3 color);
-    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection);
+    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
+    vec3 getDirection(point3 p) override;
     ~AmbientLight();
+  private:
+};
+
+class DirectLight : public Light {
+  public:
+    DirectLight(vec3 direction , color3 color);
+    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
+    vec3 getDirection(point3 p) override;
+    ~DirectLight();
   private:
 };
 
@@ -41,8 +54,9 @@ class AreaLight : public Light {
   public:
     AreaLight(vec3 corner, vec3 full_uvec, int usteps, vec3 full_vvec, int vsteps, vec3 intensity);
     ~AreaLight();
-    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection);
+    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
     point3 pointOnLight(float u, float v);
+    vec3 getDirection(point3 p) override;
     void setup(Scene* scene);
   private:
     float intensity;

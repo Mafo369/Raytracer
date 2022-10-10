@@ -14,12 +14,10 @@ Blinn::Blinn(){
 color3 Blinn::shade(Intersection *intersection, vec3 v, color3 lc, float intensity, std::vector<vec3> &samples) {
   color3 ret = color3(0.f);
   vec3 n = intersection->normal;
-  vec3 intersectionPos = intersection->position;
   
   if(intersection->isOutside){
     for(auto& sample : samples){
-      vec3 lp = sample - intersectionPos;
-      vec3 l = normalize(lp);
+      vec3 l = -sample;
       float LdotN = dot(l, n);
       v = normalize(v);
       vec3 vl = v + l;
@@ -29,7 +27,12 @@ color3 Blinn::shade(Intersection *intersection, vec3 v, color3 lc, float intensi
       float s = std::pow(NdotH, m_shininess);
 
       if(LdotN > 0){
-        ret += lc *  (LdotN * m_diffuseColor + s * m_specularColor) ;
+        if(m_texture != nullptr){
+          ret += lc *  (LdotN * m_texture->value(intersection->u, intersection->v) + s * m_specularColor);
+        }
+        else{
+          ret += lc *  (LdotN * m_diffuseColor + s * m_specularColor) ;
+        }
       }
     }
     ret = (ret / float(samples.size())) * intensity;
@@ -42,10 +45,14 @@ color3 Blinn::shade(Intersection *intersection, vec3 v, color3 lc, float intensi
 Blinn::~Blinn() {}
 
 color3 Blinn::textureColor(float u, float v, int face) {
+  if(m_texture != nullptr)
+    return m_texture->value(u, v);
   return color3(0.f);
 }
 
-color3 Blinn::ambientColor(color3 lightColor) {
+color3 Blinn::ambientColor(Intersection* intersection, color3 lightColor) {
+  if(m_texture != nullptr)
+    return m_texture->value(intersection->u, intersection->v) * lightColor;
   return m_diffuseColor * lightColor;
 }
 
