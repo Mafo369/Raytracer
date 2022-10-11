@@ -121,7 +121,7 @@ KdTree *initKdTree(Scene *scene)
     {
       float rad = obj->geom.sphere.radius;
 
-      auto spherePosition = obj->transform * vec4(0,0,0, 1);
+      auto spherePosition = obj->transform.transformFrom(vec3(0));
       float x = spherePosition.x;
       float y = spherePosition.y;
       float z = spherePosition.z;
@@ -139,9 +139,9 @@ KdTree *initKdTree(Scene *scene)
       std::vector<float> py;
       std::vector<float> pz;
 
-      vec3 p1 = obj->transform * vec4(obj->geom.triangle.p1, 1); 
-      vec3 p2 = obj->transform * vec4(obj->geom.triangle.p2, 1); 
-      vec3 p3 = obj->transform * vec4(obj->geom.triangle.p3, 1); 
+      vec3 p1 = obj->transform.transformFrom(obj->geom.triangle.p1); 
+      vec3 p2 = obj->transform.transformFrom(obj->geom.triangle.p2); 
+      vec3 p3 = obj->transform.transformFrom(obj->geom.triangle.p3); 
 
       px.push_back(p1.x);
       px.push_back(p2.x);
@@ -345,9 +345,9 @@ void clipTriangleToBox(Scene *scene, int triangle, vec3 min, vec3 max, vec3 &min
   auto& shape = scene->objects[triangle]->geom.triangle;
   auto transform = scene->objects[triangle]->transform;
 
-  vec3 v0 = transform * vec4( shape.p1, 1);
-  vec3 v1 = transform * vec4( shape.p2, 1);
-  vec3 v2 = transform * vec4( shape.p3, 1);
+  vec3 v0 = transform.transformFrom(vec3( shape.p1 ));
+  vec3 v1 = transform.transformFrom(vec3( shape.p2 ));
+  vec3 v2 = transform.transformFrom(vec3( shape.p3 ));
 
   const float minx = std::min(v0.x, std::min(v1.x, v2.x));
   const float maxx = std::max(v0.x, std::max(v1.x, v2.x));
@@ -528,9 +528,9 @@ void subdivide(Scene *scene, KdTree *tree, KdTreeNode *node)
     else if (shape.type == TRIANGLE)
     {
       auto transform = scene->objects[node->objects[i]]->transform;
-      vec3 p1 = transform * vec4(shape.triangle.p1, 1);
-      vec3 p2 = transform * vec4(shape.triangle.p2, 1);
-      vec3 p3 = transform * vec4(shape.triangle.p3, 1);
+      vec3 p1 = transform.transformFrom(shape.triangle.p1);
+      vec3 p2 = transform.transformFrom(shape.triangle.p2);
+      vec3 p3 = transform.transformFrom(shape.triangle.p3);
       bool left = intersectTriangleAabb(p1, p2, p3, shape.triangle.normal, node_left->min, node_left->max);
       bool right = intersectTriangleAabb(p1, p2, p3, shape.triangle.normal, node_right->min, node_right->max);
       //assert(left || right);

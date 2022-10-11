@@ -11,13 +11,21 @@ Blinn::Blinn(){
   m_absorption = vec3(0,0,0);
 }
 
-color3 Blinn::shade(Intersection *intersection, vec3 v, color3 lc, float intensity, std::vector<vec3> &samples) {
+color3 Blinn::shade(Intersection *intersection, vec3 v, Light* light, float intensity) {
   color3 ret = color3(0.f);
   vec3 n = intersection->normal;
+  auto lc = light->getColor();
+  auto samples = light->getSamples(); 
   
   if(intersection->isOutside){
     for(auto& sample : samples){
-      vec3 l = -sample;
+      vec3 l;
+      if(light->isDirectional()){
+        l = -sample;
+      }
+      else{
+        l = normalize(sample - intersection->position);
+      }
       float LdotN = dot(l, n);
       v = normalize(v);
       vec3 vl = v + l;

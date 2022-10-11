@@ -28,40 +28,38 @@ glm::vec3 extractScale(const glm::mat4 &m)
                      glm::length2( glm::vec3(m[2]) ));
 }
 
-Object *initSphere(std::shared_ptr<Material> mat, glm::mat4 transform ) {
+Object *initSphere(std::shared_ptr<Material> mat, Transform transform ) {
     auto ret = new Sphere(mat, transform);
     ret->geom.type = SPHERE;
-    ret->geom.sphere.center = transform * vec4(0,0,0,1);
-    glm::vec3 scalesSq = extractScale(transform);
+    ret->geom.sphere.center = transform.transformFrom(vec3(0));
+    glm::vec3 scalesSq = extractScale(transform.getTransform());
     float const maxScaleSq = *std::max_element(&scalesSq[0], &scalesSq[0] + scalesSq.length());  // length gives the dimension here i.e. 3
     // one sqrt when you know the largest of the three
     float const largestScale = std::sqrt(maxScaleSq);
-    ret->geom.sphere.radius = largestScale;
-    ret->transform = transform;
-    ret->invTransform = glm::inverse(transform);
+    ret->geom.sphere.radius = 6;
     return ret;
 }
 
 Object *initPlane(vec3 normal, float d, std::shared_ptr<Material> mat) {
-    auto ret = new Plane(mat, glm::mat4(1.f));
-    ret->geom.type = PLANE;
-    ret->geom.plane.normal = normalize(normal);
-    ret->geom.plane.dist = d;
-    return ret;
+    //auto ret = new Plane(mat, Transform(1.f));
+    //ret->geom.type = PLANE;
+    //ret->geom.plane.normal = normalize(normal);
+    //ret->geom.plane.dist = d;
+    //return ret;
+    return nullptr;
 }
 
-Object *initCube(std::shared_ptr<Material> mat, glm::mat4 transform) {
+Object *initCube(std::shared_ptr<Material> mat, Transform transform) {
     auto ret = new Cube(mat, transform);
     ret->geom.type = CUBE;
     ret->transform = transform;
-    ret->geom.cube.min = transform * vec4(-1,-1,-1, 1);
-    ret->geom.cube.max = transform * vec4(1,1,1, 1);
-    ret->invTransform = glm::inverse(transform);
+    ret->geom.cube.min = transform.transformFrom(vec3(-1));
+    ret->geom.cube.max = transform.transformFrom(vec3(1));
     return ret;
 }
 
 Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], std::shared_ptr<Material> mat){
-    auto ret = new Triangle(mat, glm::mat4(1.f));
+    auto ret = new Triangle(mat, Transform());
     ret->geom.type = TRIANGLE;
     ret->geom.triangle.p1 = p1;
     ret->geom.triangle.p2 = p2;
@@ -73,7 +71,7 @@ Object *initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], std::shared_p
     return ret;
 }
 
-Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, glm::mat4 transform, std::shared_ptr<Material> mat){
+Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, Transform transform, std::shared_ptr<Material> mat){
     auto ret = new Triangle(mat, transform);
     ret->geom.type = TRIANGLE;
     ret->geom.triangle.p1 = p1;

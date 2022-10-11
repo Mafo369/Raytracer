@@ -44,14 +44,13 @@ typedef struct geometry_s {
 
 class Object {
   public:
-    Object(std::shared_ptr<Material> material, glm::mat4 transform);
+    Object(std::shared_ptr<Material> material, Transform transform);
     virtual ~Object();
     virtual bool intersect(Ray* ray, Intersection* intersection) const = 0;
 
     Ray transformRay(Ray* ray) const;
 
-    glm::mat4 transform;
-    glm::mat4 invTransform;
+    Transform transform;
     Geometry geom;
     std::shared_ptr<Material> mat;
 };

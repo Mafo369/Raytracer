@@ -7,16 +7,6 @@
 #include <random>
 #include <iostream>
 
-namespace glm {
-// not really needed, but it makes it easier to follow the book...
-template <int N, typename T, qualifier P> T length_sq(const vec<N, T, P> &x) { return dot(x, x); }
-} // namespace glm
-
-// Utility Functions
-inline float degrees_to_radians(float degrees) {
-  return degrees * M_PI / 180.0f;
-}
-
 static std::minstd_rand engine(time(NULL));
 static std::uniform_real_distribution<float> m_unifDistributionRand{-1.f, 1.0f};
 

@@ -1,4 +1,5 @@
 #include "plane.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 //bool Plane::intersect(Ray *ray, Intersection *intersection) const {
 //  //! \todo : compute intersection of the ray and the plane object
@@ -66,16 +67,19 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
   intersection->position = ray->orig + (t * ray->dir);
   intersection->mat = mat;
   vec3 objectNormal = vec3(0.f,0.f,1.f);
-  glm::mat4 normalMatrix = glm::transpose(invTransform);
+  glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
   vec4 normal4 = normalMatrix * vec4(objectNormal, 0.f);
   vec3 normal = vec3(normal4.x, normal4.y, normal4.z);
   intersection->isOutside = true;
-  intersection->transform = transform;
   intersection->normal = normalize(normal);
   ray->tmax = t;
 
-  intersection->u = abs(fmod(intersection->position.x, 1.0f));
-  intersection->v = abs(fmod(intersection->position.z, 1.0f));
+  vec3 uvw = (x + 1.0f) / 2.0f;
+  auto p = vec4(uvw, 1) - vec4(0,0,0,1);
+  auto uvt = glm::inverse(glm::scale(glm::mat4(1.f), vec3(0.01))) * p;
+  intersection->u = uvt.x;
+  intersection->v = uvt.y;
+
 
 	// Set uv Info
 	//vec3 uvw;

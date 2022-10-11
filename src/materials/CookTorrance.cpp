@@ -9,7 +9,7 @@ CookTorrance::CookTorrance(bool transparent){
   m_transparent = transparent;
 }
 
-color3 CookTorrance::shade(Intersection *intersection, vec3 v, color3 lc, float intensity, std::vector<vec3> &samples) {
+color3 CookTorrance::shade(Intersection *intersection, vec3 v, Light* light, float intensity) {
   color3 ret = color3(0.f);
   vec3 n = intersection->normal;
   vec3 intersectionPos = intersection->position;
@@ -17,6 +17,8 @@ color3 CookTorrance::shade(Intersection *intersection, vec3 v, color3 lc, float 
   float vTex = intersection->v;
   bool outside = intersection->isOutside;
   int face = intersection->face;
+  auto lc = light->getColor();
+  auto samples = light->getSamples();
 
   //! \todo compute bsdf, return the shaded color taking into account the
   //! lightcolor

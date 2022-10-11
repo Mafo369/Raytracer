@@ -3,6 +3,6 @@
 
 class Triangle : public Object {
   public:
-    Triangle(std::shared_ptr<Material> mat, glm::mat4 transform) : Object(mat, transform) {}
+    Triangle(std::shared_ptr<Material> mat, Transform transform) : Object(mat, transform) {}
     bool intersect(Ray* ray, Intersection* intersection) const;
 };

@@ -37,7 +37,7 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
     intersection->isOutside = !(det < 0.f);
 
     vec3 objectNormal = geom.triangle.n2 * u + geom.triangle.n3 * v + geom.triangle.n1 * (1.f - u - v);
-    glm::mat4 normalMatrix = glm::transpose(invTransform);
+    glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
     vec4 normal4 = normalMatrix * vec4(objectNormal, 0.f);
     vec3 normal = vec3(normal4.x, normal4.y, normal4.z);
 

@@ -88,9 +88,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
         continue;
       }
       auto intensity = scene->lights[i]->intensityAt(intersection->position, scene, tree, v, intersection); 
-      auto samples = scene->lights[i]->getSamples();
       if(intensity > 0.0f){
-        ret += intersection->mat->shade(intersection, v, scene->lights[i]->getColor(), intensity, samples);
+        ret += intersection->mat->shade(intersection, v, scene->lights[i], intensity);
       }
     }
 

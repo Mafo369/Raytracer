@@ -87,12 +87,11 @@ bool Cube::intersect(Ray *ray, Intersection *intersection) const {
   intersection->position = ray->orig + (tmin * ray->dir);
   intersection->mat = mat;
 
-  vec3 objectPoint = invTransform * vec4(intersection->position, 1);
+  vec3 objectPoint = transform.transformTo(intersection->position);
   vec3 objectNormal = computeCubeNormal(objectPoint);
-  glm::mat4 normalMatrix = glm::transpose(invTransform);
+  glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
   vec3 normal = normalMatrix * vec4(objectNormal, 1);
   intersection->isOutside = dot(transformedRay.dir, objectNormal) < 0;
-  intersection->transform = transform;
   intersection->normal = normalize(normal);
 
   vec2 uv;

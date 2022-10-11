@@ -12,6 +12,8 @@ class texture {
       texture() = default;
       virtual ~texture() = default;
       virtual color3 value(float u, float v, int face = -1) const = 0;
+
+      Transform m_transform;
 };
 
 class solid_color : public texture {
@@ -42,19 +44,39 @@ class checker_texture : public texture {
       ~checker_texture() {}
 
       color3 value(float u, float v, int face = -1) const override {
-          int u2 = floor(u * width);
-          int v2 = floor(v * height);
-          if ( (u2 + v2) % 2 == 0)
-            return odd->value(u, v);
-          else
-            return even->value(u, v);
+          point3 u1;
+          u1.x = u - (int) u;
+          u1.y = v - (int) v;
+          if(u1.x < 0.0)
+            u1.x += 1.0;
+          if(u1.y < 0.0)
+            u1.y += 1.0;
+          if(u1.z < 0.0)
+            u1.z += 1.0;
+          if(u1.x <= 0.5){
+            if(u1.y <= 0.5)
+              return even->value(u1.x, u1.y);
+            else
+              return odd->value(u1.x, u1.y);
+          }else{
+            if(u1.y <= 0.5)
+              return odd->value(u1.x, u1.y);
+            else
+              return even->value(u1.x, u1.y);
+          }
+          //int u2 = floor(u * width);
+          //int v2 = floor(v * height);
+          //if ( (u2 + v2) % 2 == 0)
+          //  return even->value(u, v);
+          //else
+          //  return odd->value(u, v);
       }
 
   public:
       std::shared_ptr<texture> odd;
       std::shared_ptr<texture> even;
-      int width = 2;
-      int height = 2;
+      int width = 200;
+      int height = 200;
 };
 
 class image_texture : public texture {

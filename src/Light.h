@@ -16,6 +16,7 @@ class Light {
     bool isAmbient() { return m_ambient; }
     void setAmbient(bool ambient) { m_ambient = ambient; }
     bool is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree);
+    virtual bool isDirectional() { return false; }
   protected:
     bool m_ambient = false;
     color3 m_color;
@@ -46,6 +47,7 @@ class DirectLight : public Light {
     DirectLight(vec3 direction , color3 color);
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
     vec3 getDirection(point3 p) override;
+    bool isDirectional() override { return true; }
     ~DirectLight();
   private:
 };
