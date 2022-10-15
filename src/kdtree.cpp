@@ -670,7 +670,7 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
   float dist;
 
   Ray ray_backup; //Ray backup -> we'll use it to find plane intersections
-  rayInit(&ray_backup, ray->orig, ray->dir, ray->tmin, ray->tmax);
+  rayInit(&ray_backup, ray->orig, ray->dir, ray->pixel,ray->tmin, ray->tmax);
 
   if (intersectAabb(ray, tree->root->min, tree->root->max))
   { // If ray hits biggest bbox we traverse tree to find sphere intersections

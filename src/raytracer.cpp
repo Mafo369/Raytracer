@@ -101,7 +101,13 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
   }
   else
   {
-    ret = scene->skyColor;
+    vec3 pixelUV = vec3((float)ray->pixel.x / 400.f, (float)ray->pixel.y / 300.f, 0.f);
+    vec3 p = glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f);
+    if(scene->m_skyTexture != nullptr && ray->depth == 0)
+      ret = scene->skyColor * scene->m_skyTexture->value(p.x, (1.f-p.y));
+    else{
+      ret = scene->skyColor;
+    }
   }
 
   return glm::clamp(ret, color3(0,0,0), color3(1,1,1));
@@ -140,7 +146,7 @@ void renderImage(RenderImage *img, Scene *scene)
         auto u = (i + m_unifDistributionSamples(engineSamples)) / (img->width);
         auto v = (j + m_unifDistributionSamples(engineSamples)) / (img->height);
         Ray r;
-        scene->cam->get_ray(u, v, &r);
+        scene->cam->get_ray(u, v, &r, vec2(int(i), int(j)));
         Intersection intersection;
         pixel_color += trace_ray(scene, &r, tree, &intersection);
       }

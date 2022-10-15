@@ -75,10 +75,16 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
   ray->tmax = t;
 
   vec3 uvw = (x + 1.0f) / 2.0f;
-  auto p = vec4(uvw, 1) - vec4(0,0,0,1);
-  auto uvt = glm::inverse(glm::scale(glm::mat4(1.f), vec3(0.01))) * p;
-  intersection->u = uvt.x;
-  intersection->v = uvt.y;
+  if(mat->m_texture != nullptr){
+    vec3 p = uvw - vec3(0,0,0);
+    auto uvt = mat->m_texture->m_transform.transformTo(p);
+    intersection->u = uvt.x;
+    intersection->v = uvt.y;
+  }else
+  {
+    intersection->u = uvw.x;
+    intersection->v = uvw.y;
+  }
 
 
 	// Set uv Info

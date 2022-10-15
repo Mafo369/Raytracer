@@ -16,7 +16,7 @@ typedef struct intersection_s {
   float u;
   float v;
 
-  glm::mat4 transform;
+  Transform transform;
 
   bool isOutside;
   int face = -1;

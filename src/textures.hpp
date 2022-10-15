@@ -51,8 +51,6 @@ class checker_texture : public texture {
             u1.x += 1.0;
           if(u1.y < 0.0)
             u1.y += 1.0;
-          if(u1.z < 0.0)
-            u1.z += 1.0;
           if(u1.x <= 0.5){
             if(u1.y <= 0.5)
               return even->value(u1.x, u1.y);
@@ -90,8 +88,8 @@ class image_texture : public texture {
     }
 
     color3 value(float u, float v, int face = -1) const override {
-      int u2 = floor(u * (m_image->width-1));
-      int v2 = floor(v * (m_image->height-1));
+      int u2 = floor(std::clamp(u,0.f,1.f) * (m_image->width-1));
+      int v2 = floor(std::clamp(v,0.f,1.f) * (m_image->height-1));
       return *getPixelPtr(m_image, u2, v2);
     }
 

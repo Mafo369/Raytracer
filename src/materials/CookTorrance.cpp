@@ -105,7 +105,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     vec3 r = reflect(ray->dir, normal);
     Ray ray_ref;
 
-    rayInit(&ray_ref, intersection->position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+    rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
     Intersection inter;
     color3 reflectionColor = trace_ray(scene, &ray_ref, tree, &inter);
 
@@ -125,7 +125,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     if( f < 1.0f ){
       vec3 refr = refract(unit_direction, normal, refractionRatio);
       Ray ray_refr;
-      rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr, 0, 100000, ray->depth + 1);
+      rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr, ray->pixel,0, 100000, ray->depth + 1);
 
       Intersection refInter;
       refractionColor = trace_ray(scene, &ray_refr, tree, &refInter);
@@ -138,7 +138,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     //// REFLECTION
     vec3 r = reflect(ray->dir, intersection->normal);
     Ray ray_ref;
-    rayInit(&ray_ref, intersection->position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+    rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
 
     Intersection inter;
     color3 cr = trace_ray(scene, &ray_ref, tree, &inter);

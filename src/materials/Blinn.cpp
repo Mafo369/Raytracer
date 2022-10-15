@@ -73,12 +73,21 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
     vec3 r = reflect(ray->dir, normal);
     Ray ray_ref;
-    rayInit(&ray_ref, intersection->position + (acne_eps * r), r, 0, 100000, ray->depth + 1);
+    rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
 
     Intersection temp_intersection;
     reflectionShade = trace_ray(scene, &ray_ref, tree, &temp_intersection);
 
-    if(intersection->isOutside)
+    if(reflectionShade == scene->skyColor){
+        vec3 dir = r;
+        float z = asin(-dir.z) / float(M_PI) + 0.5;
+        float x = dir.x / (abs(dir.x) + abs(dir.y) + 0.00001);
+        float y = dir.y / (abs(dir.x) + abs(dir.y) + 0.00001);
+        point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
+        color3 env = 0.3f * scene->m_skyTexture->value(p.x, p.y);
+        ret += m_reflection * env;
+    }
+    else if(intersection->isOutside)
       ret += (reflectionShade * m_reflection);
   }
   if(m_refraction.x > 0.f || m_refraction.y > 0.f || m_refraction.z > 0) {
@@ -107,7 +116,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
 
     if(s2 * s2 <= 1.0){
       Ray ray_refr;
-      rayInit(&ray_refr, intersection->position + (acne_eps * refractDir), refractDir, 0, 100000, ray->depth + 1);
+      rayInit(&ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
 
       Intersection temp_inter;
       refractionShade= trace_ray(scene, &ray_refr, tree, &temp_inter);
@@ -132,6 +141,15 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
           refractionColor.b *= exp(-m_absorption.b * ray_refr.tmax);
         }
         ret += refractionColor;
+      }
+      else{
+        vec3 dir = refractDir;
+        float z = asin(-dir.z) / float(M_PI) + 0.5;
+        float x = dir.x / (abs(dir.x) + abs(dir.y) + 0.00001);
+        float y = dir.y / (abs(dir.x) + abs(dir.y) + 0.00001);
+        point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
+        color3 env = 0.3f * scene->m_skyTexture->value(p.x, p.y);
+        ret += m_refraction * env;
       }
     }
     else

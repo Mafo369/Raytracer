@@ -20,6 +20,5 @@ class Blinn : public Material {
     vec3 m_absorption;
     float m_IOR;
 
-    texture* m_texture = nullptr;
 
 };

@@ -15,9 +15,10 @@ typedef struct ray_s {
     vec3 invdir; //! =1/dir, optimize aabb
 
     bool shadow = false; // is it a shadow ray? to optimize kdtree traversal
+    vec2 pixel;
 } Ray;
 
-inline void rayInit(Ray *r, point3 o, vec3 d, float tmin=0, float tmax=100000, int depth=0) {
+inline void rayInit(Ray *r, point3 o, vec3 d, vec2 pixel, float tmin=0, float tmax=100000, int depth=0) {
     r->orig = o;
     r->dir = d;
     r->tmin = tmin;
@@ -27,6 +28,7 @@ inline void rayInit(Ray *r, point3 o, vec3 d, float tmin=0, float tmax=100000, i
     r->sign[1] = r->dir.y>=0?0:1;
     r->sign[2] = r->dir.z>=0?0:1;
     r->invdir = 1.f/d;
+    r->pixel = pixel;
 }
 
 inline point3 rayAt(const Ray r, float t) {

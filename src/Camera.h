@@ -48,11 +48,11 @@ class Camera {
           }
         }
 
-        void get_ray(float s, float t, Ray *r) const {
+        void get_ray(float s, float t, Ray *r, vec2 pixel) const {
             glm::vec2 rd = lens_radius * mDiskRand();
             vec3 offset = u * rd.x + v * rd.y;
 
-            rayInit(r, origin + offset, normalize(lower_left_corner + s*horizontal + t*vertical - origin - offset));
+            rayInit(r, origin + offset, normalize(lower_left_corner + s*horizontal + t*vertical - origin - offset), pixel);
         }
 
     private:

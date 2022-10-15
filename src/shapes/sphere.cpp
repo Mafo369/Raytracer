@@ -40,8 +40,18 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
 
       auto phi = acos(objectPoint.y / radius);
       auto raw_u = theta / (2 * pi);
-      intersection->u = 1 - (raw_u + 0.5);
-      intersection->v = 1 - phi / pi;
+      vec3 uv = vec3(1 - (raw_u + 0.5), 1 - phi / pi, 0);
+      
+      if(mat->m_texture != nullptr){
+        vec3 p = uv - vec3(0,0,0);
+        auto uvt = mat->m_texture->m_transform.transformTo(p);
+        intersection->u = uvt.x;
+        intersection->v = uvt.y;
+      }else
+      {
+        intersection->u = uv.x;
+        intersection->v = uv.y;
+      }
 
       ray->tmax = t;
       return true;
@@ -72,7 +82,8 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     }
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = mat;
-    vec3 objectPoint = transform.transformTo(intersection->position);
+    //vec3 objectPoint = transform.transformTo(intersection->position);
+    vec3 objectPoint = transformedRay.orig + (t * transformedRay.dir);
     vec3 objectNormal = objectPoint - vec3(0,0,0);
     glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
     vec3 normal = normalMatrix * vec4(objectNormal, 0);
@@ -91,8 +102,18 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
 
     auto phi = acos(objectPoint.y / radius);
     auto raw_u = theta / (2 * pi);
-    intersection->u = 1 - (raw_u + 0.5);
-    intersection->v = 1 - phi / pi;
+    vec3 uv = vec3(1 - (raw_u + 0.5), 1 - phi / pi, 0);
+    
+    if(mat->m_texture != nullptr){
+      vec3 p = uv - vec3(0,0,0);
+      auto uvt = mat->m_texture->m_transform.transformTo(p);
+      intersection->u = uvt.x;
+      intersection->v = uvt.y;
+    }else
+    {
+      intersection->u = uv.x;
+      intersection->v = uv.y;
+    }
 
 
     ray->tmax = t;
