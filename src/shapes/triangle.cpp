@@ -44,6 +44,8 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
     auto uv = geom.triangle.tex[1] * u + geom.triangle.tex[2] * v + geom.triangle.tex[0] * (1.f - u - v);
     intersection->u = abs(fmod(uv.x, 1.0));
     intersection->v = abs(fmod(uv.y, 1.0));
+    intersection->duv[0] = vec3(0);
+    intersection->duv[1] = vec3(0);
 
     intersection->normal = normalize(normal);
     ray->tmax = t;

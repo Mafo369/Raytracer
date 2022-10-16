@@ -11,7 +11,33 @@ class texture {
     public:
       texture() = default;
       virtual ~texture() = default;
-      virtual color3 value(float u, float v, int face = -1) const = 0;
+      virtual color3 value(float u, float v) const = 0;
+      virtual color3 value(float u, float v, int face) const = 0;
+
+      virtual color3 value(float u, float v, const vec3 duv[2]) const {
+          color3 texColor = value(u, v);
+          if(length_sq(duv[0]) + length_sq(duv[1]) != 0){
+              vec3 uv = vec3(u, v, 0);
+              for(int i = 1; i < 32; i++){
+                float x=0, y=0, fx=0.5f, fy=1.0f/3.0f;
+                for ( int ix=i; ix>0; ix/=2 ) { x+=fx*(ix%2); fx/=2; }   // Halton sequence (base 2)
+                for ( int iy=i; iy>0; iy/=3 ) { y+=fy*(iy%3); fy/=3; }   // Halton sequence (base 3)
+                if(true){
+                  float r = sqrtf(x)*0.5f;
+                  x = r*sinf(y*(float)M_PI*2.0);
+                  y = r*cosf(y*(float)M_PI*2.0);
+                }else
+                {
+                  if ( x > 0.5f ) x-=1;
+                  if ( y > 0.5f ) y-=1;
+                }
+                vec3 new_uv = glm::mod(uv + x * duv[0] + y * duv[1], 1.f); 
+                texColor += value(new_uv.x, new_uv.y);
+              }
+              texColor = texColor / 32.f;
+          }
+          return texColor;
+      }
 
       Transform m_transform;
 };
@@ -24,7 +50,11 @@ class solid_color : public texture {
       solid_color(float red, float green, float blue)
         : solid_color(color3(red,green,blue)) {}
 
-      color3 value(float u, float v, int face = -1) const override {
+      color3 value(float u, float v) const override {
+          return color_value;
+      }
+
+      color3 value(float u, float v, int face) const override {
           return color_value;
       }
 
@@ -43,7 +73,7 @@ class checker_texture : public texture {
 
       ~checker_texture() {}
 
-      color3 value(float u, float v, int face = -1) const override {
+      color3 value(float u, float v) const override {
           point3 u1;
           u1.x = u - (int) u;
           u1.y = v - (int) v;
@@ -51,6 +81,7 @@ class checker_texture : public texture {
             u1.x += 1.0;
           if(u1.y < 0.0)
             u1.y += 1.0;
+
           if(u1.x <= 0.5){
             if(u1.y <= 0.5)
               return even->value(u1.x, u1.y);
@@ -62,19 +93,15 @@ class checker_texture : public texture {
             else
               return even->value(u1.x, u1.y);
           }
-          //int u2 = floor(u * width);
-          //int v2 = floor(v * height);
-          //if ( (u2 + v2) % 2 == 0)
-          //  return even->value(u, v);
-          //else
-          //  return odd->value(u, v);
+      }
+
+      color3 value(float u, float v, int face) const override {
+        return value(u, v);
       }
 
   public:
       std::shared_ptr<texture> odd;
       std::shared_ptr<texture> even;
-      int width = 200;
-      int height = 200;
 };
 
 class image_texture : public texture {
@@ -87,10 +114,14 @@ class image_texture : public texture {
       delete m_image;
     }
 
-    color3 value(float u, float v, int face = -1) const override {
+    color3 value(float u, float v) const override {
       int u2 = floor(std::clamp(u,0.f,1.f) * (m_image->width-1));
       int v2 = floor(std::clamp(v,0.f,1.f) * (m_image->height-1));
       return *getPixelPtr(m_image, u2, v2);
+    }
+
+    color3 value(float u, float v, int face) const override {
+      return value(u, v);
     }
 
   private:
@@ -117,6 +148,12 @@ class AlignCheck : public texture {
     }
 
     ~AlignCheck() {}
+
+    color3 value(float u, float v) const override {
+      std::cerr << 
+        "Warning: This texture has multiple faces. Selecting default one..." << std::endl;
+      return m_faces[0].main;
+    }
 
     color3 value(float u, float v, int face) const override {
       if( v > 0.8 ){
@@ -147,6 +184,12 @@ class CubeMapTexture : public texture {
     }
 
     ~CubeMapTexture() {}
+
+    color3 value(float u, float v) const override {
+      std::cerr << 
+        "Warning: This texture has multiple faces. Selecting default one..." << std::endl;
+      return m_faces[0]->value(u, v);
+    }
 
     color3 value(float u, float v, int face) const override {
       return m_faces[face]->value(u, v);

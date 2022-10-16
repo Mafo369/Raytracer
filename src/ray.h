@@ -16,6 +16,8 @@ typedef struct ray_s {
 
     bool shadow = false; // is it a shadow ray? to optimize kdtree traversal
     vec2 pixel;
+    struct ray_s* difx;
+    struct ray_s* dify;
 } Ray;
 
 inline void rayInit(Ray *r, point3 o, vec3 d, vec2 pixel, float tmin=0, float tmax=100000, int depth=0) {

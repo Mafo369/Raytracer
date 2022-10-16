@@ -120,8 +120,12 @@ void freeScene(Scene *scene) {
     delete scene;
 }
 
-void setCamera(Scene *scene, point3 position, point3 at, vec3 up, float fov, float aspect, float aperture, float dist_to_focus) {
-    scene->cam = new Camera(position, at, up, fov, aspect, aperture, dist_to_focus);
+void setCameraFOV(Scene *scene, point3 position, point3 at, vec3 up, float fov, float width, float height, float aperture, float dist_to_focus) {
+    scene->cam = new CameraFOV(position, at, up, fov, width, height, aperture, dist_to_focus);
+}
+
+void setSimpleCamera(Scene *scene, point3 position, point3 at, vec3 up, float fov, float w, float h) {
+    scene->cam = new SimpleCamera(position, at, up, fov, w / h, w, h);
 }
 
 void addObject(Scene *scene, Object *obj) {

@@ -101,10 +101,10 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
   }
   else
   {
-    vec3 pixelUV = vec3((float)ray->pixel.x / 400.f, (float)ray->pixel.y / 300.f, 0.f);
+    vec3 pixelUV = vec3((float)ray->pixel.x / scene->cam->imgWidth, (float)ray->pixel.y / scene->cam->imgHeight, 0.f);
     vec3 p = glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f);
     if(scene->m_skyTexture != nullptr && ray->depth == 0)
-      ret = scene->skyColor * scene->m_skyTexture->value(p.x, (1.f-p.y));
+      ret = scene->skyColor * scene->m_skyTexture->value(p.x, p.y);
     else{
       ret = scene->skyColor;
     }
@@ -142,20 +142,38 @@ void renderImage(RenderImage *img, Scene *scene)
     {
       color3 pixel_color(0,0,0);
       color3 *ptr = getPixelPtr(img, i, j);
-      for (int s = 0; s < samplesPerPixel; ++s) {
-        auto u = (i + m_unifDistributionSamples(engineSamples)) / (img->width);
-        auto v = (j + m_unifDistributionSamples(engineSamples)) / (img->height);
-        Ray r;
-        scene->cam->get_ray(u, v, &r, vec2(int(i), int(j)));
-        Intersection intersection;
-        pixel_color += trace_ray(scene, &r, tree, &intersection);
-      }
-      // Divide the color by the number of samples and gamma-correct for gamma=2.0.
-      pixel_color /= samplesPerPixel;
-      //pixel_color = glm::sqrt(pixel_color);
-      pixel_color = glm::clamp(pixel_color, 0.0f, 1.0f);
+      //for (int s = 0; s < samplesPerPixel; ++s) {
+      //  float jitterI = i + m_unifDistributionSamples(engineSamples);
+      //  float jitterJ = j + m_unifDistributionSamples(engineSamples);
+      //  auto u = (jitterI) / (img->width);
+      //  auto v = (jitterJ) / (img->height);
+      //  Ray r;
+      //  r.difx = new Ray();
+      //  r.dify = new Ray();
+      //  scene->cam->get_ray((jitterI+0.5f) / img->width, v, r.difx, vec2(int(i), int(j)));
+      //  scene->cam->get_ray(u, (jitterJ+0.5f) / img->height, r.dify, vec2(int(i), int(j)));
+      //  scene->cam->get_ray(u, v, &r, vec2(int(i), int(j)));
+      //  Intersection intersection;
+      //  pixel_color += trace_ray(scene, &r, tree, &intersection);
+      //  delete r.difx;
+      //  delete r.dify;
+      //}
+      //// Divide the color by the number of samples and gamma-correct for gamma=2.0.
+      //pixel_color /= samplesPerPixel;
+      ////pixel_color = glm::sqrt(pixel_color);
+      //pixel_color = glm::clamp(pixel_color, 0.0f, 1.0f);
 
+      Ray rx;
+      scene->cam->get_ray(i, img->height-j-1, &rx, vec2(int(i), int(img->height-j-1)));
+      rx.difx = new Ray();
+      rx.dify = new Ray();
+      scene->cam->get_ray(i+0.5f, img->height-j-1, rx.difx, vec2(int(i+0.5f), int(img->height-j-1)));
+      scene->cam->get_ray(i, img->height-(j+0.5f)-1, rx.dify, vec2(int(i), int(img->height-(j+.5f)-1)));
+      Intersection intersection;
+      pixel_color = trace_ray(scene, &rx, tree, &intersection);
       *ptr = pixel_color;
+      delete rx.difx;
+      delete rx.dify;
     }
   }
   auto stopTime = std::chrono::system_clock::now();

@@ -29,14 +29,14 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
     m_FinalImage->Resize(width, height);
     img = initImage(m_FinalImage->GetWidth(), m_FinalImage->GetHeight());
-    setCamera(scene, point3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0), 60,
-        (float)m_FinalImage->GetWidth() / (float)m_FinalImage->GetHeight());
+    setCameraFOV(scene, point3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0), 60,
+        (float)m_FinalImage->GetWidth(), (float)m_FinalImage->GetHeight(), 0.01);
   }
   else
   {
     m_FinalImage = std::make_shared<Walnut::Image>(width, height, Walnut::ImageFormat::RGBA);
-    setCamera(scene, point3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0), 60,
-        (float)m_FinalImage->GetWidth() / (float)m_FinalImage->GetHeight());
+    setCameraFOV(scene, point3(0, 0, 0), vec3(0, 0, 0), vec3(0, 0, 0), 60,
+        (float)m_FinalImage->GetWidth(), (float)m_FinalImage->GetHeight(), 0.01);
   }
 
 	delete[] m_ImageData;
@@ -53,7 +53,11 @@ void Renderer::Render(const CameraI& camera)
 		{
 	    Ray ray;
 			vec3 dir = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
+      ray.difx = new Ray();
+      ray.dify = new Ray();
       rayInit(&ray, camera.GetPosition(), normalize(dir), vec2(x,y));
+      rayInit(ray.difx, camera.GetPosition(), normalize(dir), vec2(x,y));
+      rayInit(ray.difx, camera.GetPosition(), normalize(dir), vec2(x,y));
       Intersection intersection;
       auto colorr = trace_ray(scene, &ray, tree, &intersection);
       auto color = vec4(colorr.r, colorr.g, colorr.b, 1);

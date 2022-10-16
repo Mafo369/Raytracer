@@ -84,8 +84,8 @@
 
 Scene *initScene0() {
   Scene *scene = initScene();
-  setCamera(scene, point3(1, 0.75, 1), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
-            (float)WIDTH / (float)HEIGHT, 0.01, glm::length(point3(3,1,0) - vec3(0,0.3,0)));
+  setCameraFOV(scene, point3(1, 0.75, 1), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
+            (float)WIDTH, (float)HEIGHT, 0.01, glm::length(point3(3,1,0) - vec3(0,0.3,0)));
   setSkyColor(scene, color3(0.f, 0.f, 0.f));
   auto mat = std::make_shared<CookTorrance>(false);
   mat->m_IOR = 4.0;
@@ -800,8 +800,8 @@ Scene *initScene10() {
   Scene *scene = initScene();
   auto from = point3(0., -60, 12);
   auto at = vec3(0, 0, 12);
-  setCamera(scene, from, at, vec3(0, 0.0, 1), 30,
-            float(WIDTH) / float(HEIGHT), 0.001, glm::distance(from, at));
+  setCameraFOV(scene, from, at, vec3(0, 0.0, 1), 30,
+            float(WIDTH), float(HEIGHT), 0.001, glm::distance(from, at));
   setSkyColor(scene, color3(0., 0., 0.)); 
 
   auto mat = std::make_shared<Blinn>();
@@ -902,8 +902,8 @@ Scene *initScene11() {
   Scene *scene = initScene();
   auto from = point3(0., -70, 15);
   auto at = vec3(2, 0, 3);
-  setCamera(scene, from, at, vec3(0, 0.0, 1), 30,
-            float(WIDTH) / float(HEIGHT), 0.001, glm::distance(from, at));
+  //setCameraFOV(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT), 0.01, distance(from, at));
+  setSimpleCamera(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT));
   setSkyColor(scene, color3(1.,1.,1)); 
 
   image_texture* sky = new image_texture("../assets/clouds.png");

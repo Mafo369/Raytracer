@@ -45,7 +45,8 @@ void freeLight(Light *);
 Scene *initScene();
 void freeScene(Scene *scene);
 
-void setCamera(Scene *scene, point3 position, vec3 at, vec3 up, float fov, float aspect, float aperture = 0.01, float dist_to_focus = 1);
+void setCameraFOV(Scene *scene, point3 position, vec3 at, vec3 up, float fov, float width, float height, float aperture = 0.01, float dist_to_focus = 1);
+void setSimpleCamera(Scene *scene, point3 position, vec3 at, vec3 up, float fov, float w, float h);
 
 //! take ownership of obj freeScene will free obj) ... typically use addObject(scene, initPlane()
 void addObject(Scene *scene, Object *obj);

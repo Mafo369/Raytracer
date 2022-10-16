@@ -74,49 +74,43 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
   intersection->normal = normalize(normal);
   ray->tmax = t;
 
-  vec3 uvw = (x + 1.0f) / 2.0f;
+  vec3 uvw = vec3((1.f + x.x) * .5f, (1.f+x.y) * .5f, 0);
   if(mat->m_texture != nullptr){
     vec3 p = uvw - vec3(0,0,0);
     auto uvt = mat->m_texture->m_transform.transformTo(p);
     intersection->u = uvt.x;
     intersection->v = uvt.y;
+  
+    Ray tdifx = transformRay(ray->difx);
+    Ray tdify = transformRay(ray->dify);
+    float tdx = -tdifx.orig.z / tdifx.dir.z;
+    float tdy = -tdify.orig.z / tdify.dir.z;
+    point3 dxi = (tdifx.orig + (tdx * tdifx.dir));
+    point3 dyi = (tdify.orig + (tdy * tdify.dir));
+    intersection->dxi = dxi;
+    intersection->dyi = dyi;
+
+	  //// Ray Differential
+    vec3 duvw[2];
+    duvw[0] = vec3(0, 0, 0);
+    duvw[1] = vec3(0, 0, 0);
+
+    duvw[0].x = 2.0 * (dxi.x - x.x);
+    duvw[0].y = 2.0 * (dxi.y - x.y);
+    duvw[0].z = 0;
+
+    duvw[1].x = 2.0 * (dyi.x - x.x);
+    duvw[1].y = 2.0 * (dyi.y - x.y);
+    duvw[1].z = 0;
+
+    intersection->duv[0] = mat->m_texture->m_transform.transformTo(duvw[0] + uvw) - uvt;
+    intersection->duv[1] = mat->m_texture->m_transform.transformTo(duvw[1] + uvw) - uvt;
   }else
   {
     intersection->u = uvw.x;
     intersection->v = uvw.y;
   }
 
-
-	// Set uv Info
-	//vec3 uvw;
-	//uvw.x = (1 + intersection.p.x) / 2.f;
-	//uvw.y = (1 + intersection.p.y) / 2.f;
-	//intersection.uvw = uvw;
-	// Ray Differential
-	//vec3 duvw[2];
-	//duvw[0] = Vec3f(0, 0, 0);
-	//duvw[1] = Vec3f(0, 0, 0);
-
-	// dx = dd
-	//{
-	//	Vec3f d = ray.dir.GetNormalized();
-	//	float _t = (t * ray.dir).Length();
-	//	Vec3f dDx = (d.Dot(d) * dd_x - d.Dot(dd_x) *	d) / pow(d.Dot(d), 1.5f);
-	//	Vec3f dDy = (d.Dot(d) * dd_y - d.Dot(dd_y) *	d) / pow(d.Dot(d), 1.5f);
-
-	//	float dtx = -(0 + _t * dDx.Dot(intersection.N) / d.Dot(intersection.N));
-	//	float dty = -(0 + _t * dDy.Dot(intersection.N) / d.Dot(intersection.N));
-	//																				  
-	//	// delta hit point on plane
-	//	Vec3f dXx = 0 +_t* dDx + dtx * d;
-	//	Vec3f dXy = 0 +_t* dDy + dty * d;
-
-	//	duvw[0] = dXx / 2.f;
-	//	duvw[1] = dXy / 2.f;
-	//}
-
-	//intersection.duvw[0] = duvw[0];
-	//intersection.duvw[1] = duvw[1];
 
 	return true;
 }
