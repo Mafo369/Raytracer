@@ -50,8 +50,13 @@ class SimpleCamera : public Camera {
     ~SimpleCamera() {}
 
     void get_ray(float s, float t, Ray *r, vec2 pixel) const override {
-      vec3 ray_dir = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + (t + .5f) * dYPixel) - pos;
+      vec3 d = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + (t + .5f) * dYPixel) ;
+      vec3 ray_dir = d - pos;
       rayInit(r, pos, normalize(ray_dir), pixel);
+      r->dox = vec3(0.f);
+      r->doy = vec3(0.f);
+      r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) * d) / glm::pow(dot(d,d),1.5f);
+      r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) * d) / glm::pow(dot(d,d),1.5f);
     }
 
     vec3 pos;

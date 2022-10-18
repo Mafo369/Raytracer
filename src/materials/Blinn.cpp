@@ -76,13 +76,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
     vec3 r = reflect(ray->dir, normal);
     Ray ray_ref;
-    ray_ref.difx = new Ray();
-    ray_ref.dify = new Ray();
     rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
-    vec3 difx_dir = reflect(ray->difx->dir, normal);
-    vec3 dify_dir = reflect(ray->dify->dir, normal);
-    rayInit(ray_ref.difx, intersection->position + (acne_eps * difx_dir), difx_dir, ray->pixel,0, 100000, ray->depth + 1);
-    rayInit(ray_ref.dify, intersection->position + (acne_eps * dify_dir), dify_dir, ray->pixel,0, 100000, ray->depth + 1);
 
     Intersection temp_intersection;
     reflectionShade = trace_ray(scene, &ray_ref, tree, &temp_intersection);
@@ -98,8 +92,6 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     }
     else if(intersection->isOutside)
       ret += (reflectionShade * m_reflection);
-    delete ray_ref.difx;
-    delete ray_ref.dify;
   }
   if(m_refraction.x > 0.f || m_refraction.y > 0.f || m_refraction.z > 0) {
 
@@ -127,13 +119,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
 
     if(s2 * s2 <= 1.0){
       Ray ray_refr;
-      ray_refr.difx = new Ray();
-      ray_refr.dify = new Ray();
-      vec3 difx_dir = refract(ray->difx->dir, normal, n1 / n2);
-      vec3 dify_dir = refract(ray->dify->dir, normal, n1 / n2);
       rayInit(&ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
-      rayInit(ray_refr.difx, intersection->position + (acne_eps * difx_dir), difx_dir, ray->pixel,0, 100000, ray->depth + 1);
-      rayInit(ray_refr.dify, intersection->position + (acne_eps * dify_dir), dify_dir, ray->pixel,0, 100000, ray->depth + 1);
 
       Intersection temp_inter;
       refractionShade= trace_ray(scene, &ray_refr, tree, &temp_inter);
@@ -158,8 +144,6 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
           refractionColor.b *= exp(-m_absorption.b * ray_refr.tmax);
         }
         ret += refractionColor;
-        delete ray_refr.difx;
-        delete ray_refr.dify;
       }
       else{
         vec3 dir = refractDir;

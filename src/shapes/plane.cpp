@@ -55,6 +55,7 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
   float rayDz = transformedRay.dir.z;
 
 	float t = -rayPz / rayDz;
+  //std::cout << t <<"   " << - glm::dot(transformedRay.orig, glm::vec3(0,0,1.f)) / (glm::dot(transformedRay.dir, glm::vec3(0,0,1.f)))<< std::endl;
 	// hit the opposite face, or not the closest one
 	if (t < 0 || t > ray->tmax) return false;
 	// x is the hit point in the unit plane's plane
@@ -64,15 +65,16 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
 	}
 
 	// Set hit info
-  intersection->position = ray->orig + (t * ray->dir);
+  ray->tmax = t;
+  intersection->position = ray->orig + t * ray->dir;
   intersection->mat = mat;
+
   vec3 objectNormal = vec3(0.f,0.f,1.f);
   glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
   vec4 normal4 = normalMatrix * vec4(objectNormal, 0.f);
   vec3 normal = vec3(normal4.x, normal4.y, normal4.z);
   intersection->isOutside = true;
   intersection->normal = normalize(normal);
-  ray->tmax = t;
 
   vec3 uvw = vec3((1.f + x.x) * .5f, (1.f+x.y) * .5f, 0);
   if(mat->m_texture != nullptr){
@@ -80,31 +82,20 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
     auto uvt = mat->m_texture->m_transform.transformTo(p);
     intersection->u = uvt.x;
     intersection->v = uvt.y;
-  
-    Ray tdifx = transformRay(ray->difx);
-    Ray tdify = transformRay(ray->dify);
-    float tdx = -tdifx.orig.z / tdifx.dir.z;
-    float tdy = -tdify.orig.z / tdify.dir.z;
-    point3 dxi = (tdifx.orig + (tdx * tdifx.dir));
-    point3 dyi = (tdify.orig + (tdy * tdify.dir));
-    intersection->dxi = dxi;
-    intersection->dyi = dyi;
 
-	  //// Ray Differential
-    vec3 duvw[2];
-    duvw[0] = vec3(0, 0, 0);
-    duvw[1] = vec3(0, 0, 0);
+    vec3 dox = transform.transformTo(normalize(ray->dox + t*ray->ddx));
+    vec3 doy = transform.transformTo(normalize(ray->doy + t*ray->ddy));
+    float dtx = -dox.z / transformedRay.dir.z;
+    float dty = -doy.z / transformedRay.dir.z;
 
-    duvw[0].x = 2.0 * (dxi.x - x.x);
-    duvw[0].y = 2.0 * (dxi.y - x.y);
-    duvw[0].z = 0;
+    vec3 new_dox = (dox + dtx * transformedRay.dir);
+    vec3 new_doy = (doy + dty * transformedRay.dir);
 
-    duvw[1].x = 2.0 * (dyi.x - x.x);
-    duvw[1].y = 2.0 * (dyi.y - x.y);
-    duvw[1].z = 0;
+    ray->dox = new_dox;
+    ray->doy = new_doy;
 
-    intersection->duv[0] = mat->m_texture->m_transform.transformTo(duvw[0] + uvw) - uvt;
-    intersection->duv[1] = mat->m_texture->m_transform.transformTo(duvw[1] + uvw) - uvt;
+    intersection->duv[0] = mat->m_texture->m_transform.transformTo(new_dox);
+    intersection->duv[1] = mat->m_texture->m_transform.transformTo(new_doy);
   }else
   {
     intersection->u = uvw.x;

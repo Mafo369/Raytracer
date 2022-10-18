@@ -111,8 +111,8 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       auto uvt = mat->m_texture->m_transform.transformTo(p);
       intersection->u = uvt.x;
       intersection->v = uvt.y;
-        intersection->duv[0] = vec3(0);
-        intersection->duv[1] = vec3(0);
+      intersection->duv[0] = vec3(0);
+      intersection->duv[1] = vec3(0);
     }else
     {
       intersection->u = uv.x;

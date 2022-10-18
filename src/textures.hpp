@@ -31,7 +31,7 @@ class texture {
                   if ( x > 0.5f ) x-=1;
                   if ( y > 0.5f ) y-=1;
                 }
-                vec3 new_uv = glm::mod(uv + x * duv[0] + y * duv[1], 1.f); 
+                vec3 new_uv = uv + x * duv[0] + y * duv[1]; 
                 texColor += value(new_uv.x, new_uv.y);
               }
               texColor = texColor / 32.f;
