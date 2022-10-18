@@ -24,9 +24,18 @@ class SimpleCamera : public Camera {
   public:
     SimpleCamera(point3 lookfrom, point3 lookat, vec3 vup, float vfov, float aspect_ratio, 
                  int width, int height) : Camera() {
-        zdir = normalize(lookat - lookfrom); 
-        xdir = cross(zdir, vup);
-        ydir = normalize(cross(xdir, zdir));
+
+        vec3 forward = normalize(lookat - lookfrom); 
+        vec3 x = cross(forward, vup);
+        vec3 up = normalize(cross(x, forward));
+        h = tan(vfov / 2.f * (float)M_PI / 180.f) * (2.0f);
+        w = h * width / float(height);
+
+        vec3 zAxis = -forward; 
+        yAxis = up;
+        xAxis = cross(yAxis, zAxis);
+
+        topLeft = lookfrom - zAxis + yAxis * h /2.f - xAxis * w / 2.f;
 
         pos = lookfrom;
         fov = vfov;
@@ -35,38 +44,34 @@ class SimpleCamera : public Camera {
         imgWidth = width;
         imgHeight = height;
 
-        vec3 left = normalize(cross(ydir, zdir));
-        float radfov = fov * float(M_PI) / 180.f;
-        float h = tan(radfov * .5f) * (2.0f);
-        float w = h * width / float(height);
 
-        point3 B = pos + zdir + (h / 2.0f * ydir);
-        nearPlaneTopLeft = B + w / 2.0f * left;
-        dXPixel = -left * (w / float(width));
-        dYPixel = -ydir * (w / float(width));
+        dXPixel = xAxis * w / (float)width;
+        dXPixel = yAxis * h / (float)height;
 
     }
 
     ~SimpleCamera() {}
 
     void get_ray(float s, float t, Ray *r, vec2 pixel) const override {
-      vec3 d = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + (t + .5f) * dYPixel) ;
+      vec3 d = topLeft + (s + 0.5f) * w / imgWidth * xAxis - (t + 0.5f) * h / imgHeight * yAxis;
       vec3 ray_dir = d - pos;
       rayInit(r, pos, normalize(ray_dir), pixel);
       r->dox = vec3(0.f);
       r->doy = vec3(0.f);
-      r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) * d) / glm::pow(dot(d,d),1.5f);
-      r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) * d) / glm::pow(dot(d,d),1.5f);
+      //r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) * d) / glm::pow(dot(d,d),1.5f);
+      //r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) * d) / glm::pow(dot(d,d),1.5f);
+      r->ddx = dXPixel;
+      r->ddy = dYPixel;
     }
 
     vec3 pos;
     float fov;
     float aspect;
-    vec3 zdir;
-    vec3 xdir;
-    vec3 ydir;
 
-    vec3 nearPlaneTopLeft;
+    float h, w;
+    vec3 yAxis;
+    vec3 xAxis;
+    vec3 topLeft;
     vec3 dXPixel;
     vec3 dYPixel;
 };

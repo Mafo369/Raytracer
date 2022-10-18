@@ -83,19 +83,33 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
     intersection->u = uvt.x;
     intersection->v = uvt.y;
 
-    vec3 dox = transform.transformTo(normalize(ray->dox + t*ray->ddx));
-    vec3 doy = transform.transformTo(normalize(ray->doy + t*ray->ddy));
-    float dtx = -dox.z / transformedRay.dir.z;
-    float dty = -doy.z / transformedRay.dir.z;
+    vec3 ndir = normalize(transformedRay.dir);
+    float st = length(t * transformedRay.dir);
+    vec3 ddx = (dot(ndir, ndir) * ray->ddx - dot(ndir, ray->ddx) * ndir) / pow(dot(ndir, ndir), 1.5f);
+    vec3 ddy = (dot(ndir, ndir) * ray->ddy - dot(ndir, ray->ddy) * ndir) / pow(dot(ndir, ndir), 1.5f);
 
-    vec3 new_dox = (dox + dtx * transformedRay.dir);
-    vec3 new_doy = (doy + dty * transformedRay.dir);
+    float dtx = -(0 + st * dot(ddx, objectNormal) / dot(ndir, objectNormal));
+    float dty = -(0 + st * dot(ddy, objectNormal) / dot(ndir, objectNormal));
 
-    ray->dox = new_dox;
-    ray->doy = new_doy;
+    vec3 dpx = 0.f + st * ddx + dtx * ndir;
+    vec3 dpy = 0.f + st * ddy + dty * ndir;
 
-    intersection->duv[0] = mat->m_texture->m_transform.transformTo(new_dox);
-    intersection->duv[1] = mat->m_texture->m_transform.transformTo(new_doy);
+    intersection->duv[0] = mat->m_texture->m_transform.transformTo((dpx / 2.f) + uvw) - uvt;
+    intersection->duv[1] = mat->m_texture->m_transform.transformTo((dpy / 2.f) + uvw) - uvt;
+
+    //vec3 dox = transform.transformTo(normalize(ray->dox + t*ray->ddx));
+    //vec3 doy = transform.transformTo(normalize(ray->doy + t*ray->ddy));
+    //float dtx = -dox.z / transformedRay.dir.z;
+    //float dty = -doy.z / transformedRay.dir.z;
+
+    //vec3 new_dox = (dox + dtx * transformedRay.dir);
+    //vec3 new_doy = (doy + dty * transformedRay.dir);
+
+    //ray->dox = new_dox;
+    //ray->doy = new_doy;
+
+    //intersection->duv[0] = mat->m_texture->m_transform.transformTo(new_dox);
+    //intersection->duv[1] = mat->m_texture->m_transform.transformTo(new_doy);
   }else
   {
     intersection->u = uvw.x;
