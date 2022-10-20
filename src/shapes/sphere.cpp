@@ -43,10 +43,8 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       vec3 uv = vec3(1 - (raw_u + 0.5), 1 - phi / pi, 0);
       
       if(mat->m_texture != nullptr){
-        vec3 p = uv - vec3(0,0,0);
-        auto uvt = mat->m_texture->m_transform.transformTo(p);
-        intersection->u = uvt.x;
-        intersection->v = uvt.y;
+        intersection->u = uv.x;
+        intersection->v = uv.y;
         intersection->duv[0] = vec3(0);
         intersection->duv[1] = vec3(0);
       }else
@@ -107,10 +105,8 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     vec3 uv = vec3(1 - (raw_u + 0.5), 1 - phi / pi, 0);
     
     if(mat->m_texture != nullptr){
-      vec3 p = uv - vec3(0,0,0);
-      auto uvt = mat->m_texture->m_transform.transformTo(p);
-      intersection->u = uvt.x;
-      intersection->v = uvt.y;
+      intersection->u = uv.x;
+      intersection->v = uv.y;
       intersection->duv[0] = vec3(0);
       intersection->duv[1] = vec3(0);
     }else

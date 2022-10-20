@@ -62,7 +62,7 @@ color3 Blinn::textureColor(float u, float v, int face) {
 color3 Blinn::ambientColor(Intersection* intersection, color3 lightColor) {
   if(m_texture != nullptr){
     color3 texColor = m_texture->value(intersection->u, intersection->v, intersection->duv);
-    return texColor * lightColor;
+    return texColor * vec3(1,1,1) * lightColor;
   }
   return m_diffuseColor * lightColor;
 }
@@ -77,6 +77,8 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 r = reflect(ray->dir, normal);
     Ray ray_ref;
     rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
+    ray_ref.dXPixel = ray->dXPixel;
+    ray_ref.dYPixel = ray->dYPixel;
 
     Intersection temp_intersection;
     reflectionShade = trace_ray(scene, &ray_ref, tree, &temp_intersection);
@@ -120,6 +122,8 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     if(s2 * s2 <= 1.0){
       Ray ray_refr;
       rayInit(&ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
+      ray_refr.dXPixel = ray->dXPixel;
+      ray_refr.dYPixel = ray->dYPixel;
 
       Intersection temp_inter;
       refractionShade= trace_ray(scene, &ray_refr, tree, &temp_inter);

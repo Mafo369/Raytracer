@@ -69,7 +69,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 {
   color3 ret = color3(0, 0, 0);
 
-  if (ray->depth > 2)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, intersection))
@@ -163,8 +163,9 @@ void renderImage(RenderImage *img, Scene *scene)
       ////pixel_color = glm::sqrt(pixel_color);
       //pixel_color = glm::clamp(pixel_color, 0.0f, 1.0f);
 
+      std::cout << "Pixel " << i << " " << j << std::endl;
       Ray rx;
-      scene->cam->get_ray(i, img->height-j-1, &rx, vec2(int(i), int(img->height-j-1)));
+      scene->cam->get_ray(((i+0.5f) / (img->width-1)), ((j+0.5f) / (img->height-1)), &rx, vec2(int(i), int(img->height - j - 1)));
       Intersection intersection;
       pixel_color = trace_ray(scene, &rx, tree, &intersection);
       *ptr = pixel_color;

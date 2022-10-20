@@ -15,27 +15,37 @@ class texture {
       virtual color3 value(float u, float v, int face) const = 0;
 
       virtual color3 value(float u, float v, const vec3 duv[2]) const {
-          color3 texColor = value(u, v);
-          if(length_sq(duv[0]) + length_sq(duv[1]) != 0){
-              vec3 uv = vec3(u, v, 0);
-              for(int i = 1; i < 32; i++){
-                float x=0, y=0, fx=0.5f, fy=1.0f/3.0f;
-                for ( int ix=i; ix>0; ix/=2 ) { x+=fx*(ix%2); fx/=2; }   // Halton sequence (base 2)
-                for ( int iy=i; iy>0; iy/=3 ) { y+=fy*(iy%3); fy/=3; }   // Halton sequence (base 3)
-                if(true){
-                  float r = sqrtf(x)*0.5f;
-                  x = r*sinf(y*(float)M_PI*2.0);
-                  y = r*cosf(y*(float)M_PI*2.0);
-                }else
-                {
-                  if ( x > 0.5f ) x-=1;
-                  if ( y > 0.5f ) y-=1;
-                }
-                vec3 new_uv = uv + x * duv[0] + y * duv[1]; 
-                texColor += value(new_uv.x, new_uv.y);
-              }
-              texColor = texColor / 32.f;
+          vec3 uvw = vec3(u, v, 0);
+          vec3 uv = m_transform.transformTo(uvw);
+          color3 texColor = value(uv.x, uv.y);
+          if(dot(duv[0], duv[0]) + dot(duv[1], duv[1]) == 0) return texColor;
+
+          //std::cout << "DERIVATIVE" << std::endl;
+          //std::cout <<"uv color: " << glm::to_string(texColor) << std::endl;
+          //std::cout << glm::to_string(uv) << std::endl;
+          for(int i = 1; i < 32; i++){
+            float x=0, y=0, fx=0.05f, fy=1.0f/3.0f;
+            for ( int ix=i; ix>0; ix/=2 ) { x+=fx*(ix%2); fx/=2; }   // Halton sequence (base 2)
+            for ( int iy=i; iy>0; iy/=3 ) { y+=fy*(iy%3); fy/=3; }   // Halton sequence (base 3)
+            if(true){
+              float r = sqrtf(x)*0.5f;
+              x = r*sinf(y*(float)M_PI*2.0);
+              y = r*cosf(y*(float)M_PI*2.0);
+            }else
+            {
+              if ( x > 0.5f ) x-=1;
+              if ( y > 0.5f ) y-=1;
+            }
+            vec3 new_uv = uv + x * duv[0] + y * duv[1]; 
+            auto tdColor = value(new_uv.x, new_uv.y);
+            //std::cout << glm::to_string(new_uv) << std::endl;
+            //std::cout << "x: " << x << " y: " << y << std::endl;
+            //std::cout << glm::to_string(duv[0]) << std::endl;
+            //std::cout << glm::to_string(duv[1]) << std::endl;
+            //std::cout << glm::to_string(tdColor) << std::endl;
+            texColor += tdColor;
           }
+          texColor = texColor / 32.f;
           return texColor;
       }
 
