@@ -33,7 +33,6 @@ class SimpleCamera : public Camera {
         imgWidth = width;
         imgHeight = height;
 
-        dir += pos;
         dir = lookat;
         dir -= pos;
 
@@ -42,8 +41,7 @@ class SimpleCamera : public Camera {
         up = normalize(cross(x, dir));
 
         left =  normalize(cross(up, dir));
-        std::cout << left.z << std::endl;
-        float radfov = fov * 3.141592653589793 / 180.0;
+        float radfov = fov * (float)M_PI / 180.0;
         l = 1.0;
         h = tan(radfov * .5f) * (2.0f * l);
         w = h * imgWidth / (float)imgHeight;
@@ -52,15 +50,6 @@ class SimpleCamera : public Camera {
         nearPlaneTopLeft = B + w / 2.0f * (left);
         dXPixel = -left * (w / (float)imgWidth);
         dYPixel = -up * (w / (float)imgWidth);
-
-        std::cout << dir.x << " " << dir.y << " " << dir.z << std::endl;
-        std::cout << up.x << " " << up.y << " " << up.z << std::endl;
-        std::cout << "left: "<< left.x << " " << left.y << " " << left.z << std::endl;
-        std::cout << h  << std::endl;
-        std::cout << w  << std::endl;
-        std::cout << nearPlaneTopLeft.x << " " << nearPlaneTopLeft.y << " " << nearPlaneTopLeft.z << std::endl;
-        std::cout << dXPixel.x << " " << dXPixel.y << " " << dXPixel.z << std::endl;
-        std::cout << dYPixel.x << " " << dYPixel.y << " " << dYPixel.z << std::endl;
     }
 
     ~SimpleCamera() {}
