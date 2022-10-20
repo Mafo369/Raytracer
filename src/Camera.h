@@ -33,51 +33,62 @@ class SimpleCamera : public Camera {
         imgWidth = width;
         imgHeight = height;
 
-        auto theta = degrees_to_radians(vfov);
-        auto h = std::tan(theta/2.f);
-        auto viewport_height = 2.0f * h;
-        auto viewport_width = aspect_ratio * viewport_height;
+        dir += pos;
+        dir = lookat;
+        dir -= pos;
 
-        auto w = normalize(lookfrom - lookat);
-        u = normalize(cross(vup, w));
-        v = cross(w, u);
+        dir = normalize(dir);
+        point3 x = cross(dir, vup);
+        up = normalize(cross(x, dir));
 
-        horizontal = viewport_width * u;
-        vertical = viewport_height * v;
-        lower_left_corner = pos - horizontal/2.f - vertical/2.f - w;
+        left =  normalize(cross(up, dir));
+        std::cout << left.z << std::endl;
+        float radfov = fov * 3.141592653589793 / 180.0;
+        l = 1.0;
+        h = tan(radfov * .5f) * (2.0f * l);
+        w = h * imgWidth / (float)imgHeight;
 
-        dXPixel = viewport_width / (float)width;
-        dYPixel = viewport_height / (float)height;
+        point3 B = pos + (l * dir) + (h / 2.0f * up);
+        nearPlaneTopLeft = B + w / 2.0f * (left);
+        dXPixel = -left * (w / (float)imgWidth);
+        dYPixel = -up * (w / (float)imgWidth);
+
+        std::cout << dir.x << " " << dir.y << " " << dir.z << std::endl;
+        std::cout << up.x << " " << up.y << " " << up.z << std::endl;
+        std::cout << "left: "<< left.x << " " << left.y << " " << left.z << std::endl;
+        std::cout << h  << std::endl;
+        std::cout << w  << std::endl;
+        std::cout << nearPlaneTopLeft.x << " " << nearPlaneTopLeft.y << " " << nearPlaneTopLeft.z << std::endl;
+        std::cout << dXPixel.x << " " << dXPixel.y << " " << dXPixel.z << std::endl;
+        std::cout << dYPixel.x << " " << dYPixel.y << " " << dYPixel.z << std::endl;
     }
 
     ~SimpleCamera() {}
 
     void get_ray(float s, float t, Ray *r, vec2 pixel) const override {
-      //vec3 d = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + (t + .5f) * dYPixel) ;
-      //vec3 ray_dir = d - pos;
-      vec3 view = lower_left_corner - pos;
-      vec3 d = view + s * horizontal + t*vertical;
-      rayInit(r, pos, normalize(d), pixel);
+      vec3 d = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + (t + .5f) * dYPixel) - pos;
+      vec3 dnorm = normalize(d);
+      rayInit(r, pos, dnorm, pixel);
       r->dox = vec3(0.f);
       r->doy = vec3(0.f);
-      r->ddx = (dot(d,d) * horizontal - dot(d, horizontal) * d) / glm::pow(dot(d,d),1.5f);
-      r->ddy = (dot(d,d) * vertical - dot(d, vertical) * d) / glm::pow(dot(d,d),1.5f);
-      //std::cout << glm::to_string(r->ddx) << std::endl;
-      r->dXPixel = horizontal;
-      r->dYPixel = vertical;
+      r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) * d) / glm::pow(dot(d,d),1.5f);
+      r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) * d) / glm::pow(dot(d,d),1.5f);
+      r->dXPixel = dXPixel;
+      r->dYPixel = dYPixel;
     }
 
-    vec3 pos;
+    vec3 pos = vec3(0,0,0);
+    vec3 dir = vec3(0,0,-1);
+    vec3 up = vec3(0,1,0);
+    vec3 left;
     float fov;
     float aspect;
-    vec3 horizontal;
-    vec3 vertical;
-    vec3 u;
-    vec3 v;
-
-    vec3 lower_left_corner;
-    float dXPixel;
-    float dYPixel;
+    float l;
+    float h;
+    float w;
+    vec3 nearPlaneTopLeft;
+    vec3 dXPixel;
+    vec3 dYPixel;
 };
 
 class CameraFOV : public Camera {

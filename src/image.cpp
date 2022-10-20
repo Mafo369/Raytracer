@@ -64,7 +64,7 @@ void saveImage(RenderImage *img, char *basename) {
   unsigned char *image = new unsigned char [img->width*img->height*3];
   // write image to file
   for(unsigned y = 0; y < img->height; y++) {
-    color3 *ptr = getPixelPtr(img, 0, img->height-y-1);
+    color3 *ptr = getPixelPtr(img, 0, y);
     for(unsigned x = 0; x < img->width; x++) {
       ivec3 c = clamp(ivec3(255.f**ptr), 0, 255);
       image[cpt++] = c.x;

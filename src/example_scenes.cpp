@@ -900,10 +900,10 @@ Scene *initScene10() {
  
 Scene *initScene11() {
   Scene *scene = initScene();
-  auto from = point3(0., -70, 15);
-  auto at = vec3(2, 0, 3);
+  auto from = point3(0.0, -70.0, 15.0);
+  auto at = vec3(2.0, 0.0, 3.0);
   //setCameraFOV(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT), 0.01, distance(from, at));
-  setSimpleCamera(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT));
+  setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 30.f, float(WIDTH), float(HEIGHT));
   setSkyColor(scene, color3(1.,1.,1)); 
 
   image_texture* sky = new image_texture("../assets/clouds.png");

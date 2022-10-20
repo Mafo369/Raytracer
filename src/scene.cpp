@@ -125,7 +125,7 @@ void setCameraFOV(Scene *scene, point3 position, point3 at, vec3 up, float fov, 
 }
 
 void setSimpleCamera(Scene *scene, point3 position, point3 at, vec3 up, float fov, float w, float h) {
-    scene->cam = new SimpleCamera(position, at, up, fov, w / h, w, h);
+    scene->cam = new SimpleCamera(position, at, up, fov, (w / h), w, h);
 }
 
 void addObject(Scene *scene, Object *obj) {

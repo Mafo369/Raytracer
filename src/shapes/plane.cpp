@@ -150,8 +150,8 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
 		vec3 dXx = 0.f +_t* dDx + dtx * d;
 		vec3 dXy = 0.f +_t* dDy + dty * d;
 
-		intersection->duv[0] = dXx / 2.f;
-		intersection->duv[1] = dXy / 2.f;
+		intersection->duv[0] = dXx;
+		intersection->duv[1] = dXy;
 
   }else
   {
