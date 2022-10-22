@@ -60,8 +60,9 @@ class SimpleCamera : public Camera {
       rayInit(r, pos, dnorm, pixel);
       r->dox = vec3(0.f);
       r->doy = vec3(0.f);
-      r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) * d) / glm::pow(dot(d,d),1.5f);
-      r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) * d) / glm::pow(dot(d,d),1.5f);
+      float det = pow(dot(d,d), 1.5f);
+      r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) *	d) / det;
+      r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) *	d) / det;
       r->dXPixel = dXPixel;
       r->dYPixel = dYPixel;
     }

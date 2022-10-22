@@ -77,8 +77,26 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 r = reflect(ray->dir, normal);
     Ray ray_ref;
     rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
+    float DdotN = dot(ray->dir, normal);
+    vec3 dnx = vec3(0); 
+    vec3 ddnx = ray->ddx * normal + ray->dir * dnx;
+    vec3 ddx = ray->ddx - 2.f * DdotN * dnx + ddnx * normal;  
+    vec3 dny = vec3(0); 
+    vec3 ddny = ray->ddy * normal + ray->dir * dny;
+    vec3 ddy = ray->ddy - 2.f * DdotN * dny + ddny * normal;  
+    ray_ref.dox = ray->dox;
+    ray_ref.doy = ray->doy;
+    ray_ref.ddx = ray->ddx;
+    ray_ref.ddy = ray->ddy;
     ray_ref.dXPixel = ray->dXPixel;
     ray_ref.dYPixel = ray->dYPixel;
+
+    //ray_ref.dox = intersection->duv[0];
+    //ray_ref.doy = intersection->duv[1];
+    //ray_ref.ddx = ddx;
+    //ray_ref.ddy = ddy;
+    //ray_ref.dXPixel = ray->dXPixel;
+    //ray_ref.dYPixel = ray->dYPixel;
 
     Intersection temp_intersection;
     reflectionShade = trace_ray(scene, &ray_ref, tree, &temp_intersection);
@@ -122,6 +140,8 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     if(s2 * s2 <= 1.0){
       Ray ray_refr;
       rayInit(&ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
+      ray_refr.ddx = ray->ddx;
+      ray_refr.ddy = ray->ddy;
       ray_refr.dXPixel = ray->dXPixel;
       ray_refr.dYPixel = ray->dYPixel;
 
