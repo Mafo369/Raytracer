@@ -37,6 +37,8 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
   if(mat->m_texture != nullptr){
     intersection->u = uvw.x;
     intersection->v = uvw.y;
+    intersection->dn[0] = vec3(0);
+    intersection->dn[1] = vec3(0);
 
     vec3 d = normalize(transformedRay.dir);
 		float _t = length(t * transformedRay.dir);

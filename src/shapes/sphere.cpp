@@ -17,22 +17,12 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       intersection->position = ray->orig + (t * ray->dir);
       intersection->mat = mat;
       vec3 objectPoint = transform.transformTo(intersection->position);
-      // vec3 objectPoint = invTransform * vec4(intersection->position, 1);
       vec3 objectNormal = objectPoint - vec3(0.f, 0.f, 0.f);
-      // glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
-      // vec4 normal4 = normalMatrix * vec4(objectNormal, 0.f);
-      // vec3 normal = vec3(normal4.x, normal4.y, normal4.z);
       vec3 normal = transform.vectorTransformFrom(objectNormal);
       intersection->isOutside = dot(transformedRay.dir, objectNormal) < 0;
       intersection->normal = normalize(normal);
 
       float pi = M_PI;
-      // auto theta = acos(-normal.y);
-      // auto phi = atan2(-normal.z, normal.x) + pi;
-
-      // intersection->u = phi / (2*pi);
-      // intersection->v = theta / pi;
-
       auto theta = glm::atan(objectPoint.x, objectPoint.z);
       auto vec = glm::vec3(objectPoint.x, objectPoint.y, objectPoint.z);
       auto radius = glm::length(vec);
@@ -44,8 +34,6 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       if (mat->m_texture != nullptr) {
         intersection->u = uv.x;
         intersection->v = uv.y;
-        intersection->dn[0] = ray->dox / radius;
-        intersection->dn[1] = ray->doy / radius;
 
         vec3 d = normalize(transformedRay.dir);
         float _t = length(t * transformedRay.dir);
@@ -61,14 +49,17 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
         vec3 dXx = ray->dox + _t * dDx + dtx * d;
         vec3 dXy = ray->doy + _t * dDy + dty * d;
 
-        // ray->dox = x + dXx;
-        // ray->doy = x + dXy;
-
+        intersection->dn[0] = dXx / radius;
+        intersection->dn[1] = dXy / radius;
         intersection->duv[0] = dXx;
         intersection->duv[1] = dXy;
       } else {
         intersection->u = uv.x;
         intersection->v = uv.y;
+        intersection->duv[0] = vec3(0);
+        intersection->duv[1] = vec3(0);
+        intersection->dn[0] = vec3(0);
+        intersection->dn[1] = vec3(0);
       }
 
       ray->tmax = t;
@@ -94,7 +85,7 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     intersection->mat = mat;
     // vec3 objectPoint = transform.transformTo(intersection->position);
     vec3 objectPoint = transformedRay.orig + (t * transformedRay.dir);
-    vec3 objectNormal = objectPoint - vec3(0, 0, 0);
+    vec3 objectNormal = normalize(objectPoint - vec3(0, 0, 0));
     // glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
     // vec3 normal = normalMatrix * vec4(objectNormal, 0);
     vec3 normal = transform.vectorTransformFrom(objectNormal);
@@ -118,8 +109,6 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     if (mat->m_texture != nullptr) {
       intersection->u = uv.x;
       intersection->v = uv.y;
-      intersection->dn[0] = ray->dox / radius;
-      intersection->dn[1] = ray->doy / radius;
 
       vec3 d = normalize(transformedRay.dir);
       float _t = length(t * transformedRay.dir);
@@ -135,14 +124,17 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       vec3 dXx = ray->dox + _t * dDx + dtx * d;
       vec3 dXy = ray->doy + _t * dDy + dty * d;
 
-      // ray->dox = x + dXx;
-      // ray->doy = x + dXy;
-
+      intersection->dn[0] = dXx / radius;
+      intersection->dn[1] = dXy / radius;
       intersection->duv[0] = dXx;
       intersection->duv[1] = dXy;
     } else {
       intersection->u = uv.x;
       intersection->v = uv.y;
+      intersection->duv[0] = vec3(0);
+      intersection->duv[1] = vec3(0);
+      intersection->dn[0] = vec3(0);
+      intersection->dn[1] = vec3(0);
     }
 
     ray->tmax = t;

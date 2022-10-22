@@ -84,19 +84,13 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 dny = intersection->dn[1]; 
     vec3 ddny = ray->ddy * normal + ray->dir * dny;
     vec3 ddy = ray->ddy - 2.f * DdotN * dny + ddny * normal;  
-    ray_ref->dox = ray->dox;
-    ray_ref->doy = ray->doy;
-    ray_ref->ddx = ray->ddx;
-    ray_ref->ddy = ray->ddy;
+
+    ray_ref->dox = intersection->duv[0]*ray->dXPixel;
+    ray_ref->doy = intersection->duv[1]*ray->dYPixel;
+    ray_ref->ddx = ddx;
+    ray_ref->ddy = ddy;
     ray_ref->dXPixel = ray->dXPixel;
     ray_ref->dYPixel = ray->dYPixel;
-
-    //ray_ref.dox = ray->dox;
-    //ray_ref.doy = ray->doy;
-    //ray_ref.ddx = ddx;
-    //ray_ref.ddy = ddy;
-    //ray_ref.dXPixel = ray->dXPixel;
-    //ray_ref.dYPixel = ray->dYPixel;
 
     Intersection temp_intersection;
     reflectionShade = trace_ray(scene, ray_ref, tree, &temp_intersection);
@@ -141,8 +135,18 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     if(s2 * s2 <= 1.0){
       Ray* ray_refr = new Ray;
       rayInit(ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
-      ray_refr->dox = ray->dox;
-      ray_refr->doy = ray->doy;
+      float u = (n1/n2) * dot(ray->dir, normal) - dot(ray_refr->dir, intersection->normal);
+      vec3 dnx = intersection->dn[0]; 
+      vec3 ddnx = ray->ddx * normal + ray->dir * dnx;
+      vec3 dux = (n1/n2) - ((n1/n2)*(n1/n2) * dot(ray->dir, normal)) / (dot(ray_refr->dir, normal)) * ddnx;
+      vec3 ddx = (n1 / n2) * ray->ddx - u * intersection->dn[0] + dux * normal;
+
+      vec3 dny = intersection->dn[1]; 
+      vec3 ddny = ray->ddy * normal + ray->dir * dny;
+      vec3 duy = (n1/n2) - ((n1/n2)*(n1/n2) * dot(ray->dir, normal)) / (dot(ray_refr->dir, normal)) * ddny;
+      vec3 ddy = (n1 / n2) * ray->ddy - u * intersection->dn[1] + duy * normal;
+      ray_refr->dox = intersection->duv[0]*ray->dXPixel;
+      ray_refr->doy = intersection->duv[1]*ray->dYPixel;
       ray_refr->ddx = ray->ddx;
       ray_refr->ddy = ray->ddy;
       ray_refr->dXPixel = ray->dXPixel;
