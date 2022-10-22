@@ -69,7 +69,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 {
   color3 ret = color3(0, 0, 0);
 
-  if (ray->depth > 0)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, intersection))
@@ -164,11 +164,12 @@ void renderImage(RenderImage *img, Scene *scene)
       //pixel_color = glm::clamp(pixel_color, 0.0f, 1.0f);
 
       //std::cout << "Pixel " << i << " " << j << std::endl;
-      Ray rx;
-      scene->cam->get_ray(i, j, &rx, vec2(int(i), int(j)));
+      Ray* rx = new Ray;
+      scene->cam->get_ray(i, j, rx, vec2(int(i), int(j)));
       Intersection intersection;
-      pixel_color = trace_ray(scene, &rx, tree, &intersection);
+      pixel_color = trace_ray(scene, rx, tree, &intersection);
       *ptr = pixel_color;
+      delete rx;
     }
   }
   auto stopTime = std::chrono::system_clock::now();

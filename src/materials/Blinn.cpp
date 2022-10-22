@@ -75,8 +75,8 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
   {
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
     vec3 r = reflect(ray->dir, normal);
-    Ray ray_ref;
-    rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
+    Ray* ray_ref = new Ray;
+    rayInit(ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
     float DdotN = dot(ray->dir, normal);
     vec3 dnx = intersection->dn[0]; 
     vec3 ddnx = ray->ddx * normal + ray->dir * dnx;
@@ -84,12 +84,12 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 dny = intersection->dn[1]; 
     vec3 ddny = ray->ddy * normal + ray->dir * dny;
     vec3 ddy = ray->ddy - 2.f * DdotN * dny + ddny * normal;  
-    ray_ref.dox = ray->dox;
-    ray_ref.doy = ray->doy;
-    ray_ref.ddx = ray->ddx;
-    ray_ref.ddy = ray->ddy;
-    ray_ref.dXPixel = ray->dXPixel;
-    ray_ref.dYPixel = ray->dYPixel;
+    ray_ref->dox = ray->dox;
+    ray_ref->doy = ray->doy;
+    ray_ref->ddx = ray->ddx;
+    ray_ref->ddy = ray->ddy;
+    ray_ref->dXPixel = ray->dXPixel;
+    ray_ref->dYPixel = ray->dYPixel;
 
     //ray_ref.dox = ray->dox;
     //ray_ref.doy = ray->doy;
@@ -99,7 +99,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     //ray_ref.dYPixel = ray->dYPixel;
 
     Intersection temp_intersection;
-    reflectionShade = trace_ray(scene, &ray_ref, tree, &temp_intersection);
+    reflectionShade = trace_ray(scene, ray_ref, tree, &temp_intersection);
 
     if(reflectionShade == scene->skyColor){
         vec3 dir = r;
@@ -112,6 +112,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     }
     else if(intersection->isOutside)
       ret += (reflectionShade * m_reflection);
+    delete ray_ref;
   }
   if(m_refraction.x > 0.f || m_refraction.y > 0.f || m_refraction.z > 0) {
 
@@ -138,17 +139,17 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 refractDir = normalize(pt + nt);
 
     if(s2 * s2 <= 1.0){
-      Ray ray_refr;
-      rayInit(&ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
-      ray_refr.dox = ray->dox;
-      ray_refr.doy = ray->doy;
-      ray_refr.ddx = ray->ddx;
-      ray_refr.ddy = ray->ddy;
-      ray_refr.dXPixel = ray->dXPixel;
-      ray_refr.dYPixel = ray->dYPixel;
+      Ray* ray_refr = new Ray;
+      rayInit(ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
+      ray_refr->dox = ray->dox;
+      ray_refr->doy = ray->doy;
+      ray_refr->ddx = ray->ddx;
+      ray_refr->ddy = ray->ddy;
+      ray_refr->dXPixel = ray->dXPixel;
+      ray_refr->dYPixel = ray->dYPixel;
 
       Intersection temp_inter;
-      refractionShade= trace_ray(scene, &ray_refr, tree, &temp_inter);
+      refractionShade= trace_ray(scene, ray_refr, tree, &temp_inter);
 
       if(refractionShade != scene->skyColor){
         // Schlick's approximation for transmittance vs. reflectance
@@ -165,9 +166,9 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
         color3 refractionColor = m_refraction * (t * refractionShade + r * reflectionShade);
 
         if(!temp_inter.isOutside){
-          refractionColor.r *= exp(-m_absorption.r * ray_refr.tmax);
-          refractionColor.g *= exp(-m_absorption.g * ray_refr.tmax);
-          refractionColor.b *= exp(-m_absorption.b * ray_refr.tmax);
+          refractionColor.r *= exp(-m_absorption.r * ray_refr->tmax);
+          refractionColor.g *= exp(-m_absorption.g * ray_refr->tmax);
+          refractionColor.b *= exp(-m_absorption.b * ray_refr->tmax);
         }
         ret += refractionColor;
       }
@@ -180,6 +181,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
         color3 env = 0.3f * scene->m_skyTexture->value(p.x, p.y);
         ret += m_refraction * env;
       }
+      delete ray_refr;
     }
     else
     {

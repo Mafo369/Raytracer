@@ -35,52 +35,37 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = mat;
     intersection->isOutside = !(det < 0.f);
+    if(ray->shadow)
+      return true;
 
-    vec3 objectNormal = geom.triangle.n2 * u + geom.triangle.n3 * v + geom.triangle.n1 * (1.f - u - v);
-    //glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
-    //vec4 normal4 = normalMatrix * vec4(objectNormal, 0.f);
-    //vec3 normal = vec3(normal4.x, normal4.y, normal4.z);
+
+    vec3 objectNormal = normalize(geom.triangle.n2 * u + geom.triangle.n3 * v + geom.triangle.n1 * (1.f - u - v));
     vec3 normal = transform.vectorTransformFrom(objectNormal);
     intersection->normal = normalize(normal);
 
     auto uv = geom.triangle.tex[1] * u + geom.triangle.tex[2] * v + geom.triangle.tex[0] * (1.f - u - v);
     intersection->u = abs(fmod(uv.x, 1.0));
     intersection->v = abs(fmod(uv.y, 1.0));
-    //std::cout << "uv: " << intersection->u << " " << intersection->v << std::endl;
     if(mat->m_texture != nullptr){
       intersection->dn[0] = vec3(0);
       intersection->dn[1] = vec3(0);
 
       vec3 d = normalize(transformedRay.dir);
-      float _t = length(t * transformedRay.dir);
+      float _t = length(t * transformedRay.dir) * 0.2f;
       vec3 dDx = ray->ddx;
       vec3 dDy = ray->ddy;
-      if(dDx.x > 1.f || dDx.y > 1.f || dDx.z > 1.f){
-        //std::cout << "ddx: " << glm::to_string(ray->ddx) <<  std::endl;
-      }
-      if(dDy.x > 1.f || dDy.y > 1.f || dDy.z > 1.f){
-        //std::cout << "ddy: " << glm::to_string(ray->ddy) <<  std::endl;
-      }
+      auto geomN = normalize(cross(v1v2, v1v3));
+      geomN = normalize(transform.transformTo(geomN));
 
-      float dtx = -(0 + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
-      float dty = -(0 + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
+      vec3 dtx = -(ray->dox + _t * dot(dDx, geomN) / dot(d, geomN));
+      vec3 dty = -(ray->doy + _t * dot(dDy, geomN) / dot(d, geomN));
 
-      //std::cout << "dt" << dtx << " " << dty << std::endl;
-                                              
       // delta hit point on plane
-      vec3 dXx = 0.f +_t* dDx + dtx * d;
-      vec3 dXy = 0.f +_t* dDy + dty * d;
+      vec3 dXx = ray->dox +_t* dDx + dtx * d;
+      vec3 dXy = ray->doy +_t* dDy + dty * d;
 
-      //ray->dox = x + dXx;
-      //ray->doy = x + dXy;
-      
       intersection->duv[0] = dXx;
       intersection->duv[1] = dXy;
-      //std::cout << "dxx: " << glm::to_string(dXx) <<  std::endl;
-      //std::cout << "dxy: " << glm::to_string(dXy) <<  std::endl;
-      //std::cout << "TRIANGLE" << std::endl;
-      //std::cout << glm::to_string(dXx) << std::endl;
-      //std::cout << glm::to_string(dXy) << std::endl;
     }
 
     ray->tmax = t;

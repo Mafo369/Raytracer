@@ -19,7 +19,6 @@ typedef struct ray_s {
 
     point3 dox;
     point3 doy;
-
     vec3 ddx;
     vec3 ddy;
     vec3 dXPixel;
