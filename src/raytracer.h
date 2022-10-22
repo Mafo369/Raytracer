@@ -16,6 +16,7 @@ typedef struct intersection_s {
   float u;
   float v;
   vec3 duv[2];
+  vec3 dn[2];
   point3 dxi;
   point3 dyi;
 

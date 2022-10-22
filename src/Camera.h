@@ -63,6 +63,9 @@ class SimpleCamera : public Camera {
       float det = pow(dot(d,d), 1.5f);
       r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) *	d) / det;
       r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) *	d) / det;
+      //std::cout << "INIT RAY" << std::endl;
+      //std::cout << glm::to_string(r->ddx) << std::endl;
+      //std::cout << glm::to_string(r->ddy) << std::endl;
       r->dXPixel = dXPixel;
       r->dYPixel = dYPixel;
     }

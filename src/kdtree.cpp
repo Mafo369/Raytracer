@@ -663,6 +663,12 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
 
 bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *intersection)
 {
+  if(ray->ddx.x > 1.f || ray->ddx.y > 1.f || ray->ddx.z > 1.f){
+    std::cout << "ddx: " << glm::to_string(ray->ddx) <<  std::endl;
+  }
+  if(ray->ddy.x > 1.f || ray->ddy.y > 1.f || ray->ddy.z > 1.f){
+    std::cout << "ddy: " << glm::to_string(ray->ddy) <<  std::endl;
+  }
   bool hasIntersection = false;
 
   //call vanilla intersection on non kdtree object, then traverse the tree to compute other intersections
@@ -671,6 +677,8 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
 
   Ray ray_backup; //Ray backup -> we'll use it to find plane intersections
   rayInit(&ray_backup, ray->orig, ray->dir, ray->pixel,ray->tmin, ray->tmax);
+  ray_backup.dox = ray->dox;
+  ray_backup.doy = ray->doy;
   ray_backup.ddx = ray->ddx;
   ray_backup.ddy = ray->ddy;
   ray_backup.dXPixel = ray->dXPixel;

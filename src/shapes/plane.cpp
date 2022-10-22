@@ -47,12 +47,15 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
     vec3 dDx = ray->ddx;
     vec3 dDy = ray->ddy;
 
-		float dtx = -(0 + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
-		float dty = -(0 + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
+		vec3 dtx = -(ray->dox + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
+		vec3 dty = -(ray->doy + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
 																					  
 		// delta hit point on plane
-		vec3 dXx = 0.f +_t* dDx + dtx * d;
-		vec3 dXy = 0.f +_t* dDy + dty * d;
+		vec3 dXx = ray->dox +_t* dDx + dtx * d;
+		vec3 dXy = ray->doy +_t* dDy + dty * d;
+
+    //ray->dox = x + dXx;
+    //ray->doy = x + dXy;
 
 		intersection->duv[0] = dXx;
 		intersection->duv[1] = dXy;

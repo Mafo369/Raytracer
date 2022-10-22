@@ -120,8 +120,15 @@ class image_texture : public texture {
     }
 
     color3 value(float u, float v) const override {
-      int u2 = floor(std::clamp(u,0.f,1.f) * (m_image->width-1));
-      int v2 = floor(std::clamp(v,0.f,1.f) * (m_image->height-1));
+      point3 u1;
+      u1.x = u - (int) u;
+      u1.y = v - (int) v;
+      if(u1.x < 0.0)
+        u1.x += 1.0;
+      if(u1.y < 0.0)
+        u1.y += 1.0;
+      int u2 = u1.x * (m_image->width-1);
+      int v2 = u1.y * (m_image->height-1);
       return *getPixelPtr(m_image, u2, v2);
     }
 
