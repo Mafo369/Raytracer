@@ -24,6 +24,7 @@ typedef struct intersection_s {
 
   bool isOutside;
   int face = -1;
+  vec3 objNormal;
 } Intersection;
 
 #include "kdtree.h"

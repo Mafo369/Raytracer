@@ -137,7 +137,7 @@ void renderImage(RenderImage *img, Scene *scene)
     for (; cpt < 100; cpt += 5)
       printf(" ");
     printf("]\n");
-#pragma omp parallel for schedule(dynamic)
+//#pragma omp parallel for schedule(dynamic)
     for (size_t i = 0; i < img->width; i++)
     {
       color3 pixel_color(0,0,0);

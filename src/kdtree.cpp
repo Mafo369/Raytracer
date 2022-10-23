@@ -717,8 +717,10 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
         *intersection = temp;
         dist = temp_dist;
         ray->tmax = dist;
-        //if(ray->shadow)
-        //  return true;
+        if(ray->shadow){
+          delete ray_backup;
+          return true;
+        }
       }
     }
   }

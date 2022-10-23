@@ -74,7 +74,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
   if((m_reflection.x > 0.f || m_reflection.y > 0.f || m_reflection.z > 0) || (m_refraction.x > 0.f || m_refraction.y > 0.f || m_refraction.z > 0))
   {
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-    vec3 r = reflect(ray->dir, normal);
+    vec3 r = normalize(reflect(ray->dir, normal));
     Ray* ray_ref = new Ray;
     rayInit(ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
     float DdotN = dot(ray->dir, normal);
@@ -84,9 +84,24 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 dny = intersection->dn[1]; 
     vec3 ddny = ray->ddy * normal + ray->dir * dny;
     vec3 ddy = ray->ddy - 2.f * DdotN * dny + ddny * normal;  
+    
+    //vec3 wo = r;
+    //vec3 wi = ray->dir;
+    //vec3 objNormal = intersection->objNormal;
+    //vec3 dndx = intersection->dn[0] * intersection->duv[0].x +
+    //            intersection->dn[1] * intersection->duv[1].x;
+    //vec3 dndy = intersection->dn[0] * intersection->duv[0].y +
+    //            intersection->dn[1] * intersection->duv[1].y;
+    //vec3 dwodx = -ray->dox - wo, dwody = -ray->doy - wo;
+    //float dDNdx = dot(dwodx, objNormal) + dot(wo, dndx);
+    //float dDNdy = dot(dwody, objNormal) + dot(wo, dndy);
+    //vec3 ddx = wi - dwodx +
+    //    2.f * vec3(dot(wo, objNormal) * dndx + dDNdx * objNormal);
+    //vec3 ddy = wi - dwody +
+    //    2.f * vec3(dot(wo, objNormal) * dndy + dDNdy * objNormal);
 
-    ray_ref->dox = intersection->duv[0]*ray->dXPixel;
-    ray_ref->doy = intersection->duv[1]*ray->dYPixel;
+    ray_ref->dox = intersection->duv[0] * ray->dXPixel;
+    ray_ref->doy = intersection->duv[1] * ray->dYPixel;
     ray_ref->ddx = ddx;
     ray_ref->ddy = ddy;
     ray_ref->dXPixel = ray->dXPixel;

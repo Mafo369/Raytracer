@@ -42,9 +42,6 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
 
     vec3 d = normalize(transformedRay.dir);
 		float _t = length(t * transformedRay.dir);
-    //float det = pow(dot(d,d), 1.5f);
-		//vec3 dDx = (dot(d,d) * ray->dXPixel - dot(d, ray->dXPixel) *	d) / det;
-		//vec3 dDy = (dot(d,d) * ray->dYPixel - dot(d, ray->dYPixel) *	d) / det;
 
     vec3 dDx = ray->ddx;
     vec3 dDy = ray->ddy;
