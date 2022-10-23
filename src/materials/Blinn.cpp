@@ -135,20 +135,27 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     if(s2 * s2 <= 1.0){
       Ray* ray_refr = new Ray;
       rayInit(ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
-      float u = (n1/n2) * dot(ray->dir, normal) - dot(ray_refr->dir, intersection->normal);
+
+      float DdotN = dot(ray->dir, normal);
+      float n = n1 / n2;
+      float DPdotN = -sqrtf(1.f - (n*n) * (1.f - (DdotN*DdotN)));
+      float u = n * DdotN - DPdotN;
+
       vec3 dnx = intersection->dn[0]; 
       vec3 ddnx = ray->ddx * normal + ray->dir * dnx;
-      vec3 dux = (n1/n2) - ((n1/n2)*(n1/n2) * dot(ray->dir, normal)) / (dot(ray_refr->dir, normal)) * ddnx;
-      vec3 ddx = (n1 / n2) * ray->ddx - u * intersection->dn[0] + dux * normal;
+      vec3 dux = n - (((n*n) * DdotN) / DPdotN) * ddnx;
+      vec3 ddx = n * ray->ddx - u * intersection->dn[0] + dux * normal;
 
       vec3 dny = intersection->dn[1]; 
       vec3 ddny = ray->ddy * normal + ray->dir * dny;
-      vec3 duy = (n1/n2) - ((n1/n2)*(n1/n2) * dot(ray->dir, normal)) / (dot(ray_refr->dir, normal)) * ddny;
-      vec3 ddy = (n1 / n2) * ray->ddy - u * intersection->dn[1] + duy * normal;
+      vec3 duy = n - (((n*n) * DdotN) / DPdotN) * ddny;
+      vec3 ddy = n * ray->ddy - u * intersection->dn[1] + duy * normal;
+
       ray_refr->dox = intersection->duv[0]*ray->dXPixel;
       ray_refr->doy = intersection->duv[1]*ray->dYPixel;
-      ray_refr->ddx = ray->ddx;
-      ray_refr->ddy = ray->ddy;
+      //temp fix
+      ray_refr->ddx = ddx / 150.f;
+      ray_refr->ddy = ddy / 150.f;
       ray_refr->dXPixel = ray->dXPixel;
       ray_refr->dYPixel = ray->dYPixel;
 

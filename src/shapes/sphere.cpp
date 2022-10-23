@@ -31,36 +31,27 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       auto raw_u = theta / (2 * pi);
       vec3 uv = vec3(1 - (raw_u + 0.5), 1 - phi / pi, 0);
 
-      if (mat->m_texture != nullptr) {
-        intersection->u = uv.x;
-        intersection->v = uv.y;
+      intersection->u = uv.x;
+      intersection->v = uv.y;
 
-        vec3 d = normalize(transformedRay.dir);
-        float _t = length(t * transformedRay.dir);
-        vec3 dDx = ray->ddx;
-        vec3 dDy = ray->ddy;
+      vec3 d = normalize(transformedRay.dir);
+      float _t = length(t * transformedRay.dir);
+      vec3 dDx = ray->ddx;
+      vec3 dDy = ray->ddy;
 
-        vec3 dtx =
-            -(ray->dox + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
-        vec3 dty =
-            -(ray->doy + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
+      vec3 dtx =
+          -(ray->dox + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
+      vec3 dty =
+          -(ray->doy + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
 
-        // delta hit point on plane
-        vec3 dXx = ray->dox + _t * dDx + dtx * d;
-        vec3 dXy = ray->doy + _t * dDy + dty * d;
+      // delta hit point on plane
+      vec3 dXx = ray->dox + _t * dDx + dtx * d;
+      vec3 dXy = ray->doy + _t * dDy + dty * d;
 
-        intersection->dn[0] = dXx / radius;
-        intersection->dn[1] = dXy / radius;
-        intersection->duv[0] = dXx;
-        intersection->duv[1] = dXy;
-      } else {
-        intersection->u = uv.x;
-        intersection->v = uv.y;
-        intersection->duv[0] = vec3(0);
-        intersection->duv[1] = vec3(0);
-        intersection->dn[0] = vec3(0);
-        intersection->dn[1] = vec3(0);
-      }
+      intersection->dn[0] = dXx / radius;
+      intersection->dn[1] = dXy / radius;
+      intersection->duv[0] = dXx;
+      intersection->duv[1] = dXy;
 
       ray->tmax = t;
       return true;
@@ -83,21 +74,13 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     }
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = mat;
-    // vec3 objectPoint = transform.transformTo(intersection->position);
     vec3 objectPoint = transformedRay.orig + (t * transformedRay.dir);
     vec3 objectNormal = normalize(objectPoint - vec3(0, 0, 0));
-    // glm::mat4 normalMatrix = glm::transpose(transform.getInvTransform());
-    // vec3 normal = normalMatrix * vec4(objectNormal, 0);
     vec3 normal = transform.vectorTransformFrom(objectNormal);
     intersection->isOutside = dot(transformedRay.dir, objectNormal) < 0;
     intersection->normal = normalize(normal);
 
     float pi = M_PI;
-    // auto theta = acos(-normal.y);
-    // auto phi = atan2(-normal.z, normal.x) + pi;
-    // intersection->u = phi / (2*pi);
-    // intersection->v = theta / pi;
-    //
     auto theta = glm::atan(objectPoint.x, objectPoint.z);
     auto vec = glm::vec3(objectPoint.x, objectPoint.y, objectPoint.z);
     auto radius = glm::length(vec);
@@ -106,36 +89,31 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     auto raw_u = theta / (2 * pi);
     vec3 uv = vec3(1 - (raw_u + 0.5), 1 - phi / pi, 0);
 
-    if (mat->m_texture != nullptr) {
-      intersection->u = uv.x;
-      intersection->v = uv.y;
+    intersection->u = uv.x;
+    intersection->v = uv.y;
 
-      vec3 d = normalize(transformedRay.dir);
-      float _t = length(t * transformedRay.dir);
-      vec3 dDx = ray->ddx;
-      vec3 dDy = ray->ddy;
-
-      vec3 dtx =
-          -(ray->dox + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
-      vec3 dty =
-          -(ray->doy + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
-
-      // delta hit point on plane
-      vec3 dXx = ray->dox + _t * dDx + dtx * d;
-      vec3 dXy = ray->doy + _t * dDy + dty * d;
-
-      intersection->dn[0] = dXx / radius;
-      intersection->dn[1] = dXy / radius;
-      intersection->duv[0] = dXx;
-      intersection->duv[1] = dXy;
-    } else {
-      intersection->u = uv.x;
-      intersection->v = uv.y;
-      intersection->duv[0] = vec3(0);
-      intersection->duv[1] = vec3(0);
-      intersection->dn[0] = vec3(0);
-      intersection->dn[1] = vec3(0);
+    if(!intersection->isOutside){
+      objectNormal = -objectNormal;
     }
+
+    vec3 d = normalize(transformedRay.dir);
+    float _t = length(t * transformedRay.dir);
+    vec3 dDx = ray->ddx;
+    vec3 dDy = ray->ddy;
+
+    vec3 dtx =
+        -(ray->dox + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
+    vec3 dty =
+        -(ray->doy + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
+
+    // delta hit point on plane
+    vec3 dXx = ray->dox + _t * dDx + dtx * d;
+    vec3 dXy = ray->doy + _t * dDy + dty * d;
+
+    intersection->dn[0] = dXx / radius;
+    intersection->dn[1] = dXy / radius;
+    intersection->duv[0] = dXx;
+    intersection->duv[1] = dXy;
 
     ray->tmax = t;
     return true;
