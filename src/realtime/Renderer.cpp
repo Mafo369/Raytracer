@@ -53,7 +53,13 @@ void Renderer::Render(const CameraI& camera)
 		{
 	    Ray ray;
 			vec3 dir = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
+			vec3 dirx = camera.GetRayDirections()[(x+1) + y * m_FinalImage->GetWidth()];
+			vec3 diry = camera.GetRayDirections()[x + (y+1) * m_FinalImage->GetWidth()];
       rayInit(&ray, camera.GetPosition(), normalize(dir), vec2(x,y));
+      ray.dox = camera.GetPosition();
+      ray.doy = camera.GetPosition();
+      ray.ddx = normalize(dirx);
+      ray.ddy = normalize(diry);
       Intersection intersection;
       auto colorr = trace_ray(scene, &ray, tree, &intersection);
       auto color = vec4(colorr.r, colorr.g, colorr.b, 1);

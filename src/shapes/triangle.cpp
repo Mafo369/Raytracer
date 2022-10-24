@@ -1,5 +1,16 @@
 #include "triangle.h"
 
+inline void
+CoordinateSystem(const vec3 &v1, vec3 *v2, vec3 *v3) {
+    if (std::abs(v1.x) > std::abs(v1.y))
+        *v2 = vec3(-v1.z, 0, v1.x) /
+              std::sqrt(v1.x * v1.x + v1.z * v1.z);
+    else
+        *v2 = vec3(0, v1.z, -v1.y) /
+              std::sqrt(v1.y * v1.y + v1.z * v1.z);
+    *v3 = cross(v1, *v2);
+}
+
 bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
   Ray transformedRay = transformRay(ray);
   vec3 v1v2 = geom.triangle.p2 - geom.triangle.p1;
@@ -44,28 +55,60 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
     intersection->normal = normalize(normal);
 
     auto uv = geom.triangle.tex[1] * u + geom.triangle.tex[2] * v + geom.triangle.tex[0] * (1.f - u - v);
-    intersection->u = abs(fmod(uv.x, 1.0));
-    intersection->v = abs(fmod(uv.y, 1.0));
+    intersection->u = uv.x;
+    intersection->v = uv.y;
+
     if(mat->m_texture != nullptr){
+      //intersection->dn[0] = vec3(0.f);
+      //intersection->dn[0] = vec3(0.f);
+      //intersection->dpdu = vec3(0);
+      //intersection->dpdv = vec3(0);
+
+      vec3 dpdu, dpdv;
+      vec3 dndu, dndv;
+      vec2 duv02 = geom.triangle.tex[0] - geom.triangle.tex[2], duv12 = geom.triangle.tex[1] - geom.triangle.tex[2];
+      vec3 dp02 = geom.triangle.p1 - geom.triangle.p3, dp12 = geom.triangle.p2 - geom.triangle.p3;
+
+      float determinant = duv02[0] * duv12[1] - duv02[1] * duv12[0];
+      if(determinant == 0){
+        CoordinateSystem(normalize(cross(v1v3, v1v2)), &dpdu, &dpdv);
+        dndu = dndv = vec3(0, 0, 0);
+      } else {
+        float invdet = 1 / determinant;
+        dpdu = ( duv12[1] * dp02 - duv02[1] * dp12) * invdet;
+        dpdv = (-duv12[0] * dp02 + duv02[0] * dp12) * invdet;
+        vec3 dn1 = geom.triangle.n1 - geom.triangle.n3;
+        vec3 dn2 = geom.triangle.n2 - geom.triangle.n3;
+        dndu = ( duv12[1] * dn1 - duv02[1] * dn2) * invdet;
+        dndv = (-duv12[0] * dn1 + duv02[0] * dn2) * invdet;
+      }
+
       intersection->dn[0] = vec3(0);
       intersection->dn[1] = vec3(0);
+      intersection->dpdu = transform.getTransform() * dpdu;
+      intersection->dpdv = transform.getTransform() * dpdv;
 
-      vec3 d = normalize(transformedRay.dir);
-      float _t = length(t * transformedRay.dir) * 0.2f;
-      vec3 dDx = ray->ddx;
-      vec3 dDy = ray->ddy;
-      auto geomN = normalize(cross(v1v2, v1v3));
-      geomN = normalize(transform.transformTo(geomN));
 
-      vec3 dtx = -(ray->dox + _t * dot(dDx, geomN) / dot(d, geomN));
-      vec3 dty = -(ray->doy + _t * dot(dDy, geomN) / dot(d, geomN));
 
-      // delta hit point on plane
-      vec3 dXx = ray->dox +_t* dDx + dtx * d;
-      vec3 dXy = ray->doy +_t* dDy + dty * d;
+      //intersection->dn[0] = vec3(0);
+      //intersection->dn[1] = vec3(0);
 
-      intersection->duv[0] = dXx;
-      intersection->duv[1] = dXy;
+      //vec3 d = normalize(transformedRay.dir);
+      //float _t = length(t * transformedRay.dir) * 0.2f;
+      //vec3 dDx = ray->ddx;
+      //vec3 dDy = ray->ddy;
+      //auto geomN = normalize(cross(v1v2, v1v3));
+      //geomN = normalize(transform.transformTo(geomN));
+
+      //vec3 dtx = -(ray->dox + _t * dot(dDx, geomN) / dot(d, geomN));
+      //vec3 dty = -(ray->doy + _t * dot(dDy, geomN) / dot(d, geomN));
+
+      //// delta hit point on plane
+      //vec3 dXx = ray->dox +_t* dDx + dtx * d;
+      //vec3 dXy = ray->doy +_t* dDy + dty * d;
+
+      //intersection->duv[0] = dXx;
+      //intersection->duv[1] = dXy;
     }
 
     ray->tmax = t;

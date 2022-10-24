@@ -58,14 +58,16 @@ class SimpleCamera : public Camera {
       vec3 d = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + (t + .5f) * dYPixel) - pos;
       vec3 dnorm = normalize(d);
       rayInit(r, pos, dnorm, pixel);
-      r->dox = vec3(0.f);
-      r->doy = vec3(0.f);
-      float det = pow(dot(d,d), 1.5f);
-      r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) *	d) / det;
-      r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) *	d) / det;
-      //std::cout << "INIT RAY" << std::endl;
-      //std::cout << glm::to_string(r->ddx) << std::endl;
-      //std::cout << glm::to_string(r->ddy) << std::endl;
+      r->dox = pos;
+      r->doy = pos;
+      r->ddx = normalize((nearPlaneTopLeft + ((s+1.f) + 0.5f) * dXPixel + (t + .5f) * dYPixel) - pos);
+      r->ddy = normalize((nearPlaneTopLeft + (s + 0.5f) * dXPixel + ((t+1.f) + .5f) * dYPixel) - pos);
+
+      //r->dox = vec3(0.f);
+      //r->doy = vec3(0.f);
+      //float det = pow(dot(d,d), 1.5f);
+      //r->ddx = (dot(d,d) * dXPixel - dot(d, dXPixel) *	d) / det;
+      //r->ddy = (dot(d,d) * dYPixel - dot(d, dYPixel) *	d) / det;
       r->dXPixel = dXPixel;
       r->dYPixel = dYPixel;
     }

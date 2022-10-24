@@ -37,27 +37,55 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
   if(mat->m_texture != nullptr){
     intersection->u = uvw.x;
     intersection->v = uvw.y;
+
+    auto doxT = transform.transformTo(ray->dox);
+    auto doyT = transform.transformTo(ray->doy);
+    auto ddxT = transform.getInvTransform() * ray->ddx;
+    auto ddyT = transform.getInvTransform() * ray->ddy;
+
+    float tx = -doxT.z / ddxT.z; 
+    float ty = -doyT.z / ddyT.z; 
+    vec3 xx = doxT + tx * ddxT;
+    vec3 xy = doyT + ty * ddyT;
+
+    vec3 uvwx = vec3((1.f + xx.x) * .5f, (1.f+xx.y) * .5f, 0);
+    vec3 uvwy = vec3((1.f + xy.x) * .5f, (1.f+xy.y) * .5f, 0);
+
     intersection->dn[0] = vec3(0);
     intersection->dn[1] = vec3(0);
+    intersection->dpdx = transform.getTransform() * (xx - x);
+    intersection->dpdy = transform.getTransform() * (xy - x);
+    intersection->dpdu = vec3(0);
+    intersection->dpdv = vec3(0);
+    intersection->dudx = (uvwx.x - uvw.x);
+    intersection->dvdx = (uvwx.y - uvw.y);
+    intersection->dudy = (uvwy.x - uvw.x);
+    intersection->dvdy = (uvwy.y - uvw.y);
+    intersection->parametric = false;
 
-    vec3 d = normalize(transformedRay.dir);
-		float _t = length(t * transformedRay.dir);
+    //vec3 dpdu = (uvwx - uvw);
+    //vec3 dpdv = (uvwy - uvw);
+    //intersection->dpdu = transform.getTransform() * dpdu;
+    //intersection->dpdv = transform.getTransform() * dpdv;
 
-    vec3 dDx = ray->ddx;
-    vec3 dDy = ray->ddy;
+    //vec3 d = normalize(transformedRay.dir);
+		//float _t = length(t * transformedRay.dir);
 
-		vec3 dtx = -(ray->dox + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
-		vec3 dty = -(ray->doy + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
-																					  
-		// delta hit point on plane
-		vec3 dXx = ray->dox +_t* dDx + dtx * d;
-		vec3 dXy = ray->doy +_t* dDy + dty * d;
+    //vec3 dDx = ray->ddx;
+    //vec3 dDy = ray->ddy;
 
-    //ray->dox = x + dXx;
-    //ray->doy = x + dXy;
+		//vec3 dtx = -(ray->dox + _t * dot(dDx, objectNormal) / dot(d, objectNormal));
+		//vec3 dty = -(ray->doy + _t * dot(dDy, objectNormal) / dot(d, objectNormal));
+		//																			  
+		//// delta hit point on plane
+		//vec3 dXx = ray->dox +_t* dDx + dtx * d;
+		//vec3 dXy = ray->doy +_t* dDy + dty * d;
 
-		intersection->duv[0] = dXx;
-		intersection->duv[1] = dXy;
+    ////ray->dox = x + dXx;
+    ////ray->doy = x + dXy;
+
+		////intersection->duv[0] = dXx;
+		////intersection->duv[1] = dXy;
 
   }else
   {

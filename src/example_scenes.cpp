@@ -929,6 +929,7 @@ Scene *initScene11() {
   auto ret = new Plane(mat, modelMatrix);
   ret->geom.type = PLANE;
   addObject(scene, ret);
+  //addObjectsFromFile("../assets/plane.obj", scene, mat, modelMatrix);
 
   auto mat1 = std::make_shared<Blinn>();
   mat1->m_texture = new image_texture("../assets/bricks.png");
@@ -939,7 +940,7 @@ Scene *initScene11() {
   modelMatrix1.scale(0.8, 0.8, 0.8);
   modelMatrix1.rotate(vec3(0,0,1), -50.f);
   modelMatrix1.translate(vec3(2,-5,0));
-  addObjectsFromFile("../assets/teapot.obj", scene, mat1, modelMatrix1);
+  //addObjectsFromFile("../assets/teapot.obj", scene, mat1, modelMatrix1);
 
   auto mat2 = std::make_shared<Blinn>();
   mat2->m_texture = new checker_texture(color3(0.7,0,0), color3(0.3,0,0)); 
@@ -951,7 +952,6 @@ Scene *initScene11() {
   mat2->m_reflection = vec3(0.5f);
 
   Transform modelMatrix2;
-  modelMatrix2.rotate(vec3(1,0,0), 90);
   modelMatrix2.scale(6, 6, 6);
   modelMatrix2.translate(vec3(15, 2, 6));
 
@@ -968,7 +968,7 @@ Scene *initScene11() {
   modelMatrix3.scale(5, 5, 5);
   modelMatrix3.translate(vec3(-8, -16, 5));
 
-  addObject(scene, initSphere(mat3, modelMatrix3));
+  //addObject(scene, initSphere(mat3, modelMatrix3));
 
   addLight(scene, initAmbientLight(color3(0.2)));
   addLight(scene, initDirectLight(vec3(-1, 0.2, -1), color3(0.6)));

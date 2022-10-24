@@ -74,6 +74,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 
   if (intersectKdTree(scene, tree, ray, intersection))
   {
+    if(intersection->mat->m_texture != nullptr)
+      intersection->computeDifferentials(ray);
     // if skybox return directly the corresponding color
     if(intersection->face != -1)
       return intersection->mat->textureColor(intersection->u, intersection->v, intersection->face);
