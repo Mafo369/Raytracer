@@ -940,7 +940,7 @@ Scene *initScene11() {
   modelMatrix1.scale(0.8, 0.8, 0.8);
   modelMatrix1.rotate(vec3(0,0,1), -50.f);
   modelMatrix1.translate(vec3(2,-5,0));
-  //addObjectsFromFile("../assets/teapot.obj", scene, mat1, modelMatrix1);
+  addObjectsFromFile("../assets/teapot.obj", scene, mat1, modelMatrix1);
 
   auto mat2 = std::make_shared<Blinn>();
   mat2->m_texture = new checker_texture(color3(0.7,0,0), color3(0.3,0,0)); 

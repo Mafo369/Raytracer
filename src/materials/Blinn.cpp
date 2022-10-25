@@ -83,13 +83,6 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 r = normalize(reflect(ray->dir, normal));
     Ray* ray_ref = new Ray;
     rayInit(ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
-    //float DdotN = dot(ray->dir, normal);
-    //vec3 dnx = intersection->dn[0]; 
-    //vec3 ddnx = ray->ddx * normal + ray->dir * dnx;
-    //vec3 ddx = ray->ddx - 2.f * DdotN * dnx + ddnx * normal;  
-    //vec3 dny = intersection->dn[1]; 
-    //vec3 ddny = ray->ddy * normal + ray->dir * dny;
-    //vec3 ddy = ray->ddy - 2.f * DdotN * dny + ddny * normal;  
     
     vec3 wo = ray->dir;
     vec3 wi = r;
@@ -108,8 +101,6 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     ray_ref->dox = intersection->position + intersection->dpdx;
     ray_ref->doy = intersection->position + intersection->dpdy;
     
-    //ray_ref->dox = intersection->duv[0] * ray->dXPixel;
-    //ray_ref->doy = intersection->duv[1] * ray->dYPixel;
     ray_ref->ddx = normalize(ddx);
     ray_ref->ddy = normalize(ddy);
     ray_ref->dXPixel = ray->dXPixel;
@@ -177,8 +168,8 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
       //ray_refr->dox = intersection->duv[0]*ray->dXPixel;
       //ray_refr->doy = intersection->duv[1]*ray->dYPixel;
       //temp fix
-      ray_refr->ddx = ddx / 150.f;
-      ray_refr->ddy = ddy / 150.f;
+      ray_refr->ddx = ddx;
+      ray_refr->ddy = ddy;
       ray_refr->dXPixel = ray->dXPixel;
       ray_refr->dYPixel = ray->dYPixel;
 

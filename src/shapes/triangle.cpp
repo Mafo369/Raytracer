@@ -59,10 +59,6 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
     intersection->v = uv.y;
 
     if(mat->m_texture != nullptr){
-      //intersection->dn[0] = vec3(0.f);
-      //intersection->dn[0] = vec3(0.f);
-      //intersection->dpdu = vec3(0);
-      //intersection->dpdv = vec3(0);
 
       vec3 dpdu, dpdv;
       vec3 dndu, dndv;
@@ -87,28 +83,6 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
       intersection->dn[1] = vec3(0);
       intersection->dpdu = transform.getTransform() * dpdu;
       intersection->dpdv = transform.getTransform() * dpdv;
-
-
-
-      //intersection->dn[0] = vec3(0);
-      //intersection->dn[1] = vec3(0);
-
-      //vec3 d = normalize(transformedRay.dir);
-      //float _t = length(t * transformedRay.dir) * 0.2f;
-      //vec3 dDx = ray->ddx;
-      //vec3 dDy = ray->ddy;
-      //auto geomN = normalize(cross(v1v2, v1v3));
-      //geomN = normalize(transform.transformTo(geomN));
-
-      //vec3 dtx = -(ray->dox + _t * dot(dDx, geomN) / dot(d, geomN));
-      //vec3 dty = -(ray->doy + _t * dot(dDy, geomN) / dot(d, geomN));
-
-      //// delta hit point on plane
-      //vec3 dXx = ray->dox +_t* dDx + dtx * d;
-      //vec3 dXy = ray->doy +_t* dDy + dty * d;
-
-      //intersection->duv[0] = dXx;
-      //intersection->duv[1] = dXy;
     }
 
     ray->tmax = t;

@@ -47,34 +47,49 @@ typedef struct intersection_s {
 
 
   void computeDifferentials(Ray* ray){
-    if(!parametric) return;
-    float d = -dot(normal, position);
-    float tx = (-dot(normal, vec3(ray->dox)) - d) / dot(normal, ray->ddx);
-    float ty = (-dot(normal, vec3(ray->doy)) - d) / dot(normal, ray->ddy);
-    point3 px = ray->dox + tx * ray->ddx;
-    point3 py = ray->doy + ty * ray->ddy;
+    if(parametric) {
+      float d = -dot(normal, position);
+      float tx = (-dot(normal, vec3(ray->dox)) - d) / dot(normal, ray->ddx);
+      float ty = (-dot(normal, vec3(ray->doy)) - d) / dot(normal, ray->ddy);
+      point3 px = ray->dox + tx * ray->ddx;
+      point3 py = ray->doy + ty * ray->ddy;
 
-    dpdx = px - position;
-    dpdy = py - position;
+      dpdx = px - position;
+      dpdy = py - position;
 
-    int dim[2];
-    if (std::abs(normal.x) > std::abs(normal.y) && std::abs(normal.x) > std::abs(normal.z)) {
-         dim[0] = 1; dim[1] = 2;    
-     } else if (std::abs(normal.y) > std::abs(normal.z)) {
-         dim[0] = 0; dim[1] = 2;    
-     } else {
-         dim[0] = 0; dim[1] = 1;
-     }
+      int dim[2];
+      if (std::abs(normal.x) > std::abs(normal.y) && std::abs(normal.x) > std::abs(normal.z)) {
+           dim[0] = 1; dim[1] = 2;    
+       } else if (std::abs(normal.y) > std::abs(normal.z)) {
+           dim[0] = 0; dim[1] = 2;    
+       } else {
+           dim[0] = 0; dim[1] = 1;
+       }
 
-    float A[2][2] = { { dpdu[dim[0]], dpdv[dim[0]] },
-                      { dpdu[dim[1]], dpdv[dim[1]] } };
-    float Bx[2] = { px[dim[0]] - position[dim[0]], px[dim[1]] - position[dim[1]] };
-    float By[2] = { py[dim[0]] - position[dim[0]], py[dim[1]] - position[dim[1]] };
+      float A[2][2] = { { dpdu[dim[0]], dpdv[dim[0]] },
+                        { dpdu[dim[1]], dpdv[dim[1]] } };
+      float Bx[2] = { px[dim[0]] - position[dim[0]], px[dim[1]] - position[dim[1]] };
+      float By[2] = { py[dim[0]] - position[dim[0]], py[dim[1]] - position[dim[1]] };
 
-    if(!SolveLinearSystem2x2(A, Bx, &dudx, &dvdx))
-      dudx = dvdx = 0;
-    if(!SolveLinearSystem2x2(A, By, &dudy, &dvdy))
-      dudy = dvdy = 0;
+      if(!SolveLinearSystem2x2(A, Bx, &dudx, &dvdx))
+        dudx = dvdx = 0;
+      if(!SolveLinearSystem2x2(A, By, &dudy, &dvdy))
+        dudy = dvdy = 0;
+    }
+
+    // Privilege filtering on first hit
+    if(ray->depth == 0){
+      dudx *= 1.5f;
+      dvdx *= 1.5f;
+      dudy *= 1.5f;
+      dvdy *= 1.5f;
+    }else
+    {
+      dudx *= 0.75f;
+      dvdx *= 0.75f;
+      dudy *= 0.75f;
+      dvdy *= 0.75f;
+    }
   }
 
 } Intersection;

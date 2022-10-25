@@ -670,7 +670,7 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
   float dist;
 
   Ray* ray_backup = new Ray; //Ray backup -> we'll use it to find plane intersections
-  rayInit(ray_backup, ray->orig, ray->dir, ray->pixel,ray->tmin, ray->tmax);
+  rayInit(ray_backup, ray->orig, ray->dir, ray->pixel,ray->tmin, ray->tmax, ray->depth);
   ray_backup->dox = ray->dox;
   ray_backup->doy = ray->doy;
   ray_backup->ddx = ray->ddx;
