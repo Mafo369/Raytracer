@@ -675,8 +675,6 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
   ray_backup->doy = ray->doy;
   ray_backup->ddx = ray->ddx;
   ray_backup->ddy = ray->ddy;
-  ray_backup->dXPixel = ray->dXPixel;
-  ray_backup->dYPixel = ray->dYPixel;
 
   if (intersectAabb(ray, tree->root->min, tree->root->max))
   { // If ray hits biggest bbox we traverse tree to find sphere intersections

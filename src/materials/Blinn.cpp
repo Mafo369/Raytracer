@@ -98,13 +98,11 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     vec3 ddy = wi - dwody +
         2.f * vec3(dot(wo, normal) * dndy + dDNdy * normal);
 
-    ray_ref->dox = intersection->position + intersection->dpdx;
-    ray_ref->doy = intersection->position + intersection->dpdy;
+    ray_ref->dox = (intersection->position + (acne_eps * ddx)) + intersection->dpdx;
+    ray_ref->doy = (intersection->position + (acne_eps * ddy)) + intersection->dpdy;
     
     ray_ref->ddx = normalize(ddx);
     ray_ref->ddy = normalize(ddy);
-    ray_ref->dXPixel = ray->dXPixel;
-    ray_ref->dYPixel = ray->dYPixel;
 
     Intersection temp_intersection;
     reflectionShade = trace_ray(scene, ray_ref, tree, &temp_intersection);
@@ -126,12 +124,20 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
 
     float n1, n2;
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
+    vec3 dndx = intersection->dn[0] * intersection->dudx +
+                intersection->dn[1] * intersection->dvdx;
+    vec3 dndy = intersection->dn[0] * intersection->dudy +
+                intersection->dn[1] * intersection->dvdy;
+    float eta = 1 / m_IOR;
     if(intersection->isOutside){
       n1 = 1.0;
       n2 = m_IOR;
     }else {
       n2 = 1.0;
       n1 = m_IOR;
+      eta = 1 / m_IOR;
+      dndx = -dndx; 
+      dndy = -dndy; 
     }
     vec3 v = -ray->dir;
 
@@ -149,29 +155,24 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
     if(s2 * s2 <= 1.0){
       Ray* ray_refr = new Ray;
       rayInit(ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
+      vec3 wo = -ray->dir;
+      vec3 wi = refractDir;
 
-      float DdotN = dot(ray->dir, normal);
-      float n = n1 / n2;
-      float DPdotN = -sqrtf(1.f - (n*n) * (1.f - (DdotN*DdotN)));
-      float u = n * DdotN - DPdotN;
+      vec3 dwodx = -ray->ddx - wo, dwody = -ray->ddy - wo;
+      float dDNdx = dot(dwodx, normal) + dot(wo, dndx);
+      float dDNdy = dot(dwody, normal) + dot(wo, dndy);
 
-      vec3 dnx = intersection->dn[0]; 
-      vec3 ddnx = ray->ddx * normal + ray->dir * dnx;
-      vec3 dux = n - (((n*n) * DdotN) / DPdotN) * ddnx;
-      vec3 ddx = n * ray->ddx - u * intersection->dn[0] + dux * normal;
+      float mu = eta * dot(wo, normal) - abs(dot(wi, normal)); 
+      float dmudx = (eta - (eta * eta * dot(wo, normal)) / abs(dot(wi, normal))) * dDNdx;
+      float dmudy = (eta - (eta * eta * dot(wo, normal)) / abs(dot(wi, normal))) * dDNdy;
 
-      vec3 dny = intersection->dn[1]; 
-      vec3 ddny = ray->ddy * normal + ray->dir * dny;
-      vec3 duy = n - (((n*n) * DdotN) / DPdotN) * ddny;
-      vec3 ddy = n * ray->ddy - u * intersection->dn[1] + duy * normal;
+      vec3 ddx = normalize(wi - eta * dwodx + vec3(mu * dndx + dmudx * normal));
+      vec3 ddy = normalize(wi - eta * dwody + vec3(mu * dndy + dmudy * normal));
 
-      //ray_refr->dox = intersection->duv[0]*ray->dXPixel;
-      //ray_refr->doy = intersection->duv[1]*ray->dYPixel;
-      //temp fix
+      ray_refr->dox = (intersection->position + (acne_eps * ddx)) + intersection->dpdx;
+      ray_refr->doy = (intersection->position + (acne_eps * ddy)) + intersection->dpdy;
       ray_refr->ddx = ddx;
       ray_refr->ddy = ddy;
-      ray_refr->dXPixel = ray->dXPixel;
-      ray_refr->dYPixel = ray->dYPixel;
 
       Intersection temp_inter;
       refractionShade= trace_ray(scene, ray_refr, tree, &temp_inter);

@@ -77,19 +77,10 @@ typedef struct intersection_s {
         dudy = dvdy = 0;
     }
 
-    // Privilege filtering on first hit
-    if(ray->depth == 0){
-      dudx *= 1.5f;
-      dvdx *= 1.5f;
-      dudy *= 1.5f;
-      dvdy *= 1.5f;
-    }else
-    {
-      dudx *= 0.75f;
-      dvdx *= 0.75f;
-      dudy *= 0.75f;
-      dvdy *= 0.75f;
-    }
+    dudx *= 2.f;
+    dvdx *= 2.f;
+    dudy *= 2.f;
+    dvdy *= 2.f;
   }
 
 } Intersection;

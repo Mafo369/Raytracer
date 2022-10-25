@@ -8,8 +8,6 @@ bool Light::is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scen
   vec3 dir = normalize(-getDirection(point));
   rayInit(&ray, point + (acne_eps * normal), dir, vec2(0,0),0.f, 10000);
   ray.shadow = true;
-  ray.dXPixel = vec3(0);
-  ray.dYPixel = vec3(0);
   ray.dox = vec3(0.f);
   ray.doy = vec3(0.f);
   ray.ddx = vec3(0.f);

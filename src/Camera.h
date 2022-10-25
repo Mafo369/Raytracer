@@ -62,8 +62,6 @@ class SimpleCamera : public Camera {
       r->doy = pos;
       r->ddx = (nearPlaneTopLeft + ((s+1.f) + 0.5f) * dXPixel + (t + .5f) * dYPixel) - pos;
       r->ddy = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + ((t+1.f) + .5f) * dYPixel) - pos;
-      r->dXPixel = dXPixel;
-      r->dYPixel = dYPixel;
     }
 
     vec3 pos = vec3(0,0,0);

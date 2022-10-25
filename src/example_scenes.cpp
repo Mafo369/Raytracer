@@ -968,7 +968,7 @@ Scene *initScene11() {
   modelMatrix3.scale(5, 5, 5);
   modelMatrix3.translate(vec3(-8, -16, 5));
 
-  //addObject(scene, initSphere(mat3, modelMatrix3));
+  addObject(scene, initSphere(mat3, modelMatrix3));
 
   addLight(scene, initAmbientLight(color3(0.2)));
   addLight(scene, initDirectLight(vec3(-1, 0.2, -1), color3(0.6)));

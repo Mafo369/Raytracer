@@ -198,9 +198,6 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       auto vec = glm::vec3(objectPoint.x, objectPoint.y, objectPoint.z);
       auto radius = glm::length(vec);
       
-      objectPoint *= radius / distance(objectPoint, vec3(0,0,0));
-      
-      if (objectPoint.x == 0 && objectPoint.y == 0) objectPoint.x = 1e-5f * radius;
       auto phi = std::atan2(objectPoint.y, objectPoint.x);
       if(phi < 0) phi += 2.f * pi;
 
@@ -252,9 +249,6 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     auto vec = glm::vec3(objectPoint.x, objectPoint.y, objectPoint.z);
     auto radius = glm::length(vec);
     
-    objectPoint *= radius / distance(objectPoint, vec3(0,0,0));
-    
-    if (objectPoint.x == 0 && objectPoint.y == 0) objectPoint.x = 1e-5f * radius;
     auto phi = std::atan2(objectPoint.y, objectPoint.x);
     if(phi < 0) phi += 2.f * pi;
 
@@ -270,8 +264,8 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     vec3 dpdu, dpdv;
     computeDifferentials(objectPoint, objectNormal, ray, radius, theta, 
                           &dudx, &dudy, &dvdx, &dvdy, &dndu, &dndv, &dpdu, &dpdv);
-    intersection->dn[0] = transform.getTransform()* dndu;
-    intersection->dn[1] = transform.getTransform()* dndv;
+    intersection->dn[0] = transform.vectorTransformFrom(dndu);
+    intersection->dn[1] = transform.vectorTransformFrom(dndv);
     intersection->dpdu = transform.getTransform() * dpdu;
     intersection->dpdv = transform.getTransform() * dpdv;
 
