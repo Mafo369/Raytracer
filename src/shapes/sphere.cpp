@@ -213,8 +213,8 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       vec3 dpdu, dpdv;
       computeDifferentials(objectPoint, objectNormal, ray, radius, theta, 
                             &dudx, &dudy, &dvdx, &dvdy, &dndu, &dndv, &dpdu, &dpdv);
-      intersection->dn[0] = transform.getTransform()* dndu;
-      intersection->dn[1] = transform.getTransform()* dndv;
+      intersection->dn[0] = transform.vectorTransformFrom(dndu);
+      intersection->dn[1] = transform.vectorTransformFrom(dndv);
       intersection->dpdu = transform.getTransform() * dpdu;
       intersection->dpdv = transform.getTransform() * dpdv;
 

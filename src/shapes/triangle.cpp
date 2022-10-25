@@ -79,8 +79,8 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
         dndv = (-duv12[0] * dn1 + duv02[0] * dn2) * invdet;
       }
 
-      intersection->dn[0] = vec3(0);
-      intersection->dn[1] = vec3(0);
+      intersection->dn[0] = transform.vectorTransformFrom(dndu);
+      intersection->dn[1] = transform.vectorTransformFrom(dndv);
       intersection->dpdu = transform.getTransform() * dpdu;
       intersection->dpdv = transform.getTransform() * dpdv;
     }
