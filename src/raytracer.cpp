@@ -22,6 +22,9 @@
 #include "Object.h"
 #include "Camera.h"
 
+#include "sampling/stratified.h"
+
+// Mostly for debugging purposes
 bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
 {
   bool hasIntersection = false;
@@ -56,15 +59,6 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
   return hasIntersection;
 }
 
-vec3 sphereRand(){
-  while(true){
-    vec3 p(m_unifDistributionRand(engine), m_unifDistributionRand(engine), 
-          m_unifDistributionRand(engine));
-    if (glm::length_sq(p) >= 1) continue;
-    return p;
-  }
-}
-
 color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection)
 {
   color3 ret = color3(0, 0, 0);
@@ -74,8 +68,9 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 
   if (intersectKdTree(scene, tree, ray, intersection))
   {
-    //if(intersection->mat->m_texture != nullptr)
-      intersection->computeDifferentials(ray);
+    // Compute necessary differential information for texture filtering
+    intersection->computeDifferentials(ray);
+
     // if skybox return directly the corresponding color
     if(intersection->face != -1)
       return intersection->mat->textureColor(intersection->u, intersection->v, intersection->face);
@@ -95,7 +90,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
       }
     }
 
-    if (ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0) // Si contribution maximale -> on arrete
+    // If max contribution, we stop
+    if (ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0)
       return color3(1.f);
 
     // Scatter
@@ -115,17 +111,26 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
   return glm::clamp(ret, color3(0,0,0), color3(1,1,1));
 }
 
+void scaleDifferentials(Ray* ray, float s){
+  ray->dox = ray->orig + (ray->dox - ray->orig) * s;
+  ray->doy = ray->orig + (ray->doy - ray->orig) * s;
+  ray->ddx = ray->dir + (ray->ddx - ray->dir) * s;
+  ray->ddy = ray->dir + (ray->ddy - ray->dir) * s;
+}
+
+
 static std::minstd_rand engineSamples(time(NULL));
 static std::uniform_real_distribution<float> m_unifDistributionSamples{0.0f, 1.0f};
 
 void renderImage(RenderImage *img, Scene *scene)
 {
 
-  auto samplesPerPixel = 10;
-
   KdTree *tree = initKdTree(scene);
 
   auto startTime = std::chrono::system_clock::now();
+
+  auto sampler = 
+    new StratifiedSampler(4, 4, true, 1);
 
   for (size_t j = 0; j < img->height; j++)
   {
@@ -139,40 +144,31 @@ void renderImage(RenderImage *img, Scene *scene)
     for (; cpt < 100; cpt += 5)
       printf(" ");
     printf("]\n");
-#pragma omp parallel for schedule(dynamic)
+#pragma omp parallel
+    {
+    int seed = omp_get_thread_num();
+    std::unique_ptr<Sampler> tileSampler = sampler->Clone(seed);
+#pragma omp for schedule(dynamic)
     for (size_t i = 0; i < img->width; i++)
     {
       color3 pixel_color(0,0,0);
       color3 *ptr = getPixelPtr(img, i, j);
-      //for (int s = 0; s < samplesPerPixel; ++s) {
-      //  float jitterI = i + m_unifDistributionSamples(engineSamples);
-      //  float jitterJ = j + m_unifDistributionSamples(engineSamples);
-      //  auto u = (jitterI) / (img->width);
-      //  auto v = (jitterJ) / (img->height);
-      //  Ray r;
-      //  r.difx = new Ray();
-      //  r.dify = new Ray();
-      //  scene->cam->get_ray((jitterI+0.5f) / img->width, v, r.difx, vec2(int(i), int(j)));
-      //  scene->cam->get_ray(u, (jitterJ+0.5f) / img->height, r.dify, vec2(int(i), int(j)));
-      //  scene->cam->get_ray(u, v, &r, vec2(int(i), int(j)));
-      //  Intersection intersection;
-      //  pixel_color += trace_ray(scene, &r, tree, &intersection);
-      //  delete r.difx;
-      //  delete r.dify;
-      //}
-      //// Divide the color by the number of samples and gamma-correct for gamma=2.0.
-      //pixel_color /= samplesPerPixel;
-      ////pixel_color = glm::sqrt(pixel_color);
-      //pixel_color = glm::clamp(pixel_color, 0.0f, 1.0f);
+      auto pixel = vec2(i, j);
 
-      //std::cout << "Pixel " << i << " " << j << std::endl;
-      Ray* rx = new Ray;
-      scene->cam->get_ray(i, j, rx, vec2(int(i), int(j)));
-      Intersection intersection;
-      pixel_color = trace_ray(scene, rx, tree, &intersection);
-      *ptr = pixel_color;
-      delete rx;
+      tileSampler->StartPixel(pixel);
+      do {
+        point2 cameraSample = tileSampler->GetCameraSample(pixel);
+        Ray* rx = new Ray;
+        scene->cam->get_ray(cameraSample.x, cameraSample.y, rx, vec2(int(i), int(j)));
+        scaleDifferentials(rx, 1.f / sqrt(tileSampler->samplesPerPixel));
+        Intersection intersection;
+        pixel_color += trace_ray(scene, rx, tree, &intersection);
+        delete rx;
+      }while(tileSampler->StartNextSample());
+
+      *ptr = pixel_color / (float)tileSampler->samplesPerPixel;
     }
+  }
   }
   auto stopTime = std::chrono::system_clock::now();
   std::cout << "Rendering took "<< std::chrono::duration_cast<std::chrono::duration<double>>(

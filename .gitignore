@@ -99,3 +99,4 @@ tests/external/Catch2
 .cache/
 
 compile_commands.json
+launch.json

@@ -92,7 +92,6 @@ class Transform {
       m[2][1] = tyz - sx;
       m[2][2] = tz * axis.z + c;
       transform(m);
-      //transform(glm::rotate(glm::mat4(1.f), degrees_to_radians(degrees), axis));
     }
     void scale(float sx, float sy, float sz) {
       auto m = mat3(0.f);

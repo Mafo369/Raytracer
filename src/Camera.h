@@ -37,7 +37,7 @@ class SimpleCamera : public Camera {
         dir -= pos;
 
         dir = normalize(dir);
-        point3 x = cross(dir, vup);
+        vec3 x = cross(dir, vup);
         up = normalize(cross(x, dir));
 
         left =  normalize(cross(up, dir));
@@ -55,13 +55,13 @@ class SimpleCamera : public Camera {
     ~SimpleCamera() {}
 
     void get_ray(float s, float t, Ray *r, vec2 pixel) const override {
-      vec3 d = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + (t + .5f) * dYPixel) - pos;
+      vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos;
       vec3 dnorm = normalize(d);
       rayInit(r, pos, dnorm, pixel);
       r->dox = pos;
       r->doy = pos;
-      r->ddx = (nearPlaneTopLeft + ((s+1.f) + 0.5f) * dXPixel + (t + .5f) * dYPixel) - pos;
-      r->ddy = (nearPlaneTopLeft + (s + 0.5f) * dXPixel + ((t+1.f) + .5f) * dYPixel) - pos;
+      r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos;
+      r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos;
     }
 
     vec3 pos = vec3(0,0,0);

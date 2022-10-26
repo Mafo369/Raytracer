@@ -14,6 +14,7 @@ class texture {
       virtual color3 value(float u, float v) const = 0;
       virtual color3 value(float u, float v, int face) const = 0;
 
+      // From https://graphics.cs.utah.edu/courses/cs6620/
       virtual color3 value(float u, float v, const vec3 duv[2]) const {
           vec3 uvw = vec3(u, v, 0);
           vec3 uv = m_transform.transformTo(uvw);
@@ -27,15 +28,9 @@ class texture {
             float x=0, y=0, fx=0.5f, fy=1.0f/3.0f;
             for ( int ix=i; ix>0; ix/=2 ) { x+=fx*(ix%2); fx/=2; }   // Halton sequence (base 2)
             for ( int iy=i; iy>0; iy/=3 ) { y+=fy*(iy%3); fy/=3; }   // Halton sequence (base 3)
-            if(true){
-              float r = sqrtf(x)*0.5f;
-              x = r*sinf(y*(float)M_PI*2.0);
-              y = r*cosf(y*(float)M_PI*2.0);
-            }else
-            {
-              if ( x > 0.5f ) x-=1;
-              if ( y > 0.5f ) y-=1;
-            }
+            float r = sqrtf(x)*0.5f;
+            x = r*sinf(y*(float)M_PI*2.0);
+            y = r*cosf(y*(float)M_PI*2.0);
             vec3 new_uv = uv + x * d[0] + y * d[1]; 
             auto tdColor = value(new_uv.x, new_uv.y);
             texColor += tdColor;
@@ -79,24 +74,24 @@ class checker_texture : public texture {
       ~checker_texture() {}
 
       color3 value(float u, float v) const override {
-          point3 u1;
-          u1.x = u - (int) u;
-          u1.y = v - (int) v;
-          if(u1.x < 0.0)
-            u1.x += 1.0;
-          if(u1.y < 0.0)
-            u1.y += 1.0;
+          point3 uv;
+          uv.x = u - (int) u;
+          uv.y = v - (int) v;
+          if(uv.x < 0.0)
+            uv.x += 1.0;
+          if(uv.y < 0.0)
+            uv.y += 1.0;
 
-          if(u1.x <= 0.5){
-            if(u1.y <= 0.5)
-              return even->value(u1.x, u1.y);
+          if(uv.x <= 0.5){
+            if(uv.y <= 0.5)
+              return even->value(uv.x, uv.y);
             else
-              return odd->value(u1.x, u1.y);
+              return odd->value(uv.x, uv.y);
           }else{
-            if(u1.y <= 0.5)
-              return odd->value(u1.x, u1.y);
+            if(uv.y <= 0.5)
+              return odd->value(uv.x, uv.y);
             else
-              return even->value(u1.x, u1.y);
+              return even->value(uv.x, uv.y);
           }
       }
 
@@ -120,15 +115,15 @@ class image_texture : public texture {
     }
 
     color3 value(float u, float v) const override {
-      point3 u1;
-      u1.x = u - (int) u;
-      u1.y = v - (int) v;
-      if(u1.x < 0.0)
-        u1.x += 1.0;
-      if(u1.y < 0.0)
-        u1.y += 1.0;
-      int u2 = u1.x * (m_image->width-1);
-      int v2 = u1.y * (m_image->height-1);
+      point3 uv;
+      uv.x = u - (int) u;
+      uv.y = v - (int) v;
+      if(uv.x < 0.0)
+        uv.x += 1.0;
+      if(uv.y < 0.0)
+        uv.y += 1.0;
+      int u2 = uv.x * (m_image->width-1);
+      int v2 = uv.y * (m_image->height-1);
       return *getPixelPtr(m_image, u2, v2);
     }
 
