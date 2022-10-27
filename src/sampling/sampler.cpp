@@ -41,11 +41,12 @@ Sampler::~Sampler() {}
 
 Sampler::Sampler(int64_t samplesPerPixel) : samplesPerPixel(samplesPerPixel) {}
 
-point2 Sampler::GetCameraSample(const point2 &pRaster) {
-    auto cameraSample = (point2)pRaster + Get2D();
-    auto time = Get1D();
-    auto pLens = Get2D();
-    return cameraSample;
+CameraSample Sampler::GetCameraSample(const point2 &pRaster) {
+    CameraSample sample;
+    sample.xy = (point2)pRaster + Get2D();
+    sample.t = Get1D();
+    sample.uv = Get2D();
+    return sample;
 }
 
 void Sampler::StartPixel(const point2 &p) {

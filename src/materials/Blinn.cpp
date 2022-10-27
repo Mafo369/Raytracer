@@ -17,39 +17,36 @@ color3 Blinn::shade(Intersection *intersection, vec3 v, Light* light, float inte
   auto lc = light->getColor();
   auto samples = light->getSamples(); 
   
-  if(intersection->isOutside){
-    for(auto& sample : samples){
-      vec3 l;
-      if(light->isDirectional()){
-        l = -sample;
+  for(auto& sample : samples){
+    vec3 l;
+    if(light->isDirectional()){
+      l = -sample;
+    }
+    else{
+      l = normalize(sample - intersection->position);
+    }
+    float LdotN = dot(l, n);
+    v = normalize(v);
+    vec3 vl = v + l;
+    vec3 h = vl;
+    h = normalize(h);
+    float NdotH = dot(n, h);
+    float s = std::pow(NdotH, m_shininess);
+
+    if(LdotN > 0){
+      if(m_texture != nullptr){
+        vec3 duv[2];
+        duv[0] = vec3(intersection->dudx, intersection->dvdx, 0);
+        duv[1] = vec3(intersection->dudy, intersection->dvdy, 0);
+        vec3 texColor = m_texture->value(intersection->u, intersection->v, duv);
+        ret += lc *  LdotN * ( texColor + s * m_specularColor);
       }
       else{
-        l = normalize(sample - intersection->position);
-      }
-      float LdotN = dot(l, n);
-      v = normalize(v);
-      vec3 vl = v + l;
-      vec3 h = vl;
-      h = normalize(h);
-      float NdotH = dot(n, h);
-      float s = std::pow(NdotH, m_shininess);
-
-      if(LdotN >= 0){
-        if(m_texture != nullptr){
-          vec3 duv[2];
-          duv[0] = vec3(intersection->dudx, intersection->dvdx, 0);
-          duv[1] = vec3(intersection->dudy, intersection->dvdy, 0);
-          vec3 texColor = m_texture->value(intersection->u, intersection->v, duv);
-          ret += lc *  LdotN * ( texColor + s * m_specularColor);
-        }
-        else{
-          ret += lc *  (LdotN * m_diffuseColor + s * m_specularColor) ;
-        }
+        ret += lc *  LdotN *(m_diffuseColor + s * m_specularColor) ;
       }
     }
-    ret = (ret / float(samples.size())) * intensity;
-
   }
+  ret = (ret / float(samples.size())) * intensity;
 
   return ret;
 }
@@ -68,7 +65,7 @@ color3 Blinn::ambientColor(Intersection* intersection, color3 lightColor) {
     duv[0] = vec3(intersection->dudx, intersection->dvdx, 0);
     duv[1] = vec3(intersection->dudy, intersection->dvdy, 0);
     vec3 texColor = m_texture->value(intersection->u, intersection->v, duv);
-    return texColor * vec3(1,1,1) * lightColor;
+    return texColor * lightColor;
   }
   return m_diffuseColor * lightColor;
 }

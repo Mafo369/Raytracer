@@ -3,6 +3,7 @@
 #include "defines.h"
 #include "ray.h"
 #include "raytracer.h"
+#include "sampling/sampling.h"
 
 #include <random>
 #include <iostream>
@@ -17,7 +18,7 @@ class Camera {
     Camera() = default;
     virtual ~Camera() = default;
 
-    virtual void get_ray(float s, float t, Ray* r, vec2 pixel) const = 0;
+    virtual void get_ray(float s, float t, float uLens, float vLens, Ray* r, vec2 pixel) const = 0;
     float imgWidth;
     float imgHeight;
 };
@@ -25,10 +26,12 @@ class Camera {
 class SimpleCamera : public Camera {
   public:
     SimpleCamera(point3 lookfrom, point3 lookat, vec3 vup, float vfov, float aspect_ratio, 
-                 int width, int height) : Camera() {
+                 int width, int height, float lensRadius, float focalDistance) : Camera() {
         pos = lookfrom;
         fov = vfov;
         aspect = aspect_ratio;
+        m_lensRadius = lensRadius;
+        m_focalDistance = focalDistance;
 
         imgWidth = width;
         imgHeight = height;
@@ -37,12 +40,12 @@ class SimpleCamera : public Camera {
         dir -= pos;
 
         dir = normalize(dir);
-        vec3 x = cross(dir, vup);
-        up = normalize(cross(x, dir));
+        xDir = cross(dir, vup);
+        up = normalize(cross(xDir, dir));
 
         left =  normalize(cross(up, dir));
         float radfov = fov * (float)M_PI / 180.0;
-        l = 1.0;
+        l = m_focalDistance;
         h = tan(radfov * .5f) * (2.0f * l);
         w = h * imgWidth / (float)imgHeight;
 
@@ -54,14 +57,32 @@ class SimpleCamera : public Camera {
 
     ~SimpleCamera() {}
 
-    void get_ray(float s, float t, Ray *r, vec2 pixel) const override {
-      vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos;
-      vec3 dnorm = normalize(d);
-      rayInit(r, pos, dnorm, pixel);
-      r->dox = pos;
-      r->doy = pos;
-      r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos;
-      r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos;
+    void get_ray(float s, float t, float uLens, float vLens, Ray *r, vec2 pixel) const override {
+      if(m_lensRadius > 0) {
+        point2 pLens = m_lensRadius * ConcentricSampleDisk(vec2(uLens, vLens));
+        vec3 offset = xDir * pLens.x + up * pLens.y;
+        vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos - offset;
+        vec3 dnorm = normalize(d);
+        rayInit(r, pos + offset, dnorm, pixel);
+        //r->dox = vec3(0); 
+        //r->doy = vec3(0);
+        //r->ddx = vec3(0);
+        //r->ddy = vec3(0);
+
+        r->dox = pos;
+        r->doy = pos;
+        r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos;
+        r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos;
+      }
+      else{
+        vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos;
+        vec3 dnorm = normalize(d);
+        rayInit(r, pos, dnorm, pixel);
+        r->dox = pos;
+        r->doy = pos;
+        r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos;
+        r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos;
+      }
     }
 
     vec3 pos = vec3(0,0,0);
@@ -76,6 +97,9 @@ class SimpleCamera : public Camera {
     vec3 nearPlaneTopLeft;
     vec3 dXPixel;
     vec3 dYPixel;
+    float m_lensRadius;
+    float m_focalDistance;
+    vec3 xDir;
 };
 
 class CameraFOV : public Camera {
@@ -111,7 +135,7 @@ class CameraFOV : public Camera {
           }
         }
 
-        void get_ray(float s, float t, Ray *r, vec2 pixel) const override {
+        void get_ray(float s, float t, float uLens, float vLens, Ray *r, vec2 pixel) const override {
             glm::vec2 rd = lens_radius * mDiskRand();
             vec3 offset = u * rd.x + v * rd.y;
 

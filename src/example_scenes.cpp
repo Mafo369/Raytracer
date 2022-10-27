@@ -903,7 +903,7 @@ Scene *initScene11() {
   auto from = point3(0.0, -70.0, 15.0);
   auto at = vec3(2.0, 0.0, 3.0);
   //setCameraFOV(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT), 0.01, distance(from, at));
-  setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 30.f, float(WIDTH), float(HEIGHT));
+  setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 30.f, float(WIDTH), float(HEIGHT), 0.8,distance(from, at) );
   setSkyColor(scene, color3(1.,1.,1)); 
 
   image_texture* sky = new image_texture("../assets/clouds.png");
@@ -978,6 +978,113 @@ Scene *initScene11() {
   return scene;
 }
 
+Scene *initScene12() {
+  Scene *scene = initScene();
+  auto from = point3(0.0, -70.0, 25.0);
+  auto at = vec3(-2.0, 0.0, 3.0);
+  //setCameraFOV(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT), 0.01, distance(from, at));
+  setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 25.f, float(WIDTH), float(HEIGHT), 1.5, 70 );
+  setSkyColor(scene, color3(1.,1.,1)); 
+
+  image_texture* sky = new image_texture("../assets/clouds.png");
+  scene->m_skyTexture = sky;
+  Transform texSky;
+  texSky.scale(1,.4,1);
+  texSky.translate(vec3(0,-0.1,0));
+  scene->m_skyTexture->m_transform = texSky;
+
+  auto mat = std::make_shared<Blinn>();
+  mat->m_diffuseColor = color3(0.3);
+  mat->m_specularColor = color3(0.1);
+  mat->m_shininess = 50;
+
+  Transform modelMatrix;
+  modelMatrix.scale(500, 500, 500);
+
+  auto ret = new Plane(mat, modelMatrix);
+  ret->geom.type = PLANE;
+  addObject(scene, ret);
+  //addObjectsFromFile("../assets/plane.obj", scene, mat, modelMatrix);
+
+  auto mat1 = std::make_shared<Blinn>();
+  mat1->m_texture = new image_texture("../assets/bricks.png");
+  mat1->m_specularColor = color3(0.3);
+  mat1->m_shininess = 10;
+
+  Transform modelMatrix1;
+  modelMatrix1.scale(0.7, 0.7, 0.7);
+  modelMatrix1.rotate(vec3(0,0,1), -50.f);
+  modelMatrix1.translate(vec3(0,0,0));
+  addObjectsFromFile("../assets/teapot.obj", scene, mat1, modelMatrix1);
+
+  auto mat2 = std::make_shared<Blinn>();
+  mat2->m_texture = new checker_texture(color3(0.7,0,0), color3(0.3,0,0)); 
+  Transform texTransform;
+  texTransform.scale(0.25, 0.4,1);
+  mat2->m_texture->m_transform = texTransform;
+  mat2->m_specularColor = color3(0.8);
+  mat2->m_shininess = 100;
+  mat2->m_reflection = vec3(0.5f);
+
+  Transform modelMatrix3;
+  modelMatrix3.scale(5, 5, 5);
+  modelMatrix3.translate(vec3(35, 70, 5));
+  addObject(scene, initSphere(mat2, modelMatrix3));
+
+  Transform modelMatrix4;
+  modelMatrix4.scale(5, 5, 5);
+  modelMatrix4.translate(vec3(30, 60, 5));
+  addObject(scene, initSphere(mat2, modelMatrix4));
+
+  Transform modelMatrix5;
+  modelMatrix5.scale(5, 5, 5);
+  modelMatrix5.translate(vec3(25, 50, 5));
+  addObject(scene, initSphere(mat2, modelMatrix5));
+
+  Transform modelMatrix6;
+  modelMatrix6.scale(5, 5, 5);
+  modelMatrix6.translate(vec3(20, 40, 5));
+  addObject(scene, initSphere(mat2, modelMatrix6));
+
+  Transform modelMatrix7;
+  modelMatrix7.scale(5, 5, 5);
+  modelMatrix7.translate(vec3(15, 30, 5));
+  addObject(scene, initSphere(mat2, modelMatrix7));
+
+  Transform modelMatrix8;
+  modelMatrix8.scale(5, 5, 5);
+  modelMatrix8.translate(vec3(10, 20, 5));
+  addObject(scene, initSphere(mat2, modelMatrix8));
+
+  Transform modelMatrix9;
+  modelMatrix9.scale(5, 5, 5);
+  modelMatrix9.translate(vec3(5, 10, 5));
+  addObject(scene, initSphere(mat2, modelMatrix9));
+
+  Transform modelMatrix10;
+  modelMatrix10.scale(5, 5, 5);
+  modelMatrix10.translate(vec3(-5, -10, 5));
+  addObject(scene, initSphere(mat2, modelMatrix10));
+
+  Transform modelMatrix11;
+  modelMatrix11.scale(5, 5, 5);
+  modelMatrix11.translate(vec3(-10, -20, 5));
+  addObject(scene, initSphere(mat2, modelMatrix11));
+
+  Transform modelMatrix12;
+  modelMatrix12.scale(5, 5, 5);
+  modelMatrix12.translate(vec3(-15, -30, 5));
+  addObject(scene, initSphere(mat2, modelMatrix12));
+
+
+  addLight(scene, initAmbientLight(color3(0.2)));
+  addLight(scene, initDirectLight(vec3(-1, 0.2, -1), color3(0.6)));
+  addLight(scene, initDirectLight(vec3(1, 0.3, -1), color3(0.4)));
+
+
+  return scene;
+}
+
 
 Scene* parseScene(int sceneId){
   Scene *scene = NULL;
@@ -1017,6 +1124,8 @@ Scene* parseScene(int sceneId){
     break;
   case 11:
     scene = initScene11();
+  case 12:
+    scene = initScene12();
     break;
 
   default:

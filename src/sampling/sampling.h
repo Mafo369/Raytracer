@@ -44,7 +44,6 @@ const float Inv4Pi = 1.f / (4.f * Pi);
 const float PiOver2 = Pi / 2.f;
 const float PiOver4 = Pi / 4.f;
 
-
 // Sampling Declarations
 void StratifiedSample1D(float *samples, int nsamples, RNG &rng,
                         bool jitter = true);

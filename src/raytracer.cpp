@@ -72,8 +72,9 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
     intersection->computeDifferentials(ray);
 
     // if skybox return directly the corresponding color
-    if(intersection->face != -1)
+    if(intersection->face != -1){
       return intersection->mat->textureColor(intersection->u, intersection->v, intersection->face);
+    }
 
     // shading
     size_t lightsCount = scene->lights.size();
@@ -130,7 +131,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(4, 4, true, 1);
+    new StratifiedSampler(4, 4, true, 2);
 
   for (size_t j = 0; j < img->height; j++)
   {
@@ -157,9 +158,9 @@ void renderImage(RenderImage *img, Scene *scene)
 
       tileSampler->StartPixel(pixel);
       do {
-        point2 cameraSample = tileSampler->GetCameraSample(pixel);
+        CameraSample cameraSample = tileSampler->GetCameraSample(pixel);
         Ray* rx = new Ray;
-        scene->cam->get_ray(cameraSample.x, cameraSample.y, rx, vec2(int(i), int(j)));
+        scene->cam->get_ray(cameraSample.xy.x, cameraSample.xy.y, cameraSample.uv.x, cameraSample.uv.y, rx, vec2(int(i), int(j)));
         scaleDifferentials(rx, 1.f / sqrt(tileSampler->samplesPerPixel));
         Intersection intersection;
         pixel_color += trace_ray(scene, rx, tree, &intersection);

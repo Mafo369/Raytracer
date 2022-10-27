@@ -38,6 +38,12 @@
 #include <vector>
 #include <memory>
 
+typedef struct s_CameraSample {
+  point2 xy;
+  float t;
+  point2 uv;
+}CameraSample;
+
 // Sampler Declarations
 class Sampler {
   public:
@@ -47,7 +53,7 @@ class Sampler {
     virtual void StartPixel(const point2 &p);
     virtual float Get1D() = 0;
     virtual point2 Get2D() = 0;
-    point2 GetCameraSample(const point2 &pRaster);
+    CameraSample GetCameraSample(const point2 &pRaster);
     void Request1DArray(int n);
     void Request2DArray(int n);
     virtual int RoundCount(int n) const { return n; }

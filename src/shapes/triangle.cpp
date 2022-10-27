@@ -46,9 +46,6 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = mat;
     intersection->isOutside = !(det < 0.f);
-    if(ray->shadow)
-      return true;
-
 
     vec3 objectNormal = normalize(geom.triangle.n2 * u + geom.triangle.n3 * v + geom.triangle.n1 * (1.f - u - v));
     vec3 normal = transform.vectorTransformFrom(objectNormal);
