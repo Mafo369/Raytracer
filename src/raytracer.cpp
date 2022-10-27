@@ -131,7 +131,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(4, 4, true, 2);
+    new StratifiedSampler(8, 8, true, 2);
 
   for (size_t j = 0; j < img->height; j++)
   {

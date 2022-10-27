@@ -64,15 +64,11 @@ class SimpleCamera : public Camera {
         vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos - offset;
         vec3 dnorm = normalize(d);
         rayInit(r, pos + offset, dnorm, pixel);
-        //r->dox = vec3(0); 
-        //r->doy = vec3(0);
-        //r->ddx = vec3(0);
-        //r->ddy = vec3(0);
 
-        r->dox = pos;
-        r->doy = pos;
-        r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos;
-        r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos;
+        r->dox = pos + offset;
+        r->doy = pos + offset;
+        r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos - offset;
+        r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos - offset;
       }
       else{
         vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos;
