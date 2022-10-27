@@ -90,6 +90,18 @@ color3 CookTorrance::textureColor(float u, float v, int face) {
   return m_texture->value(u, v, face);
 }
 
+#include <random>
+static std::minstd_rand engine(time(NULL));
+static std::uniform_real_distribution<float> m_unifDistributionRand{-1.f, 1.0f};
+
+vec3 random_in_unit_sphere() {
+    while (true) {
+        auto p = vec3(m_unifDistributionRand(engine), m_unifDistributionRand(engine), m_unifDistributionRand(engine));
+        if (glm::length_sq(p) >= 1) continue;
+        return p;
+    }
+}
+
 color3 CookTorrance::ambientColor(Intersection* intersection, color3 lightColor) {
   if(m_texture != nullptr)
     return m_texture->value(intersection->u, intersection->v) * lightColor;
@@ -121,14 +133,19 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
         RDM_Fresnel(LdotH, m_IOR, 1.f);
 
     vec3 unit_direction = normalize( ray->dir );
+
+    float fuzz = 0.1f;
     auto refractionColor = color3(0.f);
     if( f < 1.0f ){
       vec3 refr = refract(unit_direction, normal, refractionRatio);
-      Ray ray_refr;
-      rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr, ray->pixel,0, 100000, ray->depth + 1);
+      for(int i = 0; i < 20; i++){
+        Ray ray_refr;
+        rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr + fuzz*random_in_unit_sphere(), ray->pixel,0, 100000, ray->depth + 1);
 
-      Intersection refInter;
-      refractionColor = trace_ray(scene, &ray_refr, tree, &refInter);
+        Intersection refInter;
+        refractionColor += trace_ray(scene, &ray_refr, tree, &refInter);
+      }
+      refractionColor = refractionColor / 20.f;
     }
     
     ret += ( reflectionColor * f * m_specularColor ) + refractionColor * (1.0f - f);

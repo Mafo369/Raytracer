@@ -84,47 +84,57 @@
 
 Scene *initScene0() {
   Scene *scene = initScene();
-  setCameraFOV(scene, point3(1, 0.75, 1), vec3(0, 0.3, 0), vec3(0, 1, 0), 60,
-            (float)WIDTH, (float)HEIGHT, 0.01, glm::length(point3(3,1,0) - vec3(0,0.3,0)));
-  setSkyColor(scene, color3(0.f, 0.f, 0.f));
-  auto mat = std::make_shared<CookTorrance>(false);
-  mat->m_IOR = 4.0;
-  mat->m_roughness = 0.05;
-  mat->m_specularColor = color3(1.0f);
-  mat->m_diffuseColor = color3(1.0f);
-  Transform t0;
-  t0.translate(vec3(0,0.25,0));
-  t0.scale(0.25,0.25,0.25);
-  addObject(scene, initSphere(mat, t0));
+  auto from = point3(1, 0.6, 1);
+  auto at = vec3(0, 0.3, 0);
+  setSimpleCamera(scene, from, at, vec3(0, 1, 0), 60,
+            (float)WIDTH, (float)HEIGHT, 0., glm::length(at - from));
+   image_texture* sky = new image_texture("../assets/clouds.png");
+  scene->m_skyTexture = sky;
+  Transform texSky;
+  texSky.scale(1,.4,1);
+  texSky.translate(vec3(0,-0.1,0));
+  scene->m_skyTexture->m_transform = texSky;
 
-  auto mat1 = std::make_shared<CookTorrance>(false);
-  mat1->m_IOR = 4.0;
-  mat1->m_roughness = 0.05;
-  mat1->m_specularColor = color3(1.f, 0.f, 0.f);
-  mat1->m_diffuseColor = color3(1.f, 0.f, 0.f);
-  Transform t1;
-  t1.translate(vec3(0.5,0.25,0));
-  t1.scale(0.25,0.25,0.25);
-  addObject(scene, initSphere(mat1, t1));
+ setSkyColor(scene, color3(0.52f, 0.8f, 0.9f));
+  //auto mat = std::make_shared<CookTorrance>(false);
+  //mat->m_IOR = 4.0;
+  //mat->m_roughness = 0.05;
+  //mat->m_specularColor = color3(1.0f);
+  //mat->m_diffuseColor = color3(1.0f);
+  //Transform t0;
+  //t0.translate(vec3(0,0.25,0));
+  //t0.scale(0.25,0.25,0.25);
+  //addObject(scene, initSphere(mat, t0));
+
+  //auto mat1 = std::make_shared<CookTorrance>(false);
+  //mat1->m_IOR = 4.0;
+  //mat1->m_roughness = 0.05;
+  //mat1->m_specularColor = color3(1.f, 0.f, 0.f);
+  //mat1->m_diffuseColor = color3(1.f, 0.f, 0.f);
+  //Transform t1;
+  //t1.translate(vec3(0.5,0.25,0));
+  //t1.scale(0.25,0.25,0.25);
+  //addObject(scene, initSphere(mat1, t1));
 
   auto mat2 = std::make_shared<CookTorrance>(false);
-  mat2->m_IOR = 4.0;
-  mat2->m_roughness = 0.05;
-  mat2->m_specularColor = color3(0.f, 1.f, 1.f);
-  mat2->m_diffuseColor = color3(0.f, 1.f, 1.f);
+  mat2->m_IOR = 1.3;
+  mat2->m_roughness = 0.5;
+  mat2->m_transparent = true;
+  mat2->m_specularColor = color3(1.f, 1.f, 1.f);
+  mat2->m_diffuseColor = color3(1.f, 1.f, 1.f);
   Transform t2;
-  t2.translate(vec3(0,0.75,0));
+  t2.translate(vec3(0.3,1.25,0.3));
   t2.scale(0.25,0.25,0.25);
   addObject(scene, initSphere(mat2, t2));
 
   auto mat3 = std::make_shared<CookTorrance>(false);
   mat3->m_IOR = 4.0;
-  mat3->m_roughness = 0.05;
+  mat3->m_roughness = 1.05;
   mat3->m_specularColor = color3(0.f, 0.f, 1.f);
   mat3->m_diffuseColor = color3(0.f, 0.f, 1.f);
   Transform t3;
-  t3.translate(vec3(0,0.25,0.5));
-  t3.scale(0.25,0.25,0.25);
+  t3.translate(vec3(-6,1.0,-6.0));
+  t3.scale(0.08,0.08,0.08);
   addObject(scene, initSphere(mat3, t3));
 
   auto mat4 = std::make_shared<CookTorrance>(false);
@@ -139,7 +149,9 @@ Scene *initScene0() {
   ret->geom.type = PLANE;
   addObject(scene, ret);
 
-  addLight(scene, initPointLight(point3(1, 5, 1), color3(1, 1, 1)));
+  //addLight(scene, initPointLight(point3(1, 5, 1), color3(1, 1, 1)));
+  addLight(scene, initDirectLight(vec3(0, -1, 0), color3(0.6)));
+  //addLight(scene, initDirectLight(vec3(1, 0.3, -1), color3(0.4)));
   //addLight(scene, initPointLight(point3(4, 10, -2), color3(1, 1, 1)));
   //addLight(scene, initPointLight(point3(4, 5, 0), color3(3, 3, 3)));
   

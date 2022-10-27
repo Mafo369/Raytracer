@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "/home/mafo/dev/Raytracer/build-Release/mrt",
-            "args": ["test11_4.png", "11"],
+            "args": ["test1", "1"],
             "cwd": "/home/mafo/dev/Raytracer/build-Release/"
           }
       ]
