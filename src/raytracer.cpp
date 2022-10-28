@@ -81,7 +81,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
     for (size_t i = 0; i < lightsCount; i++)
     {
       vec3 v = ray->dir * -1.0f;
-      if(scene->lights[i]->isAmbient() && intersection->isOutside){
+      if(scene->lights[i]->isAmbient()){
         ret += intersection->mat->ambientColor(intersection, scene->lights[i]->getColor());
         continue;
       }
@@ -100,13 +100,13 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
   }
   else
   {
-    //vec3 pixelUV = vec3((float)ray->pixel.x / scene->cam->imgWidth, (float)ray->pixel.y / scene->cam->imgHeight, 0.f);
-    //vec3 p = glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f);
-    //if(scene->m_skyTexture != nullptr && ray->depth == 0)
-    //  ret = scene->skyColor * scene->m_skyTexture->value(p.x, p.y);
-    //else{
-      ret = scene->skyColor;
-    //}
+    vec3 pixelUV = vec3((float)ray->pixel.x / scene->cam->imgWidth, (float)ray->pixel.y / scene->cam->imgHeight, 0.f);
+    vec3 p = glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f);
+    if(scene->m_skyTexture != nullptr && ray->depth == 0)
+      ret = scene->skyColor * scene->m_skyTexture->value(p.x, p.y);
+    else{
+    ret = scene->skyColor;
+    }
   }
 
   return glm::clamp(ret, color3(0,0,0), color3(1,1,1));
@@ -131,7 +131,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(8, 8, false, 2);
+    new StratifiedSampler(4, 4, false, 2);
 
   for (size_t j = 0; j < img->height; j++)
   {

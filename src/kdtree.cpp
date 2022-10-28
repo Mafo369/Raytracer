@@ -109,6 +109,7 @@ KdTree *initKdTree(Scene *scene)
   tree->objLimit = scene->objects.size() * sizeof(Object);
 
   KdTreeNode *root = initNode(false, 0, 0);
+  if(tree->inTree.size() == 0) return tree;
 
   std::vector<float> x_vector;
   std::vector<float> y_vector;

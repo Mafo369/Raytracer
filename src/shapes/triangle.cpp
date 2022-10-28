@@ -20,27 +20,24 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
 
   float det = dot(v1v2, cross_rayDir_v1v3);
 
-  if (abs(det) < acne_eps)
+  if (det > -acne_eps && det < acne_eps)
     return false;
 
+  float inv_det = 1.f / det;
 
   vec3 o_minus_p1 = transformedRay.orig - geom.triangle.p1;
 
-  float u = dot(o_minus_p1, cross_rayDir_v1v3);
+  float u = dot(o_minus_p1, cross_rayDir_v1v3) * inv_det;
 
-  if (u < -acne_eps || u > det * (1.f + acne_eps))
+  if (u < 0.f || u > 1.f)
     return false;
 
   vec3 cross_oMinusp1_v1v2 = cross(o_minus_p1, v1v2);
 
-  float v = dot(transformedRay.dir, cross_oMinusp1_v1v2);
+  float v = dot(transformedRay.dir, cross_oMinusp1_v1v2) * inv_det;
 
-  if (v < -acne_eps || u + v > det * (1.f + acne_eps))
+  if (v < 0.f || u + v > 1.f)
     return false;
-
-  float inv_det = 1.f / det;
-  u *= inv_det;
-  v *= inv_det; 
 
   float t = dot(v1v3, cross_oMinusp1_v1v2) * inv_det;
 

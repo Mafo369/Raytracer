@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Material.h"
+#include <random>
 
 class Blinn : public Material {
   public:
@@ -19,6 +20,10 @@ class Blinn : public Material {
     vec3 m_refraction;
     vec3 m_absorption;
     float m_IOR;
+    float m_reflectionGloss;
+    float m_refractionGloss;
 
+    std::mt19937 engine;
+    std::uniform_real_distribution<float> m_rand {0.f, 1.f};
 
 };

@@ -915,7 +915,7 @@ Scene *initScene11() {
   auto from = point3(0.0, -70.0, 15.0);
   auto at = vec3(2.0, 0.0, 3.0);
   //setCameraFOV(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT), 0.01, distance(from, at));
-  setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 30.f, float(WIDTH), float(HEIGHT), 0.8,distance(from, at) );
+  setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 30.f, float(WIDTH), float(HEIGHT), 0., 1 );
   setSkyColor(scene, color3(1.,1.,1)); 
 
   image_texture* sky = new image_texture("../assets/clouds.png");
@@ -996,7 +996,7 @@ Scene *initScene12() {
   auto at = vec3(-2.0, 0.0, 3.0);
   //setCameraFOV(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT), 0.01, distance(from, at));
   setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 25.f, float(WIDTH), float(HEIGHT), 1.5, 70 );
-  setSkyColor(scene, color3(0.,0.,0)); 
+  setSkyColor(scene, color3(1.,1.,1)); 
 
   image_texture* sky = new image_texture("../assets/clouds.png");
   scene->m_skyTexture = sky;
@@ -1097,6 +1097,134 @@ Scene *initScene12() {
   return scene;
 }
 
+Scene *initScene13() {
+  Scene *scene = initScene();
+  auto from = point3(42, -42.0, 15.0);
+  auto at = vec3(6.0, 0.0, -3.0);
+  //setCameraFOV(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT), 0.01, distance(from, at));
+  setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 40.f, float(WIDTH), float(HEIGHT), 0, 1 );
+  setSkyColor(scene, color3(1.,1.,1)); 
+
+  image_texture* sky = new image_texture("../assets/clouds.png");
+  scene->m_skyTexture = sky;
+  Transform texSky;
+  texSky.scale(1,.4,1);
+  texSky.translate(vec3(0,-0.1,0));
+  scene->m_skyTexture->m_transform = texSky;
+
+  auto mat = std::make_shared<Blinn>();
+  mat->m_diffuseColor = color3(1,1,1);
+  mat->m_texture = new checker_texture(color3(0.5, 0.5, 0.7), color3(1));
+  Transform texCheck;
+  texCheck.scale(0.003, 0.003, 0.003);
+  mat->m_texture->m_transform = texCheck;
+  mat->m_specularColor = color3(0);
+
+  Transform modelMatrix;
+  modelMatrix.scale(1000, 1000, 1000);
+
+  auto ret = new Plane(mat, modelMatrix);
+  ret->geom.type = PLANE;
+  addObject(scene, ret);
+  //addObjectsFromFile("../assets/plane.obj", scene, mat, modelMatrix);
+  
+  auto matWall = std::make_shared<Blinn>();
+  matWall->m_texture = new image_texture("../assets/bricks.png");
+  Transform texCheckWall;
+  texCheckWall.scale(0.05, 0.05, 0.05);
+  matWall->m_texture->m_transform = texCheckWall;
+  matWall->m_specularColor = color3(0.3);
+  matWall->m_shininess = 10;
+
+  Transform modelMatrixWall;
+  modelMatrixWall.scale(100, 100, 100);
+  modelMatrixWall.rotate(vec3(1,0,0), 90);
+  modelMatrixWall.translate(vec3(0,10,0));
+
+  auto retWall = new Plane(matWall, modelMatrixWall);
+  retWall->geom.type = PLANE;
+  addObject(scene, retWall);
+  //addObjectsFromFile("../assets/plane.obj", scene, mat, modelMatrix);
+
+  auto mat1 = std::make_shared<Blinn>();
+  mat1->m_diffuseColor = color3(0.8, 0.2, 0.2);
+  mat1->m_specularColor = color3(0.8);
+  mat1->m_shininess = 100;
+  mat1->m_reflection = vec3(0.3);
+
+  Transform modelMatrix1;
+  modelMatrix1.scale(0.5, 0.5, 0.5);
+  modelMatrix1.rotate(vec3(0,0,1), -50.f);
+  modelMatrix1.translate(vec3(13,-21,0));
+  addObjectsFromFile("../assets/teapot.obj", scene, mat1, modelMatrix1);
+
+  auto mat2 = std::make_shared<Blinn>();
+  mat2->m_diffuseColor = color3(0);
+  mat2->m_specularColor = color3(0.8);
+  mat2->m_shininess = 100;
+  mat2->m_reflection = vec3(0.8f);
+
+  Transform modelMatrix3;
+  modelMatrix3.scale(6, 6, 6);
+  modelMatrix3.translate(vec3(-28, 0, 6));
+  addObject(scene, initSphere(mat2, modelMatrix3));
+
+  auto mat3 = std::make_shared<Blinn>();
+  mat3->m_diffuseColor = color3(0);
+  mat3->m_specularColor = color3(0.8);
+  mat3->m_shininess = 50;
+  mat3->m_reflection = vec3(0.8f);
+  mat3->m_reflectionGloss = 0.05;
+
+  Transform modelMatrix4;
+  modelMatrix4.scale(6, 6, 6);
+  modelMatrix4.translate(vec3(-14, 0, 6));
+  addObject(scene, initSphere(mat3, modelMatrix4));
+
+  auto mat4 = std::make_shared<Blinn>();
+  mat4->m_diffuseColor = color3(0);
+  mat4->m_specularColor = color3(0.8);
+  mat4->m_shininess = 20;
+  mat4->m_reflection = vec3(0.8f);
+  mat4->m_reflectionGloss = 0.1;
+
+  Transform modelMatrix5;
+  modelMatrix5.scale(6, 6, 6);
+  modelMatrix5.translate(vec3(0, 0, 6));
+  addObject(scene, initSphere(mat4, modelMatrix5));
+
+  auto mat5 = std::make_shared<Blinn>();
+  mat5->m_diffuseColor = color3(0);
+  mat5->m_specularColor = color3(0.8);
+  mat5->m_shininess = 10;
+  mat5->m_reflection = vec3(0.8f);
+  mat5->m_reflectionGloss = 0.2;
+
+  Transform modelMatrix6;
+  modelMatrix6.scale(6, 6, 6);
+  modelMatrix6.translate(vec3(14, 0, 6));
+  addObject(scene, initSphere(mat5, modelMatrix6));
+
+  auto mat6 = std::make_shared<Blinn>();
+  mat6->m_diffuseColor = color3(0);
+  mat6->m_specularColor = color3(0.8);
+  mat6->m_shininess = 50;
+  mat6->m_refraction = vec3(0.8);
+  mat6->m_IOR = 2.0;
+  mat6->m_refractionGloss = 0.05;
+
+  Transform modelMatrix7;
+  modelMatrix7.scale(2, 2, 2);
+  modelMatrix7.translate(vec3(22, -30, 2));
+  addObject(scene, initSphere(mat6, modelMatrix7));
+
+  addLight(scene, initAmbientLight(color3(0.2)));
+
+  addLight(scene, initPointLight(vec3(-50, -100, 50), vec3(1,1,1), 5));
+
+  return scene;
+}
+
 
 Scene* parseScene(int sceneId){
   Scene *scene = NULL;
@@ -1136,8 +1264,12 @@ Scene* parseScene(int sceneId){
     break;
   case 11:
     scene = initScene11();
+    break;
   case 12:
     scene = initScene12();
+    break;
+  case 13:
+    scene = initScene13();
     break;
 
   default:

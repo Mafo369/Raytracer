@@ -24,13 +24,22 @@ class Light {
     std::vector<vec3> m_samples;
 };
 
+#include <random>
+
 class PointLight : public Light {
   public:
-    PointLight(vec3 position , color3 color);
+    PointLight(vec3 position , color3 color, float size=0 );
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
     vec3 getDirection(point3 p) override;
+    vec3 getLightPoint(point3 p, int c, float r);
     ~PointLight();
   private:
+    float m_size;
+    int m_shadowMin;
+    int m_shadowMax;
+
+    std::mt19937 engine;
+    std::uniform_real_distribution<float> m_rand {0, 1.0};
 };
 
 class AmbientLight : public Light {

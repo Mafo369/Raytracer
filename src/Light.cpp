@@ -5,8 +5,8 @@
 bool Light::is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree){
   Intersection temp_inter;
   Ray ray;
-  vec3 dir = normalize(-getDirection(point));
-  rayInit(&ray, point + (acne_eps * dir), dir, vec2(0,0),0.f, 10000);
+  vec3 dir = normalize(lightPosition - point);
+  rayInit(&ray, point + (acne_eps * normal), dir, vec2(0,0),0.f, 100);
   ray.shadow = true;
   ray.dox = vec3(0.f);
   ray.doy = vec3(0.f);
@@ -19,9 +19,12 @@ bool Light::is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scen
 }
 
 
-PointLight::PointLight(vec3 position, color3 color){
+PointLight::PointLight(vec3 position, color3 color, float size){
   m_position = position;
   m_color = color;
+  m_size = size;
+  m_shadowMin = 10;
+  m_shadowMax = 20;
   m_samples.push_back(position);
 }
 
@@ -30,7 +33,105 @@ PointLight::~PointLight(){
 }
 
 float PointLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection){
-  return is_shadowed(m_position, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f;
+  if(m_size == 0.0){
+    return is_shadowed(m_position, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f;
+  }
+  else{
+    // to detect if we are in the penumbra
+    bool penumbra = false;
+    
+    // keep track of running shadow variables
+    int count;
+    float mean = 0.0;
+    
+    // calculate random rotation for Halton sequence on our sphere of confusion
+    float rotate = m_rand(engine) * 2.0 * M_PI;
+    
+    // cast our minmum number of shadow rays
+    for(count = 0; count < m_shadowMin; count++){
+      
+      // calculate (partially) randomized shadow ray
+      vec3 p = getLightPoint(point, count, rotate);
+      
+      // cast shadow ray
+      int val = is_shadowed(p, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f;
+      
+      // update our mean shadow value
+      mean = ((float) (mean * count + val)) / ((float) (count + 1));
+      
+      // check if we are in penumbra
+      if(mean != 0.0 && mean != 1.0)
+        penumbra = true;
+    }
+    
+    // continue casting more shadow rays, if in penumbra
+    if(penumbra){
+      
+      // continue casting shadow rays
+      for(count = m_shadowMin; count < m_shadowMax; count++){
+        
+        // calculate (partially) randomized shadow ray
+        vec3 p = getLightPoint(point, count, rotate);
+        
+        // cast shadow ray
+        int val = is_shadowed(p, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f;
+        
+        // update our mean shadow value
+        mean = ((float) (mean * count + val)) / ((float) (count + 1));
+      }
+    }
+    
+    // return our final shaded intensity
+    return mean;
+  }
+}
+
+// Halton sequence generator, with an index (how deep) & a base
+float Halton(int index, int base){
+  
+  // initial value
+  float r = 0.0;
+  
+  // iterate through (using the base number) to find the value in the sequence
+  float f = 1.0 / (float) base;
+  for(int i = index; i > 0; i /= base){
+    r += f * (i % base);
+    f /= (float) base;
+  }
+  
+  // return the Halton sequence value
+  return r;
+}
+
+vec3 PointLight::getLightPoint(point3 p, int c, float r){
+  vec3 dir = normalize(m_position - p);
+  vec3 v0 = vec3(0, 1, 0);
+  float dotV0D = dot(v0, dir);
+  if(dotV0D < 0.5 && dotV0D > -0.5)
+    v0 = vec3(0, 0, 1);
+  vec3 v1 = normalize(cross(v0, dir));
+
+  float diskRad;
+  if(c < 4)
+    diskRad = 1.0 * m_size;
+  else
+    diskRad = sqrt(Halton(c -4, 2)) * m_size;
+
+  float diskRot;
+  if(c == 0)
+    diskRot = 0.0;
+  else if(c == 1)
+    diskRot = 1.0 * M_PI;
+  else if(c == 2)
+    diskRot = 0.5 * M_PI;
+  else if(c == 3)
+    diskRot = 1.5 * M_PI;
+  else
+    diskRot = Halton(c - 4, 3) * 2.0 * M_PI;
+      
+  // compute our semi-random position inside the disk
+  vec3 pos = m_position + (v0 * diskRad * cos(diskRot + r)) + (v1 * diskRad * sin(diskRot + r));
+  return pos; 
 }
 
 vec3 PointLight::getDirection(point3 p) {

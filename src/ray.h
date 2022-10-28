@@ -21,6 +21,8 @@ typedef struct ray_s {
     point3 doy;
     vec3 ddx;
     vec3 ddy;
+
+    bool hasDifferentials;
 } Ray;
 
 inline void rayInit(Ray *r, point3 o, vec3 d, vec2 pixel, float tmin=0, float tmax=100000, int depth=0) {

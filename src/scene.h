@@ -33,7 +33,7 @@ Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1
 void freeObject(Object *obj);
 
 //! init a new light at position with a give color (no special unit here for the moment)
-Light* initPointLight(point3 position, color3 color);
+Light* initPointLight(point3 position, color3 color, float size=0);
 Light *initDirectLight(vec3 direction, color3 color);
 
 Light* initAmbientLight(color3 color);

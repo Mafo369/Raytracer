@@ -91,8 +91,8 @@ void freeObject(Object *obj) {
     free(obj);
 }
 
-Light *initPointLight(point3 position, color3 color) {
-    Light *light = new PointLight(position, color);
+Light *initPointLight(point3 position, color3 color, float size) {
+    Light *light = new PointLight(position, color, size);
     return light;
 }
 
