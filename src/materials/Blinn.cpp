@@ -1,7 +1,7 @@
 #include "Blinn.h"
 #include "../bsdf.hpp"
 
-#define GLOSS_SAMPLES 20
+#define GLOSS_SAMPLES 10
 
 Blinn::Blinn(){
   m_IOR = 1.0;
@@ -31,7 +31,6 @@ color3 Blinn::shade(Intersection *intersection, vec3 v, Light* light, float inte
         l = normalize(sample - intersection->position);
       }
       float LdotN = dot(l, n);
-      v = normalize(v);
       vec3 vl = v + l;
       vec3 h = vl;
       h = normalize(h);
@@ -122,7 +121,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
         Intersection temp_intersection;
         color3 reflColor = trace_ray(scene, ray_ref, tree, &temp_intersection);
 
-        if(reflColor == scene->skyColor){
+        if(!temp_intersection.hit){
             vec3 dir = r;
             float z = asin(-dir.z) / float(M_PI) + 0.5;
             float x = dir.x / (abs(dir.x) + abs(dir.y));
@@ -168,7 +167,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
       Intersection temp_intersection;
       reflectionShade = trace_ray(scene, ray_ref, tree, &temp_intersection);
 
-      if(reflectionShade == scene->skyColor){
+      if(!temp_intersection.hit){
           vec3 dir = r;
           float z = asin(-dir.z) / float(M_PI) + 0.5;
           float x = dir.x / (abs(dir.x) + abs(dir.y));
@@ -254,7 +253,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
           Intersection temp_inter;
           color3 refrColor = trace_ray(scene, ray_refr, tree, &temp_inter);
 
-          if(refrColor != scene->skyColor){
+          if(temp_inter.hit){
             // Schlick's approximation for transmittance vs. reflectance
             float r0 = (n1 - n2) / (n1 + n2);
             r0 *= r0;
@@ -349,7 +348,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
         Intersection temp_inter;
         refractionShade= trace_ray(scene, ray_refr, tree, &temp_inter);
 
-        if(refractionShade != scene->skyColor){
+        if(temp_inter.hit){
           // Schlick's approximation for transmittance vs. reflectance
           float r0 = (n1 - n2) / (n1 + n2);
           r0 *= r0;
@@ -376,7 +375,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
           float x = dir.x / (abs(dir.x) + abs(dir.y) + 0.00001);
           float y = dir.y / (abs(dir.x) + abs(dir.y) + 0.00001);
           point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-          color3 env = 0.3f * scene->m_skyTexture->value(p.x, p.y);
+          color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
           ret += m_refraction * env;
         }
         delete ray_refr;

@@ -55,8 +55,10 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     // Une solution
     float t = -b / (2.f * a);
     if (t >= ray->tmin && t <= ray->tmax) {
+      ray->tmax = t;
       intersection->position = ray->orig + (t * ray->dir);
       intersection->mat = mat;
+      if(ray->shadow) return true;
       vec3 objectPoint = transform.transformTo(intersection->position);
       vec3 objectNormal = objectPoint - vec3(0.f, 0.f, 0.f);
       vec3 normal = transform.vectorTransformFrom(objectNormal);
@@ -87,27 +89,29 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       intersection->dpdu = transform.getTransform() * dpdu;
       intersection->dpdv = transform.getTransform() * dpdv;
 
-      ray->tmax = t;
       return true;
     }
   } else if (delta > 0) {
 
     // Deux solutions
-    float t1 = (-b + sqrtf(delta)) / (2 * a);
-    float t2 = (-b - sqrtf(delta)) / (2 * a);
+    float t1 = (-b + sqrtf(delta)) / (2.f * a);
+    float t2 = (-b - sqrtf(delta)) / (2.f * a);
     float t;
-    if (t1 >= transformedRay.tmin && t1 <= transformedRay.tmax &&
-        t2 >= transformedRay.tmin && t2 <= transformedRay.tmax) {
+    if (t1 >= transformedRay.tmin && t1 < transformedRay.tmax &&
+        t2 >= transformedRay.tmin && t2 < transformedRay.tmax) {
       t = std::min(t1, t2);
-    } else if (t1 >= transformedRay.tmin && t1 <= transformedRay.tmax) {
+    } else if (t1 >= transformedRay.tmin && t1 < transformedRay.tmax) {
       t = t1;
-    } else if (t2 >= transformedRay.tmin && t2 <= transformedRay.tmax) {
+    } else if (t2 >= transformedRay.tmin && t2 < transformedRay.tmax) {
       t = t2;
     } else {
       return false;
     }
+    ray->tmax = t;
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = mat;
+    if(ray->shadow) return true;
+
     vec3 objectPoint = transformedRay.orig + (t * transformedRay.dir);
     vec3 objectNormal = normalize(objectPoint - vec3(0, 0, 0));
     vec3 normal = transform.vectorTransformFrom(objectNormal);
@@ -138,7 +142,6 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     intersection->dpdu = transform.getTransform() * dpdu;
     intersection->dpdv = transform.getTransform() * dpdv;
 
-    ray->tmax = t;
     return true;
   }
   return false;

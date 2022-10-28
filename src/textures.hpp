@@ -7,6 +7,8 @@
 #include <iostream>
 #include <algorithm>
 
+#define TEXTURE_SAMPLES 32
+
 class texture {
     public:
       texture() = default;
@@ -24,7 +26,7 @@ class texture {
           color3 texColor = value(uv.x, uv.y);
           if(dot(d[0], d[0]) + dot(d[1], d[1]) == 0) return texColor;
 
-          for(int i = 1; i < 32; i++){
+          for(int i = 1; i < TEXTURE_SAMPLES; i++){
             float x=0, y=0, fx=0.5f, fy=1.0f/3.0f;
             for ( int ix=i; ix>0; ix/=2 ) { x+=fx*(ix%2); fx/=2; }   // Halton sequence (base 2)
             for ( int iy=i; iy>0; iy/=3 ) { y+=fy*(iy%3); fy/=3; }   // Halton sequence (base 3)
@@ -35,7 +37,7 @@ class texture {
             auto tdColor = value(new_uv.x, new_uv.y);
             texColor += tdColor;
           }
-          texColor = texColor / 32.f;
+          texColor = texColor / (float)TEXTURE_SAMPLES;
           return texColor;
       }
 

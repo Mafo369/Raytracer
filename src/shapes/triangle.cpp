@@ -43,9 +43,11 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
 
   if (t >= transformedRay.tmin && t <= transformedRay.tmax)
   {
+    ray->tmax = t;
     intersection->position = ray->orig + (t * ray->dir);
     intersection->mat = mat;
     intersection->isOutside = !(det < 0.f);
+    if(ray->shadow) return true;
 
     vec3 objectNormal = normalize(geom.triangle.n2 * u + geom.triangle.n3 * v + geom.triangle.n1 * (1.f - u - v));
     vec3 normal = transform.vectorTransformFrom(objectNormal);
@@ -81,7 +83,6 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
     intersection->dpdu = transform.getTransform() * dpdu;
     intersection->dpdv = transform.getTransform() * dpdv;
 
-    ray->tmax = t;
     return true;
   }
   return false;

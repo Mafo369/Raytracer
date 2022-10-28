@@ -25,6 +25,8 @@ bool Plane::intersect(Ray *ray, Intersection *intersection) const {
   intersection->position = ray->orig + t * ray->dir;
   intersection->mat = mat;
 
+  if(ray->shadow) return true;
+
   vec3 objectNormal = vec3(0.f,0.f,1.f);
   vec3 normal = transform.vectorTransformFrom(objectNormal);
   intersection->isOutside = true;

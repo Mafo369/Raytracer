@@ -32,6 +32,7 @@ typedef struct intersection_s {
   vec3 dpdy;
 
   bool parametric = true;
+  bool hit = false;
 
   // From PBR..
 

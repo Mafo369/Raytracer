@@ -68,6 +68,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 
   if (intersectKdTree(scene, tree, ray, intersection))
   {
+    intersection->hit = true;
     // Compute necessary differential information for texture filtering
     intersection->computeDifferentials(ray);
 
@@ -131,7 +132,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(4, 4, false, 2);
+    new StratifiedSampler(4, 4, true, 2);
 
   for (size_t j = 0; j < img->height; j++)
   {

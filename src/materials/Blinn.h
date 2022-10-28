@@ -13,6 +13,11 @@ class Blinn : public Material {
     color3 ambientColor(Intersection* intersection, color3 lightColor) override;
     color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) override;
 
+    //color3 refractionColor();
+    //color3 reflectionColor();
+    //color3 refractionGlossyColor();
+    //color3 reflectionGlossyColor();
+
     color3 m_diffuseColor;
     color3 m_specularColor;
     float m_shininess;

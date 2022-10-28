@@ -1103,7 +1103,7 @@ Scene *initScene13() {
   auto at = vec3(6.0, 0.0, -3.0);
   //setCameraFOV(scene, from, at, vec3(0, 0, 1), 30.f, float(WIDTH), float(HEIGHT), 0.01, distance(from, at));
   setSimpleCamera(scene, from, at, vec3(0.f, 0.f, 1), 40.f, float(WIDTH), float(HEIGHT), 0, 1 );
-  setSkyColor(scene, color3(1.,1.,1)); 
+  setSkyColor(scene, color3(0.,0.,0)); 
 
   image_texture* sky = new image_texture("../assets/clouds.png");
   scene->m_skyTexture = sky;
