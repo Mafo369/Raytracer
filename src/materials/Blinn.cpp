@@ -144,6 +144,7 @@ color3 Blinn::reflectionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection
   auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection);
 
   if(!temp_intersection.hit){
+    if(scene->m_skyTexture != nullptr){
       vec3 dir = r;
       float z = asin(-dir.z) / float(M_PI) + 0.5;
       float x = dir.x / (abs(dir.x) + abs(dir.y));
@@ -152,6 +153,7 @@ color3 Blinn::reflectionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection
       // TODO: Multiply with intensity var
       color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
       color += m_reflection * env;
+    }
   }
   else if(intersection->isOutside){
     color += (reflColor * m_reflection);
@@ -237,13 +239,15 @@ color3 Blinn::refractionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection
       refractionShade += refractionColor;
     }
     else{
-      vec3 dir = refractDir;
-      float z = asin(-dir.z) / float(M_PI) + 0.5;
-      float x = dir.x / (abs(dir.x) + abs(dir.y) + 0.00001);
-      float y = dir.y / (abs(dir.x) + abs(dir.y) + 0.00001);
-      point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-      color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
-      refractionShade += env;
+      if(scene->m_skyTexture != nullptr){
+        vec3 dir = refractDir;
+        float z = asin(-dir.z) / float(M_PI) + 0.5;
+        float x = dir.x / (abs(dir.x) + abs(dir.y) + 0.00001);
+        float y = dir.y / (abs(dir.x) + abs(dir.y) + 0.00001);
+        point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
+        color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
+        refractionShade += env;
+      }
     }
   }
   else

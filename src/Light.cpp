@@ -6,7 +6,8 @@ bool Light::is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scen
   Intersection temp_inter;
   Ray ray;
   vec3 dir = normalize(lightPosition - point);
-  rayInit(&ray, point + (acne_eps * normal), dir, vec2(0,0),0.f, 100);
+  //rayInit(&ray, point + (acne_eps * normal), dir, vec2(0,0),0.f, 100);
+  rayInit(&ray, point + (acne_eps * normal), dir, vec2(0,0),0.f, distance(point + (acne_eps * normal), lightPosition));
   ray.shadow = true;
   ray.dox = vec3(0.f);
   ray.doy = vec3(0.f);
@@ -34,7 +35,8 @@ PointLight::~PointLight(){
 
 float PointLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection){
   if(m_size == 0.0){
-    return is_shadowed(m_position, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f;
+    return 
+      is_shadowed(m_position, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f;
   }
   else{
     // to detect if we are in the penumbra

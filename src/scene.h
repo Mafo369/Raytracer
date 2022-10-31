@@ -19,7 +19,7 @@ typedef struct scene_s {
   Objects objects; //! the scene have several objects
   Camera* cam; //! the scene have one camera
   color3 skyColor; //! the sky color, could be extended to a sky function ;)
-  texture* m_skyTexture;
+  texture* m_skyTexture = nullptr;
 } Scene;
 
 //! create a new sphere structure

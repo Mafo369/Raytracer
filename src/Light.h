@@ -28,7 +28,7 @@ class Light {
 
 class PointLight : public Light {
   public:
-    PointLight(vec3 position , color3 color, float size=0 );
+    PointLight(vec3 position , color3 color, float size=0.0 );
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
     vec3 getDirection(point3 p) override;
     vec3 getLightPoint(point3 p, int c, float r);

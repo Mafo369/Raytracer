@@ -101,12 +101,13 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
   }
   else
   {
-    vec3 pixelUV = vec3((float)ray->pixel.x / scene->cam->imgWidth, (float)ray->pixel.y / scene->cam->imgHeight, 0.f);
-    vec3 p = glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f);
-    if(scene->m_skyTexture != nullptr && ray->depth == 0)
+    if(scene->m_skyTexture != nullptr && ray->depth == 0){
+      vec3 pixelUV = vec3((float)ray->pixel.x / scene->cam->imgWidth, (float)ray->pixel.y / scene->cam->imgHeight, 0.f);
+      vec3 p = glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f);
       ret = scene->skyColor * scene->m_skyTexture->value(p.x, p.y);
+    }
     else{
-    ret = scene->skyColor;
+      ret = scene->skyColor;
     }
   }
 
@@ -132,7 +133,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(1, 1, true, 2);
+    new StratifiedSampler(4, 4, true, 2);
 
   for (size_t j = 0; j < img->height; j++)
   {
