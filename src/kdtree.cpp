@@ -670,12 +670,12 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
 
   float dist;
 
-  Ray* ray_backup = new Ray; //Ray backup -> we'll use it to find plane intersections
-  rayInit(ray_backup, ray->orig, ray->dir, ray->pixel,ray->tmin, ray->tmax, ray->depth);
-  ray_backup->dox = ray->dox;
-  ray_backup->doy = ray->doy;
-  ray_backup->ddx = ray->ddx;
-  ray_backup->ddy = ray->ddy;
+  Ray ray_backup; //Ray backup -> we'll use it to find plane intersections
+  rayInit(&ray_backup, ray->orig, ray->dir, ray->pixel,ray->tmin, ray->tmax, ray->depth);
+  ray_backup.dox = ray->dox;
+  ray_backup.doy = ray->doy;
+  ray_backup.ddx = ray->ddx;
+  ray_backup.ddy = ray->ddy;
 
   if (intersectAabb(ray, tree->root->min, tree->root->max))
   { // If ray hits biggest bbox we traverse tree to find sphere intersections
@@ -690,17 +690,16 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
   if (hasIntersection)
   { // If object intersection in kdtree, use tmax as distance reference
     if(ray->shadow){
-      delete ray_backup;
       return true;
     }
-    ray_backup->tmax = ray->tmax;
+    ray_backup.tmax = ray->tmax;
     dist = ray->tmax;
   }
   for (size_t i = 0; i < tree->outOfTree.size(); i++)
   { // Iterate through plane objects to find intersection
     Intersection temp;
-    if(scene->objects[tree->outOfTree[i]]->intersect(ray_backup, &temp)){
-      float temp_dist = ray_backup->tmax;
+    if(scene->objects[tree->outOfTree[i]]->intersect(&ray_backup, &temp)){
+      float temp_dist = ray_backup.tmax;
       if (hasIntersection)
       {
         if (temp_dist < dist)
@@ -717,12 +716,10 @@ bool intersectKdTree(Scene *scene, KdTree *tree, Ray *ray, Intersection *interse
         dist = temp_dist;
         ray->tmax = dist;
         if(ray->shadow){
-          delete ray_backup;
           return true;
         }
       }
     }
   }
-  delete ray_backup;
   return hasIntersection;
 }

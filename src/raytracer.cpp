@@ -160,12 +160,11 @@ void renderImage(RenderImage *img, Scene *scene)
       tileSampler->StartPixel(pixel);
       do {
         CameraSample cameraSample = tileSampler->GetCameraSample(pixel);
-        Ray* rx = new Ray;
-        scene->cam->get_ray(cameraSample.xy.x, cameraSample.xy.y, cameraSample.uv.x, cameraSample.uv.y, rx, vec2(int(i), int(j)));
-        scaleDifferentials(rx, 1.f / sqrt(tileSampler->samplesPerPixel));
+        Ray rx;
+        scene->cam->get_ray(cameraSample.xy.x, cameraSample.xy.y, cameraSample.uv.x, cameraSample.uv.y, &rx, vec2(int(i), int(j)));
+        scaleDifferentials(&rx, 1.f / sqrt(tileSampler->samplesPerPixel));
         Intersection intersection;
-        pixel_color += trace_ray(scene, rx, tree, &intersection);
-        delete rx;
+        pixel_color += trace_ray(scene, &rx, tree, &intersection);
       }while(tileSampler->StartNextSample());
 
       *ptr = pixel_color / (float)tileSampler->samplesPerPixel;
