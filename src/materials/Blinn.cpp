@@ -1,7 +1,7 @@
 #include "Blinn.h"
 #include "../bsdf.hpp"
 
-#define GLOSS_SAMPLES 10
+#define SCATTER_SAMPLES 1
 
 Blinn::Blinn(){
   m_IOR = 1.0;
@@ -80,11 +80,11 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
   auto ret = color3(0.0);
   auto reflectionShade = color3(0.f);
   auto refractionShade = color3(0.f);
+  vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
   if((m_reflection.x > 0.f || m_reflection.y > 0.f || m_reflection.z > 0) || (m_refraction.x > 0.f || m_refraction.y > 0.f || m_refraction.z > 0))
   {
-    vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
     if(m_reflectionGloss > 0){
-      for(int i = 0; i < GLOSS_SAMPLES; i++){
+      for(int i = 0; i < SCATTER_SAMPLES; i++){
         point3 v0 = point3(0, 1, 0);
         if(dot(v0, normal))
           v0 = point3(0,0,1);
@@ -94,101 +94,21 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
         float factor = m_rand(engine) * 2.0 * M_PI;
         
         vec3 n1 = normalize(normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
-        vec3 r = normalize(reflect(ray->dir, n1));
-        Ray* ray_ref = new Ray;
-        rayInit(ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
-        
-        vec3 wo = ray->dir;
-        vec3 wi = r;
-        vec3 dndx = intersection->dn[0] * intersection->dudx +
-                    intersection->dn[1] * intersection->dvdx;
-        vec3 dndy = intersection->dn[0] * intersection->dudy +
-                    intersection->dn[1] * intersection->dvdy;
-        vec3 dwodx = -ray->ddx - wo, dwody = -ray->ddy - wo;
-        float dDNdx = dot(dwodx, n1) + dot(wo, dndx);
-        float dDNdy = dot(dwody, n1) + dot(wo, dndy);
-        vec3 ddx = wi - dwodx +
-            2.f * vec3(dot(wo, n1) * dndx + dDNdx * n1);
-        vec3 ddy = wi - dwody +
-            2.f * vec3(dot(wo, n1) * dndy + dDNdy * n1);
-
-        ray_ref->dox = (intersection->position + (acne_eps * ddx)) + intersection->dpdx;
-        ray_ref->doy = (intersection->position + (acne_eps * ddy)) + intersection->dpdy;
-        
-        ray_ref->ddx = normalize(ddx);
-        ray_ref->ddy = normalize(ddy);
-
-        Intersection temp_intersection;
-        color3 reflColor = trace_ray(scene, ray_ref, tree, &temp_intersection);
-
-        if(!temp_intersection.hit){
-            vec3 dir = r;
-            float z = asin(-dir.z) / float(M_PI) + 0.5;
-            float x = dir.x / (abs(dir.x) + abs(dir.y));
-            float y = dir.y / (abs(dir.x) + abs(dir.y));
-            point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-            // TODO: Multiply with intensity var
-            color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
-            reflectionShade += m_reflection * env;
-        }
-        else if(intersection->isOutside)
-          reflectionShade += (reflColor * m_reflection);
-        delete ray_ref;
+        reflectionColor(scene, tree, ray, intersection, reflectionShade, n1);
       }
-      reflectionShade /= GLOSS_SAMPLES;
+      reflectionShade /= SCATTER_SAMPLES;
       ret += reflectionShade;
     }
     else
     {
-      vec3 r = normalize(reflect(ray->dir, normal));
-      Ray* ray_ref = new Ray;
-      rayInit(ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
-      
-      vec3 wo = ray->dir;
-      vec3 wi = r;
-      vec3 dndx = intersection->dn[0] * intersection->dudx +
-                  intersection->dn[1] * intersection->dvdx;
-      vec3 dndy = intersection->dn[0] * intersection->dudy +
-                  intersection->dn[1] * intersection->dvdy;
-      vec3 dwodx = -ray->ddx - wo, dwody = -ray->ddy - wo;
-      float dDNdx = dot(dwodx, normal) + dot(wo, dndx);
-      float dDNdy = dot(dwody, normal) + dot(wo, dndy);
-      vec3 ddx = wi - dwodx +
-          2.f * vec3(dot(wo, normal) * dndx + dDNdx * normal);
-      vec3 ddy = wi - dwody +
-          2.f * vec3(dot(wo, normal) * dndy + dDNdy * normal);
-
-      ray_ref->dox = (intersection->position + (acne_eps * ddx)) + intersection->dpdx;
-      ray_ref->doy = (intersection->position + (acne_eps * ddy)) + intersection->dpdy;
-      
-      ray_ref->ddx = normalize(ddx);
-      ray_ref->ddy = normalize(ddy);
-
-      Intersection temp_intersection;
-      reflectionShade = trace_ray(scene, ray_ref, tree, &temp_intersection);
-
-      if(!temp_intersection.hit){
-          vec3 dir = r;
-          float z = asin(-dir.z) / float(M_PI) + 0.5;
-          float x = dir.x / (abs(dir.x) + abs(dir.y));
-          float y = dir.y / (abs(dir.x) + abs(dir.y));
-          point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-          // TODO: Multiply with intensity var
-          color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
-          ret += m_reflection * env;
-      }
-      else if(intersection->isOutside)
-        ret += (reflectionShade * m_reflection);
-      delete ray_ref;
-      
+      reflectionShade = reflectionColor(scene, tree, ray, intersection, ret, normal); 
     }
 
   }
   if(m_refraction.x > 0.f || m_refraction.y > 0.f || m_refraction.z > 0) {
 
-    vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
     if(m_refractionGloss > 0) {
-      for(int i = 0; i < GLOSS_SAMPLES; i++){
+      for(int i = 0; i < SCATTER_SAMPLES; i++){
         point3 v0 = point3(0, 1, 0);
         if(dot(v0, normal))
           v0 = point3(0,0,1);
@@ -198,193 +118,155 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
         float factor = m_rand(engine) * 2.0 * M_PI;
         
         normal = normalize(normal + (v0 * rndRefraction * cos(factor)) + (v1 * rndRefraction * sin(factor)));
+        refractionShade += refractionColor(scene, tree, ray, intersection, reflectionShade, normal);
 
-        float n1, n2;
-        vec3 dndx = intersection->dn[0] * intersection->dudx +
-                    intersection->dn[1] * intersection->dvdx;
-        vec3 dndy = intersection->dn[0] * intersection->dudy +
-                    intersection->dn[1] * intersection->dvdy;
-        float eta = 1 / m_IOR;
-        if(intersection->isOutside){
-          n1 = 1.0;
-          n2 = m_IOR;
-        }else {
-          n2 = 1.0;
-          n1 = m_IOR;
-          eta = 1 / m_IOR;
-          dndx = -dndx; 
-          dndy = -dndy; 
-        }
-        vec3 v = -ray->dir;
-
-        // calculate refraction ray direction
-        float c1 = dot(normal, v);
-        float s1 = sqrt(1.0 - c1 * c1);
-        float s2 = n1 / n2 * s1;
-        float c2 = sqrt(1.0 - s2 * s2);
-        vec3 p = normalize(v - c1 * normal);
-        vec3 pt = s2 * -p;
-        vec3 nt = c2 * -normal;
-
-        vec3 refractDir = normalize(pt + nt);
-
-        if(s2 * s2 <= 1.0){
-          Ray* ray_refr = new Ray;
-          rayInit(ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
-          vec3 wo = -ray->dir;
-          vec3 wi = refractDir;
-
-          vec3 dwodx = -ray->ddx - wo, dwody = -ray->ddy - wo;
-          float dDNdx = dot(dwodx, normal) + dot(wo, dndx);
-          float dDNdy = dot(dwody, normal) + dot(wo, dndy);
-
-          float mu = eta * dot(wo, normal) - abs(dot(wi, normal)); 
-          float dmudx = (eta - (eta * eta * dot(wo, normal)) / abs(dot(wi, normal))) * dDNdx;
-          float dmudy = (eta - (eta * eta * dot(wo, normal)) / abs(dot(wi, normal))) * dDNdy;
-
-          vec3 ddx = normalize(wi - eta * dwodx + vec3(mu * dndx + dmudx * normal));
-          vec3 ddy = normalize(wi - eta * dwody + vec3(mu * dndy + dmudy * normal));
-
-          ray_refr->dox = (intersection->position + (acne_eps * ddx)) + intersection->dpdx;
-          ray_refr->doy = (intersection->position + (acne_eps * ddy)) + intersection->dpdy;
-          ray_refr->ddx = ddx;
-          ray_refr->ddy = ddy;
-
-          Intersection temp_inter;
-          color3 refrColor = trace_ray(scene, ray_refr, tree, &temp_inter);
-
-          if(temp_inter.hit){
-            // Schlick's approximation for transmittance vs. reflectance
-            float r0 = (n1 - n2) / (n1 + n2);
-            r0 *= r0;
-            float r;
-            if(n1 <= n2)
-              r = r0 + (1.0 - r0) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1);
-            else
-              r = r0 + (1.0 - r0) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2);
-            float t = 1.0 - r;
-            
-            // compute total refraction color
-            color3 refractionColor = m_refraction * (t * refrColor + r * reflectionShade);
-
-            if(!temp_inter.isOutside){
-              refractionColor.r *= exp(-m_absorption.r * ray_refr->tmax);
-              refractionColor.g *= exp(-m_absorption.g * ray_refr->tmax);
-              refractionColor.b *= exp(-m_absorption.b * ray_refr->tmax);
-            }
-            refractionShade += refractionColor;
-          }
-          else{
-            vec3 dir = refractDir;
-            float z = asin(-dir.z) / float(M_PI) + 0.5;
-            float x = dir.x / (abs(dir.x) + abs(dir.y) + 0.00001);
-            float y = dir.y / (abs(dir.x) + abs(dir.y) + 0.00001);
-            point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-            color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
-            refractionShade += env;
-          }
-          delete ray_refr;
-        }
-        else
-        {
-          refractionShade += m_refraction * reflectionShade;
-        }
       }
-      refractionShade /= GLOSS_SAMPLES;
+      refractionShade /= SCATTER_SAMPLES;
       ret += refractionShade;
     }
     else{
-      float n1, n2;
-      vec3 dndx = intersection->dn[0] * intersection->dudx +
-                  intersection->dn[1] * intersection->dvdx;
-      vec3 dndy = intersection->dn[0] * intersection->dudy +
-                  intersection->dn[1] * intersection->dvdy;
-      float eta = 1 / m_IOR;
-      if(intersection->isOutside){
-        n1 = 1.0;
-        n2 = m_IOR;
-      }else {
-        n2 = 1.0;
-        n1 = m_IOR;
-        eta = 1 / m_IOR;
-        dndx = -dndx; 
-        dndy = -dndy; 
-      }
-      vec3 v = -ray->dir;
-
-      // calculate refraction ray direction
-      float c1 = dot(normal, v);
-      float s1 = sqrt(1.0 - c1 * c1);
-      float s2 = n1 / n2 * s1;
-      float c2 = sqrt(1.0 - s2 * s2);
-      vec3 p = normalize(v - c1 * normal);
-      vec3 pt = s2 * -p;
-      vec3 nt = c2 * -normal;
-
-      vec3 refractDir = normalize(pt + nt);
-
-      if(s2 * s2 <= 1.0){
-        Ray* ray_refr = new Ray;
-        rayInit(ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
-        vec3 wo = -ray->dir;
-        vec3 wi = refractDir;
-
-        vec3 dwodx = -ray->ddx - wo, dwody = -ray->ddy - wo;
-        float dDNdx = dot(dwodx, normal) + dot(wo, dndx);
-        float dDNdy = dot(dwody, normal) + dot(wo, dndy);
-
-        float mu = eta * dot(wo, normal) - abs(dot(wi, normal)); 
-        float dmudx = (eta - (eta * eta * dot(wo, normal)) / abs(dot(wi, normal))) * dDNdx;
-        float dmudy = (eta - (eta * eta * dot(wo, normal)) / abs(dot(wi, normal))) * dDNdy;
-
-        vec3 ddx = normalize(wi - eta * dwodx + vec3(mu * dndx + dmudx * normal));
-        vec3 ddy = normalize(wi - eta * dwody + vec3(mu * dndy + dmudy * normal));
-
-        ray_refr->dox = (intersection->position + (acne_eps * ddx)) + intersection->dpdx;
-        ray_refr->doy = (intersection->position + (acne_eps * ddy)) + intersection->dpdy;
-        ray_refr->ddx = ddx;
-        ray_refr->ddy = ddy;
-
-        Intersection temp_inter;
-        refractionShade= trace_ray(scene, ray_refr, tree, &temp_inter);
-
-        if(temp_inter.hit){
-          // Schlick's approximation for transmittance vs. reflectance
-          float r0 = (n1 - n2) / (n1 + n2);
-          r0 *= r0;
-          float r;
-          if(n1 <= n2)
-            r = r0 + (1.0 - r0) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1);
-          else
-            r = r0 + (1.0 - r0) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2);
-          float t = 1.0 - r;
-          
-          // compute total refraction color
-          color3 refractionColor = m_refraction * (t * refractionShade + r * reflectionShade);
-
-          if(!temp_inter.isOutside){
-            refractionColor.r *= exp(-m_absorption.r * ray_refr->tmax);
-            refractionColor.g *= exp(-m_absorption.g * ray_refr->tmax);
-            refractionColor.b *= exp(-m_absorption.b * ray_refr->tmax);
-          }
-          ret += refractionColor;
-        }
-        else{
-          vec3 dir = refractDir;
-          float z = asin(-dir.z) / float(M_PI) + 0.5;
-          float x = dir.x / (abs(dir.x) + abs(dir.y) + 0.00001);
-          float y = dir.y / (abs(dir.x) + abs(dir.y) + 0.00001);
-          point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-          color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
-          ret += m_refraction * env;
-        }
-        delete ray_refr;
-      }
-      else
-      {
-        ret += m_refraction * reflectionShade;
-      }
+      ret += refractionColor(scene, tree, ray, intersection, reflectionShade, normal);
     }
   }
   return ret;
+}
+
+color3 Blinn::reflectionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, color3& color, vec3 normal){
+  vec3 r = normalize(reflect(ray->dir, normal));
+  Ray* ray_ref = new Ray;
+  rayInit(ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
+  
+  vec3 wo = ray->dir;
+  vec3 wi = r;
+  vec3 dndx = intersection->dn[0] * intersection->dudx +
+              intersection->dn[1] * intersection->dvdx;
+  vec3 dndy = intersection->dn[0] * intersection->dudy +
+              intersection->dn[1] * intersection->dvdy;
+  vec3 dwodx = -ray->ddx - wo, dwody = -ray->ddy - wo;
+  float dDNdx = dot(dwodx, normal) + dot(wo, dndx);
+  float dDNdy = dot(dwody, normal) + dot(wo, dndy);
+  vec3 ddx = wi - dwodx +
+      2.f * vec3(dot(wo, normal) * dndx + dDNdx * normal);
+  vec3 ddy = wi - dwody +
+      2.f * vec3(dot(wo, normal) * dndy + dDNdy * normal);
+
+  ray_ref->dox = (intersection->position + (acne_eps * ddx)) + intersection->dpdx;
+  ray_ref->doy = (intersection->position + (acne_eps * ddy)) + intersection->dpdy;
+  
+  ray_ref->ddx = normalize(ddx);
+  ray_ref->ddy = normalize(ddy);
+
+  Intersection temp_intersection;
+  auto reflColor = trace_ray(scene, ray_ref, tree, &temp_intersection);
+  delete ray_ref;
+
+  if(!temp_intersection.hit){
+      vec3 dir = r;
+      float z = asin(-dir.z) / float(M_PI) + 0.5;
+      float x = dir.x / (abs(dir.x) + abs(dir.y));
+      float y = dir.y / (abs(dir.x) + abs(dir.y));
+      point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
+      // TODO: Multiply with intensity var
+      color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
+      color += m_reflection * env;
+  }
+  else if(intersection->isOutside){
+    color += (reflColor * m_reflection);
+  }
+  return reflColor;
+}
+
+color3 Blinn::refractionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, color3 reflectionShade, vec3 normal){
+  float n1, n2;
+  vec3 dndx = intersection->dn[0] * intersection->dudx +
+              intersection->dn[1] * intersection->dvdx;
+  vec3 dndy = intersection->dn[0] * intersection->dudy +
+              intersection->dn[1] * intersection->dvdy;
+  float eta = 1.f / m_IOR;
+  color3 refractionShade = color3(0,0,0);
+  if(intersection->isOutside){
+    n1 = 1.0;
+    n2 = m_IOR;
+  }else {
+    n2 = 1.0;
+    n1 = m_IOR;
+    eta = 1.f / m_IOR;
+    dndx = -dndx; 
+    dndy = -dndy; 
+  }
+  vec3 v = -ray->dir;
+
+  // calculate refraction ray direction
+  float c1 = dot(normal, v);
+  float s1 = sqrt(1.0 - c1 * c1);
+  float s2 = n1 / n2 * s1;
+  float c2 = sqrt(1.0 - s2 * s2);
+  vec3 p = normalize(v - c1 * normal);
+  vec3 pt = s2 * -p;
+  vec3 nt = c2 * -normal;
+
+  vec3 refractDir = normalize(pt + nt);
+
+  if(s2 * s2 <= 1.0){
+    Ray* ray_refr = new Ray;
+    rayInit(ray_refr, intersection->position + (acne_eps * refractDir), refractDir, ray->pixel,0, 100000, ray->depth + 1);
+    vec3 wo = -ray->dir;
+    vec3 wi = refractDir;
+
+    vec3 dwodx = -ray->ddx - wo, dwody = -ray->ddy - wo;
+    float dDNdx = dot(dwodx, normal) + dot(wo, dndx);
+    float dDNdy = dot(dwody, normal) + dot(wo, dndy);
+
+    float mu = eta * dot(wo, normal) - abs(dot(wi, normal)); 
+    float dmudx = (eta - (eta * eta * dot(wo, normal)) / abs(dot(wi, normal))) * dDNdx;
+    float dmudy = (eta - (eta * eta * dot(wo, normal)) / abs(dot(wi, normal))) * dDNdy;
+
+    vec3 ddx = normalize(wi - eta * dwodx + vec3(mu * dndx + dmudx * normal));
+    vec3 ddy = normalize(wi - eta * dwody + vec3(mu * dndy + dmudy * normal));
+
+    ray_refr->dox = (intersection->position + (acne_eps * ddx)) + intersection->dpdx;
+    ray_refr->doy = (intersection->position + (acne_eps * ddy)) + intersection->dpdy;
+    ray_refr->ddx = ddx;
+    ray_refr->ddy = ddy;
+
+    Intersection temp_inter;
+    color3 refrColor = trace_ray(scene, ray_refr, tree, &temp_inter);
+
+    if(temp_inter.hit){
+      // Schlick's approximation for transmittance vs. reflectance
+      float r0 = (n1 - n2) / (n1 + n2);
+      r0 *= r0;
+      float r;
+      if(n1 <= n2)
+        r = r0 + (1.0 - r0) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1);
+      else
+        r = r0 + (1.0 - r0) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2);
+      float t = 1.0 - r;
+      
+      // compute total refraction color
+      color3 refractionColor = m_refraction * (t * refrColor + r * reflectionShade);
+
+      if(!temp_inter.isOutside){
+        refractionColor.r *= exp(-m_absorption.r * ray_refr->tmax);
+        refractionColor.g *= exp(-m_absorption.g * ray_refr->tmax);
+        refractionColor.b *= exp(-m_absorption.b * ray_refr->tmax);
+      }
+      refractionShade += refractionColor;
+    }
+    else{
+      vec3 dir = refractDir;
+      float z = asin(-dir.z) / float(M_PI) + 0.5;
+      float x = dir.x / (abs(dir.x) + abs(dir.y) + 0.00001);
+      float y = dir.y / (abs(dir.x) + abs(dir.y) + 0.00001);
+      point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
+      color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
+      refractionShade += env;
+    }
+    delete ray_refr;
+  }
+  else
+  {
+    refractionShade += m_refraction * reflectionShade;
+  }
+  return refractionShade;
 }
