@@ -63,7 +63,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 {
   color3 ret = color3(0, 0, 0);
 
-  if (ray->depth > 1)
+  if (ray->depth > 3)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, intersection))
@@ -130,7 +130,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(3, 3, true, 2);
+    new StratifiedSampler(8, 8, true, 2);
 
   for (size_t j = 0; j < img->height; j++)
   {

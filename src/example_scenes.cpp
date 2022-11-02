@@ -1310,7 +1310,7 @@ Scene* initScene14(){
   modelMatrix6.translate(vec3(-4.5,5,0));
   addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix6);
 
-  addLight(scene, initPointLight(point3(0, 0, 22), color3(0.5f), 4.0));
+  addLight(scene, initPointLight(point3(0, 0, 19), color3(0.5f), 5.0));
   return scene;
 }
 

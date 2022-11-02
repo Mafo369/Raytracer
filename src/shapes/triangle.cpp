@@ -53,7 +53,8 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
     vec3 normal = transform.vectorTransformFrom(objectNormal);
     intersection->normal = normalize(normal);
 
-    auto uv = geom.triangle.tex[1] * u + geom.triangle.tex[2] * v + geom.triangle.tex[0] * (1.f - u - v);
+    auto uv = geom.triangle.tex[1] * u + geom.triangle.tex[2] * v + 
+              geom.triangle.tex[0] * (1.f - u - v);
     intersection->u = uv.x;
     intersection->v = uv.y;
 

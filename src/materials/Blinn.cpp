@@ -114,7 +114,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
   }
 
   // Indirect illumination
-  int isamples = 3;
+  int isamples = 5;
   color3 iColor = color3(0,0,0);
   for(int i = 0; i < isamples; i++){
     vec3 dirA = cosineWeightedSampling(normal);
