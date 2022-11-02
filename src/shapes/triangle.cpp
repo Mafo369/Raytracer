@@ -59,29 +59,31 @@ bool Triangle::intersect(Ray *ray, Intersection *intersection) const {
 
     // From PBR...
 
-    vec3 dpdu, dpdv;
-    vec3 dndu, dndv;
-    vec2 duv02 = geom.triangle.tex[0] - geom.triangle.tex[2], duv12 = geom.triangle.tex[1] - geom.triangle.tex[2];
-    vec3 dp02 = geom.triangle.p1 - geom.triangle.p3, dp12 = geom.triangle.p2 - geom.triangle.p3;
+    if(ray->hasDifferentials){
+      vec3 dpdu, dpdv;
+      vec3 dndu, dndv;
+      vec2 duv02 = geom.triangle.tex[0] - geom.triangle.tex[2], duv12 = geom.triangle.tex[1] - geom.triangle.tex[2];
+      vec3 dp02 = geom.triangle.p1 - geom.triangle.p3, dp12 = geom.triangle.p2 - geom.triangle.p3;
 
-    float determinant = duv02[0] * duv12[1] - duv02[1] * duv12[0];
-    if(determinant == 0){
-      CoordinateSystem(normalize(cross(v1v3, v1v2)), &dpdu, &dpdv);
-      dndu = dndv = vec3(0, 0, 0);
-    } else {
-      float invdet = 1 / determinant;
-      dpdu = ( duv12[1] * dp02 - duv02[1] * dp12) * invdet;
-      dpdv = (-duv12[0] * dp02 + duv02[0] * dp12) * invdet;
-      vec3 dn1 = geom.triangle.n1 - geom.triangle.n3;
-      vec3 dn2 = geom.triangle.n2 - geom.triangle.n3;
-      dndu = ( duv12[1] * dn1 - duv02[1] * dn2) * invdet;
-      dndv = (-duv12[0] * dn1 + duv02[0] * dn2) * invdet;
+      float determinant = duv02[0] * duv12[1] - duv02[1] * duv12[0];
+      if(determinant == 0){
+        CoordinateSystem(normalize(cross(v1v3, v1v2)), &dpdu, &dpdv);
+        dndu = dndv = vec3(0, 0, 0);
+      } else {
+        float invdet = 1 / determinant;
+        dpdu = ( duv12[1] * dp02 - duv02[1] * dp12) * invdet;
+        dpdv = (-duv12[0] * dp02 + duv02[0] * dp12) * invdet;
+        vec3 dn1 = geom.triangle.n1 - geom.triangle.n3;
+        vec3 dn2 = geom.triangle.n2 - geom.triangle.n3;
+        dndu = ( duv12[1] * dn1 - duv02[1] * dn2) * invdet;
+        dndv = (-duv12[0] * dn1 + duv02[0] * dn2) * invdet;
+      }
+
+      intersection->dn[0] = transform.vectorTransformFrom(dndu);
+      intersection->dn[1] = transform.vectorTransformFrom(dndv);
+      intersection->dpdu = transform.getTransform() * dpdu;
+      intersection->dpdv = transform.getTransform() * dpdv;
     }
-
-    intersection->dn[0] = transform.vectorTransformFrom(dndu);
-    intersection->dn[1] = transform.vectorTransformFrom(dndv);
-    intersection->dpdu = transform.getTransform() * dpdu;
-    intersection->dpdv = transform.getTransform() * dpdv;
 
     return true;
   }

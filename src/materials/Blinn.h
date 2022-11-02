@@ -10,7 +10,7 @@ class Blinn : public Material {
 
     color3 shade(Intersection *intersection, vec3 v, Light* light, float intensity) override;
     color3 textureColor(float u, float v, int face) override;
-    color3 ambientColor(Intersection* intersection, color3 lightColor) override;
+    color3 ambientColor(Ray* ray, Intersection* intersection, color3 lightColor) override;
     color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) override;
 
     color3 refractionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, color3 reflectionShade, vec3 normal);
@@ -25,8 +25,5 @@ class Blinn : public Material {
     float m_IOR;
     float m_reflectionGloss;
     float m_refractionGloss;
-
-    std::mt19937 engine;
-    std::uniform_real_distribution<float> m_rand {0.f, 1.f};
 
 };

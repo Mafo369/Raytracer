@@ -63,14 +63,15 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 {
   color3 ret = color3(0, 0, 0);
 
-  if (ray->depth > 3)
+  if (ray->depth > 1)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, intersection))
   {
     intersection->hit = true;
     // Compute necessary differential information for texture filtering
-    intersection->computeDifferentials(ray);
+    if(ray->hasDifferentials)
+      intersection->computeDifferentials(ray);
 
     // if skybox return directly the corresponding color
     if(intersection->face != -1){
@@ -83,7 +84,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
     {
       vec3 v = ray->dir * -1.0f;
       if(scene->lights[i]->isAmbient()){
-        ret += intersection->mat->ambientColor(intersection, scene->lights[i]->getColor());
+        ret += intersection->mat->ambientColor(ray, intersection, scene->lights[i]->getColor());
         continue;
       }
       auto intensity = scene->lights[i]->intensityAt(intersection->position, scene, tree, v, intersection); 
@@ -133,7 +134,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(4, 4, true, 2);
+    new StratifiedSampler(3, 3, true, 2);
 
   for (size_t j = 0; j < img->height; j++)
   {
@@ -162,13 +163,22 @@ void renderImage(RenderImage *img, Scene *scene)
       do {
         CameraSample cameraSample = tileSampler->GetCameraSample(pixel);
         Ray rx;
+        rx.hasDifferentials = false;
         scene->cam->get_ray(cameraSample.xy.x, cameraSample.xy.y, cameraSample.uv.x, cameraSample.uv.y, &rx, vec2(int(i), int(j)));
-        scaleDifferentials(&rx, 1.f / sqrt(tileSampler->samplesPerPixel));
+        if(rx.hasDifferentials)
+          scaleDifferentials(&rx, 1.f / sqrt(tileSampler->samplesPerPixel));
         Intersection intersection;
         pixel_color += trace_ray(scene, &rx, tree, &intersection);
       }while(tileSampler->StartNextSample());
 
-      *ptr = pixel_color / (float)tileSampler->samplesPerPixel;
+      color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;
+
+      // gamma-correction
+      avgColor.r = pow(avgColor.r, 1.0  / 2.2);
+      avgColor.g = pow(avgColor.g, 1.0  / 2.2);
+      avgColor.b = pow(avgColor.b, 1.0  / 2.2);
+
+      *ptr = avgColor;
     }
   }
   }

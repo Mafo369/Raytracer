@@ -79,15 +79,17 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
       intersection->u = u;
       intersection->v = v;
 
-      float dudx, dvdx, dudy, dvdy;
-      vec3 dndu, dndv;
-      vec3 dpdu, dpdv;
-      computeDifferentials(objectPoint, objectNormal, ray, radius, theta, 
-                            &dudx, &dudy, &dvdx, &dvdy, &dndu, &dndv, &dpdu, &dpdv);
-      intersection->dn[0] = transform.vectorTransformFrom(dndu);
-      intersection->dn[1] = transform.vectorTransformFrom(dndv);
-      intersection->dpdu = transform.getTransform() * dpdu;
-      intersection->dpdv = transform.getTransform() * dpdv;
+      if(ray->hasDifferentials){
+        float dudx, dvdx, dudy, dvdy;
+        vec3 dndu, dndv;
+        vec3 dpdu, dpdv;
+        computeDifferentials(objectPoint, objectNormal, ray, radius, theta, 
+                              &dudx, &dudy, &dvdx, &dvdy, &dndu, &dndv, &dpdu, &dpdv);
+        intersection->dn[0] = transform.vectorTransformFrom(dndu);
+        intersection->dn[1] = transform.vectorTransformFrom(dndv);
+        intersection->dpdu = transform.getTransform() * dpdu;
+        intersection->dpdv = transform.getTransform() * dpdv;
+      }
 
       return true;
     }
@@ -132,16 +134,17 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     intersection->u = u;
     intersection->v = v;
 
-    float dudx, dvdx, dudy, dvdy;
-    vec3 dndu, dndv;
-    vec3 dpdu, dpdv;
-    computeDifferentials(objectPoint, objectNormal, ray, radius, theta, 
-                          &dudx, &dudy, &dvdx, &dvdy, &dndu, &dndv, &dpdu, &dpdv);
-    intersection->dn[0] = transform.vectorTransformFrom(dndu);
-    intersection->dn[1] = transform.vectorTransformFrom(dndv);
-    intersection->dpdu = transform.getTransform() * dpdu;
-    intersection->dpdv = transform.getTransform() * dpdv;
-
+    if(ray->hasDifferentials){
+      float dudx, dvdx, dudy, dvdy;
+      vec3 dndu, dndv;
+      vec3 dpdu, dpdv;
+      computeDifferentials(objectPoint, objectNormal, ray, radius, theta, 
+                            &dudx, &dudy, &dvdx, &dvdy, &dndu, &dndv, &dpdu, &dpdv);
+      intersection->dn[0] = transform.vectorTransformFrom(dndu);
+      intersection->dn[1] = transform.vectorTransformFrom(dndv);
+      intersection->dpdu = transform.getTransform() * dpdu;
+      intersection->dpdv = transform.getTransform() * dpdv;
+    }
     return true;
   }
   return false;

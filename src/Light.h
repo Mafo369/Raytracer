@@ -38,7 +38,7 @@ class PointLight : public Light {
     int m_shadowMin;
     int m_shadowMax;
 
-    std::mt19937 engine;
+    std::minstd_rand engine;
     std::uniform_real_distribution<float> m_rand {0, 1.0};
 };
 

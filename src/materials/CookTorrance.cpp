@@ -102,7 +102,7 @@ vec3 random_in_unit_sphere() {
     }
 }
 
-color3 CookTorrance::ambientColor(Intersection* intersection, color3 lightColor) {
+color3 CookTorrance::ambientColor(Ray* ray, Intersection* intersection, color3 lightColor) {
   if(m_texture != nullptr)
     return m_texture->value(intersection->u, intersection->v) * lightColor;
   return m_diffuseColor * lightColor;

@@ -65,19 +65,37 @@ class SimpleCamera : public Camera {
         vec3 dnorm = normalize(d);
         rayInit(r, pos + offset, dnorm, pixel);
 
-        r->dox = pos + offset;
-        r->doy = pos + offset;
-        r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos - offset;
-        r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos - offset;
+        if(r->hasDifferentials){
+          r->dox = pos + offset;
+          r->doy = pos + offset;
+          r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos - offset;
+          r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos - offset;
+        }
+        else
+        {
+          r->dox = vec3(0);
+          r->doy = vec3(0);
+          r->ddx = vec3(0);
+          r->ddy = vec3(0);
+        }
       }
       else{
         vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos;
         vec3 dnorm = normalize(d);
         rayInit(r, pos, dnorm, pixel);
-        r->dox = pos;
-        r->doy = pos;
-        r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos;
-        r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos;
+        if(r->hasDifferentials){
+          r->dox = pos;
+          r->doy = pos;
+          r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos;
+          r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos;
+        }
+        else
+        {
+          r->dox = vec3(0);
+          r->doy = vec3(0);
+          r->ddx = vec3(0);
+          r->ddy = vec3(0);
+        }
       }
     }
 
