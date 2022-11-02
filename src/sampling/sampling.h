@@ -183,4 +183,15 @@ inline float PowerHeuristic(int nf, float fPdf, int ng, float gPdf) {
     return (f * f) / (f * f + g * g);
 }
 
+inline vec3 cosineWeightedSampling(vec3 normal) {
+    float phi = uniform01(engine) * 2.0 * M_PI;
+    float the = acos(1.0 - 2.0 * uniform01(engine)) / 2.0;
 
+    vec3 v0 = vec3(0, 1.0, 0);
+    if(dot(v0, normal) > 0.5 || dot(v0, normal) < -0.5)
+      v0 = vec3(0,0,1.0);
+    vec3 v1 = normalize(cross(v0, normal));
+    v0 = normalize(cross(v1, normal));
+
+    return normal * cos(the) + (v0 * cos(phi) + v1 * sin(phi)) * sin(the);
+}

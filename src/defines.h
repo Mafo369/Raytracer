@@ -42,6 +42,10 @@ inline float degrees_to_radians(float degrees) {
   return degrees * M_PI / 180.0f;
 }
 
+#include <random>
+
+static std::mt19937 engine(time(NULL));
+static std::uniform_real_distribution<float> uniform01 {0, 1.0};
 
 // Inspired by: https://graphics.cs.utah.edu/courses/cs6620/fall2019/?f=code&prj=7&file=scene.h
 class Transform {

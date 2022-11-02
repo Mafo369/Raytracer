@@ -122,10 +122,6 @@ void scaleDifferentials(Ray* ray, float s){
   ray->ddy = ray->dir + (ray->ddy - ray->dir) * s;
 }
 
-
-static std::minstd_rand engineSamples(time(NULL));
-static std::uniform_real_distribution<float> m_unifDistributionSamples{0.0f, 1.0f};
-
 void renderImage(RenderImage *img, Scene *scene)
 {
 

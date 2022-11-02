@@ -10,7 +10,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-static std::minstd_rand engine(time(NULL));
 static std::uniform_real_distribution<float> m_unifDistributionRand{-1.f, 1.0f};
 
 class Camera {

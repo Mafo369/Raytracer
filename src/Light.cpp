@@ -47,7 +47,7 @@ float PointLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view,
     float mean = 0.0;
     
     // calculate random rotation for Halton sequence on our sphere of confusion
-    float rotate = m_rand(engine) * 2.0 * M_PI;
+    float rotate = uniform01(engine) * 2.0 * M_PI;
     
     // cast our minmum number of shadow rays
     for(count = 0; count < m_shadowMin; count++){
@@ -178,10 +178,6 @@ vec3 AreaLight::getDirection(point3 p){
   return vec3(0,0,0);
 }
 
-#include <random>
-static std::minstd_rand engine(time(NULL));
-static std::uniform_real_distribution<float> m_unifDistributionRand{0.f, 1.0f};
-
 float AreaLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection){
   float intensity = 0.0f;
   for(auto& sample : m_samples) {
@@ -193,8 +189,8 @@ float AreaLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, 
 }
 point3 AreaLight::pointOnLight(float u, float v){
   return m_corner +
-    uvec * (u + m_unifDistributionRand(engine)) +
-    vvec * (v + m_unifDistributionRand(engine));
+    uvec * (u + uniform01(engine)) +
+    vvec * (v + uniform01(engine));
 }
 
 AreaLight::~AreaLight() {

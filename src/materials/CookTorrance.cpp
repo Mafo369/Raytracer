@@ -90,8 +90,6 @@ color3 CookTorrance::textureColor(float u, float v, int face) {
   return m_texture->value(u, v, face);
 }
 
-#include <random>
-static std::minstd_rand engine(time(NULL));
 static std::uniform_real_distribution<float> m_unifDistributionRand{-1.f, 1.0f};
 
 vec3 random_in_unit_sphere() {

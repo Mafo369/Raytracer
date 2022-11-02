@@ -1,11 +1,7 @@
 #include "Blinn.h"
 #include "../bsdf.hpp"
 
-#include <random>
-
-static std::mt19937 engine;
-static std::uniform_real_distribution<float> uniform {0, 1.0};
-
+#include "../sampling/sampling.h"
 #define SCATTER_SAMPLES 1
 
 Blinn::Blinn(){
@@ -92,10 +88,10 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
       if(dot(v0, normal))
         v0 = point3(0,0,1);
       point3 v1 = normalize(cross(v0, normal));
-      float rnd = sqrt(uniform(engine));
+      float rnd = sqrt(uniform01(engine));
       float rndReflection = rnd * m_reflectionGloss;
       float rndRefraction = rnd * m_refractionGloss;
-      float factor = uniform(engine) * 2.0 * M_PI;
+      float factor = uniform01(engine) * 2.0 * M_PI;
       
       vec3 n1 = normalize(normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
       vec3 n2 = normalize(normal + (v0 * rndRefraction * cos(factor)) + (v1 * rndRefraction * sin(factor)));
@@ -121,25 +117,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
   int isamples = 3;
   color3 iColor = color3(0,0,0);
   for(int i = 0; i < isamples; i++){
-    float phi = uniform(engine) * 2.0 * M_PI;
-    float the = acos(1.0 - 2.0 * uniform(engine)) / 2.0;
-
-    vec3 v0 = vec3(0, 1.0, 0);
-    if(dot(v0, normal) > 0.5 || dot(v0, normal) < -0.5)
-      v0 = vec3(0,0,1.0);
-    vec3 v1 = normalize(cross(v0, normal));
-    v0 = normalize(cross(v1, normal));
-
-    vec3 dirA = normal * cos(the) + (v0 * cos(phi) + v1 * sin(phi)) * sin(the);
-
-    //float r1 = uniform(engine);
-    //float r2 = uniform(engine);
-    //vec3 r = vec3(cos(2.f * M_PI * r1)*sqrt(1.f-r2), sin(2.f*M_PI*r1)*sqrt(1.f-r2), sqrt(r2));
-    //vec3 randV = vec3(uniform(engine), uniform(engine), uniform(engine));
-    //vec3 tangent1 = normalize(cross(normal, randV));
-    //vec3 tangent2 = cross(tangent1, normal);
-
-    //vec3 dirA = r.z * normal + r.x * tangent1 + r.y * tangent2;
+    vec3 dirA = cosineWeightedSampling(normal);
     Ray ray_ref;
     rayInit(&ray_ref, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
     
