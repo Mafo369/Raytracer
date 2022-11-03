@@ -25,5 +25,4 @@ class Blinn : public Material {
     float m_IOR;
     float m_reflectionGloss;
     float m_refractionGloss;
-
 };

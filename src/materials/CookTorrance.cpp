@@ -1,5 +1,6 @@
 #include "CookTorrance.h"
 #include "../bsdf.hpp"
+#include "../sampling/sampling.h"
 
 CookTorrance::CookTorrance(bool transparent){
   m_IOR = 1.0;
@@ -112,6 +113,20 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     // REFRACTION + REFLECTION
 
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
+    point3 v0 = point3(0, 1, 0);
+    if(dot(v0, normal))
+      v0 = point3(0,0,1);
+    point3 v1 = normalize(cross(v0, normal));
+    float rnd = sqrt(uniform01(engine));
+    float rndReflection = rnd * m_roughness;
+    float rndRefraction = rnd * m_roughness;
+    float factor = uniform01(engine) * 2.0 * M_PI;
+    
+    vec3 n1 = normalize(normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
+    vec3 n2 = normalize(normal + (v0 * rndRefraction * cos(factor)) + (v1 * rndRefraction * sin(factor)));
+
+    normal = n1;
+
     vec3 r = reflect(ray->dir, normal);
     Ray ray_ref;
 
@@ -135,6 +150,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     float fuzz = 0.1f;
     auto refractionColor = color3(0.f);
     if( f < 1.0f ){
+      normal = n2;
       vec3 refr = refract(unit_direction, normal, refractionRatio);
       for(int i = 0; i < 20; i++){
         Ray ray_refr;
@@ -150,8 +166,17 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
   } 
   else
   {
+    point3 v0 = point3(0, 1, 0);
+    if(dot(v0, intersection->normal))
+      v0 = point3(0,0,1);
+    point3 v1 = normalize(cross(v0, intersection->normal));
+    float rnd = sqrt(uniform01(engine));
+    float rndReflection = rnd * m_roughness;
+    float factor = uniform01(engine) * 2.0 * M_PI;
+    
+    vec3 n1 = normalize(intersection->normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
     //// REFLECTION
-    vec3 r = reflect(ray->dir, intersection->normal);
+    vec3 r = reflect(ray->dir, n1);
     Ray ray_ref;
     rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
 
@@ -187,5 +212,46 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     //ret += indirectColor;
 
   }
+  vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
+  int isamples = 1;
+  color3 iColor = color3(0,0,0);
+  for(int i = 0; i < isamples; i++){
+    vec3 dirA = cosineWeightedSampling(normal);
+    Ray ray_ref;
+    rayInit(&ray_ref, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
+    
+    ray_ref.dox =  vec3(0);
+    ray_ref.doy =  vec3(0);
+    ray_ref.ddx =  vec3(0);
+    ray_ref.ddy =  vec3(0);
+
+    Intersection temp_intersection;
+    auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection);
+
+    if(!temp_intersection.hit){
+      if(scene->m_skyTexture != nullptr){
+        vec3 dir = dirA;
+        float z = asin(-dir.z) / float(M_PI) + 0.5;
+        float x = dir.x / (abs(dir.x) + abs(dir.y));
+        float y = dir.y / (abs(dir.x) + abs(dir.y));
+        point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
+        // TODO: Multiply with intensity var
+        color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
+        iColor += m_diffuseColor * env;
+      }
+    }
+    else if(intersection->isOutside){
+      if(m_texture != nullptr){
+        iColor += reflColor * m_texture->value(intersection->u, intersection->v);
+      }
+      else
+      {
+        iColor += reflColor * m_diffuseColor;
+      }
+    }
+  }
+  iColor /= (float)isamples;
+  ret += iColor;
+ 
   return ret;
 }

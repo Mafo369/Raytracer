@@ -3,6 +3,7 @@
 
 #include "../sampling/sampling.h"
 #define SCATTER_SAMPLES 1
+#define GI_SAMPLES 1 
 
 Blinn::Blinn(){
   m_IOR = 1.0;
@@ -14,6 +15,7 @@ Blinn::Blinn(){
   m_absorption = vec3(0,0,0);
   m_reflectionGloss = 0;
   m_refractionGloss = 0;
+  m_emission = color3(0);
 }
 
 color3 Blinn::shade(Intersection *intersection, vec3 v, Light* light, float intensity) {
@@ -114,7 +116,7 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
   }
 
   // Indirect illumination
-  int isamples = 5;
+  int isamples = GI_SAMPLES;
   color3 iColor = color3(0,0,0);
   for(int i = 0; i < isamples; i++){
     vec3 dirA = cosineWeightedSampling(normal);

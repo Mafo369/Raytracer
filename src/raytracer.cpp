@@ -130,7 +130,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(8, 8, true, 2);
+    new StratifiedSampler(2, 2, true, 1);
 
   for (size_t j = 0; j < img->height; j++)
   {
@@ -146,8 +146,7 @@ void renderImage(RenderImage *img, Scene *scene)
     printf("]\n");
 #pragma omp parallel
     {
-    int seed = omp_get_thread_num();
-    std::unique_ptr<Sampler> tileSampler = sampler->Clone(seed);
+    std::unique_ptr<Sampler> tileSampler = sampler->Clone(time(NULL));
 #pragma omp for schedule(dynamic)
     for (size_t i = 0; i < img->width; i++)
     {

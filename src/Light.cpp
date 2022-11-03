@@ -24,8 +24,8 @@ PointLight::PointLight(vec3 position, color3 color, float size){
   m_position = position;
   m_color = color;
   m_size = size;
-  m_shadowMin = 10;
-  m_shadowMax = 20;
+  m_shadowMin = 15;
+  m_shadowMax = 25;
   m_samples.push_back(position);
 }
 
@@ -34,9 +34,13 @@ PointLight::~PointLight(){
 }
 
 float PointLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection){
+  // distance square
+	//float distanceSquare = glm::length_sq(m_position - point);
+	//float distance = sqrt(distanceSquare);
+	//float fallFactor = 1.0f / (1.0f + 0.09f * distance + 0.032f * distanceSquare);
   if(m_size == 0.0){
     return 
-      is_shadowed(m_position, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f;
+      is_shadowed(m_position, intersection->normal, intersection->position, scene, tree) ? 0.f : 1.f /** fallFactor*/;
   }
   else{
     // to detect if we are in the penumbra
@@ -82,6 +86,7 @@ float PointLight::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view,
         mean = ((float) (mean * count + val)) / ((float) (count + 1));
       }
     }
+    //mean = mean * fallFactor;
     
     // return our final shaded intensity
     return mean;

@@ -643,12 +643,16 @@ bool traverse(Scene *scene, KdTree *tree, std::stack<StackNode> *stack, StackNod
         }
         else
         {
-          hasIntersection = true;
-          *intersection = temp;
-          dist = temp_dist;
           if(ray->shadow){
-            ray->tmax = dist;
-            return true;
+            if(temp.mat->m_emission.r == 0.f && temp.mat->m_emission.g == 0.f && temp.mat->m_emission.b == 0.f ){
+              ray->tmax = temp_dist;
+              return true;
+            }
+          }
+          else{
+            hasIntersection = true;
+            *intersection = temp;
+            dist = temp_dist;
           }
         }
       }
