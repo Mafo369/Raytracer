@@ -2,8 +2,8 @@
 #include "../bsdf.hpp"
 
 #include "../sampling/sampling.h"
-#define SCATTER_SAMPLES 1
-#define GI_SAMPLES 1 
+#define SCATTER_SAMPLES 0
+#define GI_SAMPLES 0 
 
 Blinn::Blinn(){
   m_IOR = 1.0;
@@ -68,6 +68,93 @@ color3 Blinn::textureColor(float u, float v, int face) {
   return color3(0.f);
 }
 
+color3 Blinn::sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, float* pdf, int type){
+  if(type == 0) { // whitted reflection
+    if(isBlack(m_reflection) && isBlack(m_refraction))
+      return color3(0);
+    bool isOutside = dot(wo, normal) < 0;
+    if(!isOutside) normal = -normal;
+    *wi = normalize(reflect(wo, normal));
+    *pdf = 1;
+
+    if(!isBlack(m_refraction)){
+      float n1, n2;
+      if(isOutside){
+        n1 = 1.0;
+        n2 = m_IOR;
+      }else {
+        n2 = 1.0;
+        n1 = m_IOR;
+      }
+      wo = -wo;
+
+      // calculate refraction ray direction
+      float c1 = dot(normal, wo);
+      float s1 = sqrt(1.0 - c1 * c1);
+      float s2 = n1 / n2 * s1;
+      float c2 = sqrt(1.0 - s2 * s2);
+
+      if(s2 * s2 > 1.0) return m_refraction;
+
+      float r0 = (n1 - n2) / (n1 + n2);
+      r0 *= r0;
+      float r;
+      if(n1 <= n2)
+        r = r0 + (1.0 - r0) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1);
+      else
+        r = r0 + (1.0 - r0) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2);
+      
+      return m_refraction * r;
+    }
+
+    //float absCosThetar = abs(dot(*wi, normal));
+    //return m_diffuseColor / absCosThetar;
+    return m_reflection;
+  }
+  else if(type == 1) { // whitted refraction
+    if(isBlack(m_refraction))
+      return color3(0);
+    float n1, n2;
+    bool isOutside = dot(normal, wo) > 0;
+    if(isOutside){
+      n1 = 1.0;
+      n2 = m_IOR;
+    }else {
+      n2 = 1.0;
+      n1 = m_IOR;
+      normal = -normal;
+    }
+
+    // calculate refraction ray direction
+    float c1 = dot(normal, wo);
+    float s1 = sqrt(1.0 - c1 * c1);
+    float s2 = n1 / n2 * s1;
+    float c2 = sqrt(1.0 - s2 * s2);
+    vec3 p = normalize(wo - c1 * normal);
+    vec3 pt = s2 * -p;
+    vec3 nt = c2 * -normal;
+
+    // cannot refract
+    if(s2 * s2 > 1.0) return color3(0);
+
+    float r0 = (n1 - n2) / (n1 + n2);
+    r0 *= r0;
+    float r;
+    if(n1 <= n2)
+      r = r0 + (1.0 - r0) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1) * (1 - c1);
+    else
+      r = r0 + (1.0 - r0) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2) * (1 - c2);
+    float fr = 1.0 - r;
+
+    *wi = normalize(pt + nt);
+    *pdf = 1;
+    //float absCosThetar = abs(dot(*wi, normal));
+    //return m_diffuseColor / absCosThetar;
+    return m_refraction * fr;
+  }
+  return color3(0,0,0);
+}
+
 color3 Blinn::ambientColor(Ray* ray, Intersection* intersection, color3 lightColor) {
   if(ray->hasDifferentials && m_texture != nullptr){
     vec3 duv[2];
@@ -115,40 +202,40 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
       ret += refractionColor(scene, tree, ray, intersection, reflectionShade, normal);
   }
 
-  // Indirect illumination
-  int isamples = GI_SAMPLES;
-  color3 iColor = color3(0,0,0);
-  for(int i = 0; i < isamples; i++){
-    vec3 dirA = cosineWeightedSampling(normal);
-    Ray ray_ref;
-    rayInit(&ray_ref, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
-    
-    ray_ref.dox =  vec3(0);
-    ray_ref.doy =  vec3(0);
-    ray_ref.ddx =  vec3(0);
-    ray_ref.ddy =  vec3(0);
+  //// Indirect illumination
+  //int isamples = GI_SAMPLES;
+  //color3 iColor = color3(0,0,0);
+  //for(int i = 0; i < isamples; i++){
+  //  vec3 dirA = cosineWeightedSampling(normal);
+  //  Ray ray_ref;
+  //  rayInit(&ray_ref, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
+  //  
+  //  ray_ref.dox =  vec3(0);
+  //  ray_ref.doy =  vec3(0);
+  //  ray_ref.ddx =  vec3(0);
+  //  ray_ref.ddy =  vec3(0);
 
-    Intersection temp_intersection;
-    auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection);
+  //  Intersection temp_intersection;
+  //  auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection);
 
-    if(!temp_intersection.hit){
-      if(scene->m_skyTexture != nullptr){
-        vec3 dir = dirA;
-        float z = asin(-dir.z) / float(M_PI) + 0.5;
-        float x = dir.x / (abs(dir.x) + abs(dir.y));
-        float y = dir.y / (abs(dir.x) + abs(dir.y));
-        point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-        // TODO: Multiply with intensity var
-        color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
-        iColor += m_diffuseColor * env;
-      }
-    }
-    else if(intersection->isOutside){
-      iColor += reflColor * m_diffuseColor;
-    }
-  }
-  iColor /= (float)isamples;
-  ret += iColor;
+  //  if(!temp_intersection.hit){
+  //    if(scene->m_skyTexture != nullptr){
+  //      vec3 dir = dirA;
+  //      float z = asin(-dir.z) / float(M_PI) + 0.5;
+  //      float x = dir.x / (abs(dir.x) + abs(dir.y));
+  //      float y = dir.y / (abs(dir.x) + abs(dir.y));
+  //      point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
+  //      // TODO: Multiply with intensity var
+  //      color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
+  //      iColor += m_diffuseColor * env;
+  //    }
+  //  }
+  //  else if(intersection->isOutside){
+  //    iColor += reflColor * m_diffuseColor;
+  //  }
+  //}
+  //iColor /= (float)isamples;
+  //ret += iColor;
   return ret;
 }
 

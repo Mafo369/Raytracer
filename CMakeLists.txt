@@ -24,6 +24,7 @@ set(mrt_SRCS
   src/sampling/sampling.cpp
   src/sampling/sampler.cpp
   src/sampling/stratified.cpp
+  src/Material.cpp
   )
 
 add_subdirectory(libs/Walnut/)

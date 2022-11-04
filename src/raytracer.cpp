@@ -59,7 +59,8 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
   return hasIntersection;
 }
 
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection)
+// whitted
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, Sampler* sampler)
 {
   color3 ret = color3(0, 0, 0);
 
@@ -98,7 +99,9 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
       return color3(1.f);
 
     // Scatter
-    ret += intersection->mat->scatterColor(scene, tree, ray, intersection);
+    //ret += intersection->mat->scatterColor(scene, tree, ray, intersection);
+    ret += specularReflect(ray, intersection, scene, tree, sampler);
+    ret += specularTransmission(ray, intersection, scene, tree, sampler);
   }
   else
   {
@@ -158,7 +161,7 @@ void renderImage(RenderImage *img, Scene *scene)
       do {
         CameraSample cameraSample = tileSampler->GetCameraSample(pixel);
         Ray rx;
-        rx.hasDifferentials = false;
+        rx.hasDifferentials = true;
         scene->cam->get_ray(cameraSample.xy.x, cameraSample.xy.y, cameraSample.uv.x, cameraSample.uv.y, &rx, vec2(int(i), int(j)));
         if(rx.hasDifferentials)
           scaleDifferentials(&rx, 1.f / sqrt(tileSampler->samplesPerPixel));
@@ -169,9 +172,9 @@ void renderImage(RenderImage *img, Scene *scene)
       color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;
 
       // gamma-correction
-      avgColor.r = pow(avgColor.r, 1.0  / 2.2);
-      avgColor.g = pow(avgColor.g, 1.0  / 2.2);
-      avgColor.b = pow(avgColor.b, 1.0  / 2.2);
+      //avgColor.r = pow(avgColor.r, 1.0  / 2.2);
+      //avgColor.g = pow(avgColor.g, 1.0  / 2.2);
+      //avgColor.b = pow(avgColor.b, 1.0  / 2.2);
 
       *ptr = avgColor;
     }

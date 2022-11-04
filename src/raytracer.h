@@ -100,5 +100,7 @@ bool intersectPlane(Ray *ray, Intersection *intersection, Object *plane);
 bool intersectSphere(Ray *ray, Intersection *intersection, Object *sphere);
 bool intersectTriangle(Ray *ray, Intersection *intersection, Object *sphere);
 
+class Sampler;
+
 void renderImage(RenderImage *img, Scene *scene);
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection);
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, Sampler* sampler = nullptr);

@@ -255,3 +255,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
  
   return ret;
 }
+
+color3 CookTorrance::sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, float* pdf, int type) {
+  return color3(0);
+}

@@ -24,20 +24,20 @@ class texture {
           d[0] = m_transform.transformTo(duv[0] + uvw) - uv;
           d[1] = m_transform.transformTo(duv[1] + uvw) - uv;
           color3 texColor = value(uv.x, uv.y);
-          if(dot(d[0], d[0]) + dot(d[1], d[1]) == 0) return texColor;
+          //if(dot(d[0], d[0]) + dot(d[1], d[1]) == 0) return texColor;
 
-          for(int i = 1; i < TEXTURE_SAMPLES; i++){
-            float x=0, y=0, fx=0.5f, fy=1.0f/3.0f;
-            for ( int ix=i; ix>0; ix/=2 ) { x+=fx*(ix%2); fx/=2; }   // Halton sequence (base 2)
-            for ( int iy=i; iy>0; iy/=3 ) { y+=fy*(iy%3); fy/=3; }   // Halton sequence (base 3)
-            float r = sqrtf(x)*0.5f;
-            x = r*sinf(y*(float)M_PI*2.0);
-            y = r*cosf(y*(float)M_PI*2.0);
-            vec3 new_uv = uv + x * d[0] + y * d[1]; 
-            auto tdColor = value(new_uv.x, new_uv.y);
-            texColor += tdColor;
-          }
-          texColor = texColor / (float)TEXTURE_SAMPLES;
+          //for(int i = 1; i < TEXTURE_SAMPLES; i++){
+          //  float x=0, y=0, fx=0.5f, fy=1.0f/3.0f;
+          //  for ( int ix=i; ix>0; ix/=2 ) { x+=fx*(ix%2); fx/=2; }   // Halton sequence (base 2)
+          //  for ( int iy=i; iy>0; iy/=3 ) { y+=fy*(iy%3); fy/=3; }   // Halton sequence (base 3)
+          //  float r = sqrtf(x)*0.5f;
+          //  x = r*sinf(y*(float)M_PI*2.0);
+          //  y = r*cosf(y*(float)M_PI*2.0);
+          //  vec3 new_uv = uv + x * d[0] + y * d[1]; 
+          //  auto tdColor = value(new_uv.x, new_uv.y);
+          //  texColor += tdColor;
+          //}
+          //texColor = texColor / (float)TEXTURE_SAMPLES;
           return texColor;
       }
 

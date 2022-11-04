@@ -37,6 +37,10 @@ namespace glm {
 template <int N, typename T, qualifier P> T length_sq(const vec<N, T, P> &x) { return dot(x, x); }
 } // namespace glm
 
+inline bool isBlack(const vec3& color){
+  return color.r + color.g + color.b == 0.;
+}
+
 // Utility Functions
 inline float degrees_to_radians(float degrees) {
   return degrees * M_PI / 180.0f;

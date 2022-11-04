@@ -1174,7 +1174,7 @@ Scene *initScene13() {
   mat3->m_specularColor = color3(0.8);
   mat3->m_shininess = 50;
   mat3->m_reflection = vec3(0.8f);
-  mat3->m_reflectionGloss = 0.05;
+  //mat3->m_reflectionGloss = 0.05;
 
   Transform modelMatrix4;
   modelMatrix4.scale(6, 6, 6);
@@ -1186,7 +1186,7 @@ Scene *initScene13() {
   mat4->m_specularColor = color3(0.8);
   mat4->m_shininess = 20;
   mat4->m_reflection = vec3(0.8f);
-  mat4->m_reflectionGloss = 0.1;
+  //mat4->m_reflectionGloss = 0.1;
 
   Transform modelMatrix5;
   modelMatrix5.scale(6, 6, 6);
@@ -1198,7 +1198,7 @@ Scene *initScene13() {
   mat5->m_specularColor = color3(0.8);
   mat5->m_shininess = 10;
   mat5->m_reflection = vec3(0.8f);
-  mat5->m_reflectionGloss = 0.2;
+  //mat5->m_reflectionGloss = 0.2;
 
   Transform modelMatrix6;
   modelMatrix6.scale(6, 6, 6);
@@ -1211,7 +1211,7 @@ Scene *initScene13() {
   mat6->m_shininess = 50;
   mat6->m_refraction = vec3(0.8);
   mat6->m_IOR = 2.0;
-  mat6->m_refractionGloss = 0.05;
+  //mat6->m_refractionGloss = 0.05;
 
   Transform modelMatrix7;
   modelMatrix7.scale(2, 2, 2);
