@@ -2,8 +2,8 @@
 #include "../bsdf.hpp"
 
 #include "../sampling/sampling.h"
-#define SCATTER_SAMPLES 0
-#define GI_SAMPLES 0 
+#define SCATTER_SAMPLES 1
+#define GI_SAMPLES 1
 
 Blinn::Blinn(){
   m_IOR = 1.0;
@@ -203,39 +203,34 @@ color3 Blinn::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* i
   }
 
   //// Indirect illumination
-  //int isamples = GI_SAMPLES;
-  //color3 iColor = color3(0,0,0);
-  //for(int i = 0; i < isamples; i++){
-  //  vec3 dirA = cosineWeightedSampling(normal);
-  //  Ray ray_ref;
-  //  rayInit(&ray_ref, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
-  //  
-  //  ray_ref.dox =  vec3(0);
-  //  ray_ref.doy =  vec3(0);
-  //  ray_ref.ddx =  vec3(0);
-  //  ray_ref.ddy =  vec3(0);
+  color3 iColor = color3(0,0,0);
+  vec3 dirA = normalize(random_dir(normal));
+  Ray ray_ref;
+  rayInit(&ray_ref, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
+  ray_ref.dox =  vec3(0);
+  ray_ref.doy =  vec3(0);
+  ray_ref.ddx =  vec3(0);
+  ray_ref.ddy =  vec3(0);
 
-  //  Intersection temp_intersection;
-  //  auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection);
+  Intersection temp_intersection;
+  auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection);
 
-  //  if(!temp_intersection.hit){
-  //    if(scene->m_skyTexture != nullptr){
-  //      vec3 dir = dirA;
-  //      float z = asin(-dir.z) / float(M_PI) + 0.5;
-  //      float x = dir.x / (abs(dir.x) + abs(dir.y));
-  //      float y = dir.y / (abs(dir.x) + abs(dir.y));
-  //      point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-  //      // TODO: Multiply with intensity var
-  //      color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
-  //      iColor += m_diffuseColor * env;
-  //    }
-  //  }
-  //  else if(intersection->isOutside){
-  //    iColor += reflColor * m_diffuseColor;
-  //  }
-  //}
-  //iColor /= (float)isamples;
-  //ret += iColor;
+  if(!temp_intersection.hit){
+    if(scene->m_skyTexture != nullptr){
+      vec3 dir = dirA;
+      float z = asin(-dir.z) / float(M_PI) + 0.5;
+      float x = dir.x / (abs(dir.x) + abs(dir.y));
+      float y = dir.y / (abs(dir.x) + abs(dir.y));
+      point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
+      // TODO: Multiply with intensity var
+      color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
+      iColor += m_diffuseColor * env;
+    }
+  }
+  else if(intersection->isOutside){
+    iColor += reflColor * m_diffuseColor;
+  }
+  ret += iColor;
   return ret;
 }
 

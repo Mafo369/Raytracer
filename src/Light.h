@@ -16,8 +16,10 @@ class Light {
     bool isAmbient() { return m_ambient; }
     void setAmbient(bool ambient) { m_ambient = ambient; }
     bool is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree);
+    virtual float getSize() { return m_size; }
     virtual bool isDirectional() { return false; }
   protected:
+    float m_size;
     bool m_ambient = false;
     color3 m_color;
     vec3 m_position;
@@ -34,7 +36,6 @@ class PointLight : public Light {
     vec3 getLightPoint(point3 p, int c, float r);
     ~PointLight();
   private:
-    float m_size;
     int m_shadowMin;
     int m_shadowMax;
 };

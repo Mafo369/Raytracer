@@ -18,8 +18,6 @@ class Blinn : public Material {
     color3 refractionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, color3 reflectionShade, vec3 normal);
     color3 reflectionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, color3& color, vec3 normal);
 
-    color3 m_diffuseColor;
-    color3 m_specularColor;
     float m_shininess;
     vec3 m_reflection;
     vec3 m_refraction;

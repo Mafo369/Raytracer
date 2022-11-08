@@ -17,6 +17,8 @@ class Material {
     virtual color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) = 0;
     texture* m_texture = nullptr;
     color3 m_emission = color3(0,0,0);
+    color3 m_diffuseColor = color3(0,0,0);
+    color3 m_specularColor = color3(0,0,0);
 
     float m_IOR;	//! Index of refraction (for dielectric)
 };

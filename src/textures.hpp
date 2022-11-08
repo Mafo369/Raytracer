@@ -126,7 +126,7 @@ class image_texture : public texture {
         uv.y += 1.0;
       int u2 = uv.x * (m_image->width-1);
       int v2 = uv.y * (m_image->height-1);
-      return *getPixelPtr(m_image, u2, v2);
+      return *getPixelPtr(m_image, u2, m_image->height-v2-1);
     }
 
     color3 value(float u, float v, int face) const override {

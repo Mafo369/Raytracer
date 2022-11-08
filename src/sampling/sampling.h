@@ -183,15 +183,45 @@ inline float PowerHeuristic(int nf, float fPdf, int ng, float gPdf) {
     return (f * f) / (f * f + g * g);
 }
 
-inline vec3 cosineWeightedSampling(vec3 normal) {
-    float phi = uniform01(engine) * 2.0 * M_PI;
-    float the = acos(1.0 - 2.0 * uniform01(engine)) / 2.0;
+//inline vec3 cosineWeightedSampling(vec3 normal) {
+//    float phi = uniform01(engine) * 2.0 * M_PI;
+//    float the = acos(1.0 - 2.0 * uniform01(engine)) / 2.0;
+//
+//    vec3 v0 = vec3(0, 1.0, 0);
+//    if(dot(v0, normal) > 0.5 || dot(v0, normal) < -0.5)
+//      v0 = vec3(0,0,1.0);
+//    vec3 v1 = normalize(cross(v0, normal));
+//    v0 = normalize(cross(v1, normal));
+//
+//    return normal * cos(the) + (v0 * cos(phi) + v1 * sin(phi)) * sin(the);
+//}
 
-    vec3 v0 = vec3(0, 1.0, 0);
-    if(dot(v0, normal) > 0.5 || dot(v0, normal) < -0.5)
-      v0 = vec3(0,0,1.0);
-    vec3 v1 = normalize(cross(v0, normal));
-    v0 = normalize(cross(v1, normal));
+inline vec3 random_dir(vec3 normal) {
+  float r1 = uniform01(engine);
+  float r2 = uniform01(engine);
 
-    return normal * cos(the) + (v0 * cos(phi) + v1 * sin(phi)) * sin(the);
+  float theta = 2.f * Pi * r1;
+  float r = sqrt(1.f-r2);
+  vec3 dir_rand_local = vec3(cos(theta)*r, sin(theta)*r, sqrt(r2));
+  vec3 randV = vec3(uniform01(engine)-0.5, uniform01(engine)-0.5, uniform01(engine)-0.5);
+
+  vec3 tangent1 = normalize(cross(normal, randV));
+  vec3 tangent2 = cross(tangent1, normal);
+
+  return dir_rand_local[2] * normal + dir_rand_local[0] * tangent1 + dir_rand_local[1] * tangent2;
+}
+
+inline vec3 uniformHemisphereDir(vec3 normal){
+  float r1 = uniform01(engine);
+  float r2 = uniform01(engine);
+  float theta = 2.f * Pi * r1;
+  float r = sqrt(1.f-(r2*r2));
+
+  vec3 dir_rand_local = vec3(cos(theta)*r, sin(theta)*r, r2);
+  vec3 randV = vec3(uniform01(engine)-0.5, uniform01(engine)-0.5, uniform01(engine)-0.5);
+
+  vec3 tangent1 = normalize(cross(normal, randV));
+  vec3 tangent2 = cross(tangent1, normal);
+
+  return dir_rand_local[2] * normal + dir_rand_local[0] * tangent1 + dir_rand_local[1] * tangent2;
 }

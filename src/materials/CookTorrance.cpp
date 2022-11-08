@@ -133,11 +133,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
     Intersection inter;
     color3 reflectionColor = trace_ray(scene, &ray_ref, tree, &inter);
-
-    vec3 v = ray->dir * -1.0f;
-    vec3 h = v + ray_ref.dir;
-    h = h / length(h);
-    float LdotH = dot(ray_ref.dir, h);
+    float LdotH = dot(ray_ref.dir, normal);
 
     float refractionRatio = 
       intersection->isOutside ? (1.f/m_IOR) : m_IOR;
@@ -147,19 +143,15 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
 
     vec3 unit_direction = normalize( ray->dir );
 
-    float fuzz = 0.1f;
     auto refractionColor = color3(0.f);
     if( f < 1.0f ){
       normal = n2;
       vec3 refr = refract(unit_direction, normal, refractionRatio);
-      for(int i = 0; i < 20; i++){
-        Ray ray_refr;
-        rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr + fuzz*random_in_unit_sphere(), ray->pixel,0, 100000, ray->depth + 1);
+      Ray ray_refr;
+      rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr, ray->pixel,0, 100000, ray->depth + 1);
 
-        Intersection refInter;
-        refractionColor += trace_ray(scene, &ray_refr, tree, &refInter);
-      }
-      refractionColor = refractionColor / 20.f;
+      Intersection refInter;
+      refractionColor += trace_ray(scene, &ray_refr, tree, &refInter);
     }
     
     ret += ( reflectionColor * f * m_specularColor ) + refractionColor * (1.0f - f);
@@ -173,8 +165,8 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     float rnd = sqrt(uniform01(engine));
     float rndReflection = rnd * m_roughness;
     float factor = uniform01(engine) * 2.0 * M_PI;
-    
     vec3 n1 = normalize(intersection->normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
+
     //// REFLECTION
     vec3 r = reflect(ray->dir, n1);
     Ray ray_ref;
@@ -182,51 +174,24 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
 
     Intersection inter;
     color3 cr = trace_ray(scene, &ray_ref, tree, &inter);
-    vec3 v = ray->dir * -1.0f;
-    vec3 h = v + ray_ref.dir;
-    h = h / length(h);
-    float LdotH = dot(ray_ref.dir, h);
+    float LdotH = dot(ray_ref.dir, intersection->normal);
     float f = RDM_Fresnel(LdotH, 1.f, m_IOR);
 
     ret += (f * cr * m_specularColor);
 
-    //auto indirectColor = color3(0.f);
-    //float fuzz = 0.0f;
-    //for(int i = 0; i < 5; i++){
-    //  Ray scattered;
-    //  rayInit(&scattered, intersection->position+(acne_eps*r), normalize(r + fuzz * sphereRand()), 0, 10000, ray->depth+1);
-
-    //  if(dot(scattered.invdir, intersection->normal) <= 0)
-    //    continue;
-
-    //  vec3 cr = trace_ray(scene, &scattered, tree);
-    //  vec3 h = v + scattered.dir;
-    //  h = h / length(h);
-    //  float LdotH = dot(scattered.dir, h);
-    //  float f = RDM_Fresnel(LdotH, 1.f, intersection.mat->IOR);
-
-    //  indirectColor += (f * cr * intersection.mat->specularColor);
-    //}
-    //indirectColor /= 5.f;
-
-    //ret += indirectColor;
-
-  }
-  vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-  int isamples = 1;
-  color3 iColor = color3(0,0,0);
-  for(int i = 0; i < isamples; i++){
-    vec3 dirA = cosineWeightedSampling(normal);
-    Ray ray_ref;
-    rayInit(&ray_ref, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
+    vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
+    color3 iColor = color3(0,0,0);
+    vec3 dirA = normalize(random_dir(normal));
+    Ray ray_gi;
+    rayInit(&ray_gi, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
     
-    ray_ref.dox =  vec3(0);
-    ray_ref.doy =  vec3(0);
-    ray_ref.ddx =  vec3(0);
-    ray_ref.ddy =  vec3(0);
+    ray_gi.dox =  vec3(0);
+    ray_gi.doy =  vec3(0);
+    ray_gi.ddx =  vec3(0);
+    ray_gi.ddy =  vec3(0);
 
     Intersection temp_intersection;
-    auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection);
+    auto reflColor = trace_ray(scene, &ray_gi, tree, &temp_intersection);
 
     if(!temp_intersection.hit){
       if(scene->m_skyTexture != nullptr){
@@ -249,13 +214,56 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
         iColor += reflColor * m_diffuseColor;
       }
     }
+    ret += iColor;
   }
-  iColor /= (float)isamples;
-  ret += iColor;
- 
+
+
   return ret;
 }
 
 color3 CookTorrance::sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, float* pdf, int type) {
+  if(type == 0){
+    bool isOutside = dot(wo, normal) < 0;
+    normal = isOutside ? normal : -normal;
+    *wi = reflect(wo, normal);
+    *pdf = 1;
+
+    vec3 v = wo * -1.0f;
+    vec3 h = v + *wi;
+    h = h / length(h);
+    float LdotH = dot(*wi, h);
+
+    float f = isOutside ? RDM_Fresnel(LdotH, 1.f, m_IOR) : RDM_Fresnel(LdotH, m_IOR, 1.f);
+    
+    return f * m_specularColor;
+  }
+  else if(type == 1){
+    if(m_transparent) {
+      // REFRACTION + REFLECTION
+
+      //vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
+      bool isOutside = dot(wo, normal) < 0;
+      normal = isOutside ? normal : -normal;
+
+      vec3 r = reflect(-wo, normal);
+
+      vec3 h = wo + r;
+      h = h / length(h);
+      float LdotH = dot(r, h);
+
+      float refractionRatio = isOutside ? (1.f/m_IOR) : m_IOR;
+      float f = isOutside ? RDM_Fresnel(LdotH, 1.f, m_IOR) : RDM_Fresnel(LdotH, m_IOR, 1.f);
+
+      vec3 unit_direction = normalize( -wo );
+
+      if( f < 1.0f ){
+        *wi = refract(unit_direction, normal, refractionRatio);
+        *pdf = 1;
+        return vec3(1.0f - f);
+      }
+      
+    } 
+
+  }
   return color3(0);
 }

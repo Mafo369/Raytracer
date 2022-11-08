@@ -36,7 +36,7 @@ Object *initSphere(std::shared_ptr<Material> mat, Transform transform ) {
     float const maxScaleSq = *std::max_element(&scalesSq[0], &scalesSq[0] + scalesSq.length());  // length gives the dimension here i.e. 3
     // one sqrt when you know the largest of the three
     float const largestScale = std::sqrt(maxScaleSq);
-    ret->geom.sphere.radius = 6;
+    ret->geom.sphere.radius = 1.f * largestScale;
     return ret;
 }
 

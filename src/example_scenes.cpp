@@ -1351,8 +1351,17 @@ Scene* initScene15(){
   ret->geom.type = PLANE;
   addObject(scene, ret);
 
+  auto matBehind = std::make_shared<Blinn>();
+  //matBehind->m_diffuseColor = color3(1.0, 1., 1.0);
+  auto walltext = new image_texture("../assets/walltext.png");
+  Transform walltextT;
+  //walltextT.scale(0.5, 0.5, 0.5);
+  walltextT.translate(vec3(0, -.19, 0));
+  walltext->m_transform = walltextT;
+  matBehind->m_texture = walltext;
   Transform modelMatrix2;
   modelMatrix2.scale(32,32,32);
+  //modelMatrix2.scale(21,21,21);
   modelMatrix2.rotate(vec3(1,0,0), (90.f));
   modelMatrix2.translate(vec3(0,0,12));
   modelMatrix2.translate(vec3(0,20,0));
@@ -1386,17 +1395,25 @@ Scene* initScene15(){
   ret->geom.type = PLANE;
   addObject(scene, ret);
 
-  auto mat3 = std::make_shared<CookTorrance>(false);
+  auto mat3 = std::make_shared<Blinn>();
   mat3->m_diffuseColor = color3(0.8, 0.2, 0.2);
-  mat3->m_specularColor = color3(0.7f);
-  mat3->m_IOR = 1.2;
-  mat3->m_roughness = 0.3;
+  mat3->m_specularColor = color3(0.2, 0.7f, 0.7);
 
-  auto mat4 = std::make_shared<CookTorrance>(false);
-  mat4->m_diffuseColor = color3(0.0, 1., 0.0);
-  mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
-  mat4->m_IOR = 1.8;
-  mat4->m_roughness = 0.1;
+  auto mat4 = std::make_shared<Blinn>();
+  mat4->m_diffuseColor = color3(0.2, 0.8, 0.2);
+  mat4->m_specularColor = color3(0.8f, 0.1, 0.8);
+
+  //auto mat3 = std::make_shared<CookTorrance>(true);
+  //mat3->m_diffuseColor = color3(0.8, 0.2, 0.2);
+  //mat3->m_specularColor = color3(0.7f);
+  //mat3->m_IOR = 1.15;
+  //mat3->m_roughness = 0.1;
+
+  //auto mat4 = std::make_shared<CookTorrance>(false);
+  //mat4->m_diffuseColor = color3(0.0, 1., 0.0);
+  //mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
+  //mat4->m_IOR = 1.8;
+  //mat4->m_roughness = 0.1;
 
   //auto mat4 = std::make_shared<CookTorrance>(false);
   ////mat4->m_diffuseColor = color3(0.0, 1., 0.0);
@@ -1420,18 +1437,20 @@ Scene* initScene15(){
   modelMatrix6.scale(0.75, 0.75, 0.75);
   modelMatrix6.rotate(vec3(0,0,1), (30.f)); 
   modelMatrix6.translate(vec3(-4.5,5,0));
-  //addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix6);
+  addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix6);
 
   //auto matE = std::make_shared<Blinn>();
-  //matE->m_emission = color3(0.5);
+  //matE->m_emission = color3(100000000000000.5);
   //matE->m_diffuseColor = color3(0.5f);
 
   //Transform modemMatrixE;
   //modemMatrixE.scale(5.f, 5.f, 5.f);
-  //modemMatrixE.translate(vec3(0,0,19));
+  //modemMatrixE.translate(vec3(0,0,23.5));
   //addObject(scene, initSphere(matE, modemMatrixE));
 
-  addLight(scene, initPointLight(point3(0, 0, 19), color3(0.5f), 5.0));
+  auto lightSize = 5.f;
+  auto lightIntensity = 2000.f * 4.f * M_PI / (4. * M_PI * lightSize*lightSize * M_PI);
+  addLight(scene, initPointLight(point3(0, 0, 18), color3(lightIntensity), lightSize));
   return scene;
 }
 
