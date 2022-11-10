@@ -1400,8 +1400,12 @@ Scene* initScene15(){
   mat3->m_specularColor = color3(0.2, 0.7f, 0.7);
 
   auto mat4 = std::make_shared<Blinn>();
-  mat4->m_diffuseColor = color3(0.2, 0.8, 0.2);
-  mat4->m_specularColor = color3(0.8f, 0.1, 0.8);
+  //mat4->m_diffuseColor = color3(0.2, 0.8, 0.2);
+  mat4->m_diffuseColor = color3(0);
+  mat4->m_specularColor = color3(0);
+  mat4->m_refraction = color3(1);
+  //mat4->m_reflection = color3(1);
+  mat4->m_IOR = 1.3;
 
   //auto mat3 = std::make_shared<CookTorrance>(true);
   //mat3->m_diffuseColor = color3(0.8, 0.2, 0.2);
@@ -1439,18 +1443,18 @@ Scene* initScene15(){
   modelMatrix6.translate(vec3(-4.5,5,0));
   addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix6);
 
-  //auto matE = std::make_shared<Blinn>();
-  //matE->m_emission = color3(100000000000000.5);
-  //matE->m_diffuseColor = color3(0.5f);
-
-  //Transform modemMatrixE;
-  //modemMatrixE.scale(5.f, 5.f, 5.f);
-  //modemMatrixE.translate(vec3(0,0,23.5));
-  //addObject(scene, initSphere(matE, modemMatrixE));
-
   auto lightSize = 5.f;
-  auto lightIntensity = 2000.f * 4.f * M_PI / (4. * M_PI * lightSize*lightSize * M_PI);
-  addLight(scene, initPointLight(point3(0, 0, 18), color3(lightIntensity), lightSize));
+  auto lightIntensity = 500.f * 4.f * M_PI / (4. * M_PI * lightSize*lightSize * M_PI);
+  auto matE = std::make_shared<Blinn>();
+  matE->m_emission = color3(lightIntensity);
+  matE->m_diffuseColor = color3(1.f);
+
+  Transform modemMatrixE;
+  modemMatrixE.scale(lightSize, lightSize, lightSize);
+  modemMatrixE.translate(vec3(0,0,26.5));
+  addObject(scene, initSphere(matE, modemMatrixE));
+
+  //addLight(scene, initPointLight(point3(0, 0, 17), color3(lightIntensity), lightSize));
   return scene;
 }
 

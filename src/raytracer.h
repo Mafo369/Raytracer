@@ -103,4 +103,4 @@ bool intersectTriangle(Ray *ray, Intersection *intersection, Object *sphere);
 class Sampler;
 
 void renderImage(RenderImage *img, Scene *scene);
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, Sampler* sampler = nullptr);
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, bool show_lights=true, Sampler* sampler=nullptr);
