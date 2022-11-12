@@ -1,6 +1,7 @@
 #include "CookTorrance.h"
 #include "../bsdf.hpp"
 #include "../sampling/sampling.h"
+#include "../Light.h"  
 
 CookTorrance::CookTorrance(bool transparent){
   m_IOR = 1.0;
@@ -91,16 +92,6 @@ color3 CookTorrance::textureColor(float u, float v, int face) {
   return m_texture->value(u, v, face);
 }
 
-static std::uniform_real_distribution<float> m_unifDistributionRand{-1.f, 1.0f};
-
-vec3 random_in_unit_sphere() {
-    while (true) {
-        auto p = vec3(m_unifDistributionRand(engine), m_unifDistributionRand(engine), m_unifDistributionRand(engine));
-        if (glm::length_sq(p) >= 1) continue;
-        return p;
-    }
-}
-
 color3 CookTorrance::ambientColor(Ray* ray, Intersection* intersection, color3 lightColor) {
   if(m_texture != nullptr)
     return m_texture->value(intersection->u, intersection->v) * lightColor;
@@ -118,14 +109,14 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
       v0 = point3(0,0,1);
     point3 v1 = normalize(cross(v0, normal));
     float rnd = sqrt(uniform01(engine));
-    float rndReflection = rnd * m_roughness;
-    float rndRefraction = rnd * m_roughness;
+    float rndReflection = rnd * 0.0001;
+    float rndRefraction = rnd * 0.0001;
     float factor = uniform01(engine) * 2.0 * M_PI;
     
     vec3 n1 = normalize(normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
     vec3 n2 = normalize(normal + (v0 * rndRefraction * cos(factor)) + (v1 * rndRefraction * sin(factor)));
 
-    normal = n1;
+    //normal = n1;
 
     vec3 r = reflect(ray->dir, normal);
     Ray ray_ref;
@@ -145,7 +136,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
 
     auto refractionColor = color3(0.f);
     if( f < 1.0f ){
-      normal = n2;
+      //normal = n2;
       vec3 refr = refract(unit_direction, normal, refractionRatio);
       Ray ray_refr;
       rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr, ray->pixel,0, 100000, ray->depth + 1);
@@ -179,6 +170,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
 
     ret += (f * cr * m_specularColor);
 
+    // Indirect illumination
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
     color3 iColor = color3(0,0,0);
     vec3 dirA = normalize(random_dir(normal));
@@ -241,8 +233,7 @@ color3 CookTorrance::sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, f
     if(m_transparent) {
       // REFRACTION + REFLECTION
 
-      //vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-      bool isOutside = dot(wo, normal) < 0;
+      bool isOutside = dot(-wo, normal) < 0;
       normal = isOutside ? normal : -normal;
 
       vec3 r = reflect(-wo, normal);
@@ -261,9 +252,7 @@ color3 CookTorrance::sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, f
         *pdf = 1;
         return vec3(1.0f - f);
       }
-      
     } 
-
   }
   return color3(0);
 }

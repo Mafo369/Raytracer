@@ -1,4 +1,5 @@
 #include "Material.h"
+#include "Light.h"
 
 color3 specularReflect(Ray* ray, Intersection* intersection, Scene* scene, KdTree* tree, Sampler* sampler){
   float pdf;

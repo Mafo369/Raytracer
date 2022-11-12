@@ -41,10 +41,14 @@ void Renderer::OnResize(uint32_t width, uint32_t height)
 
 	delete[] m_ImageData;
 	m_ImageData = new uint32_t[width * height];
+	delete[] m_accumulationData;
+	m_accumulationData = new glm::vec4[width * height];
 }
 
 void Renderer::Render(const CameraI& camera)
 {
+  if(m_frameIndex == 1)
+    memset(m_accumulationData, 0, m_FinalImage->GetHeight() * m_FinalImage->GetWidth() * sizeof(glm::vec4));
 
 	for (uint32_t y = 0; y < m_FinalImage->GetHeight(); y++)
 	{
@@ -53,20 +57,37 @@ void Renderer::Render(const CameraI& camera)
 		{
 	    Ray ray;
 			vec3 dir = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-			vec3 dirx = camera.GetRayDirections()[(x+1) + y * m_FinalImage->GetWidth()];
-			vec3 diry = camera.GetRayDirections()[x + (y+1) * m_FinalImage->GetWidth()];
+			//vec3 dirx = camera.GetRayDirections()[(x+1) + y * m_FinalImage->GetWidth()];
+			//vec3 diry = camera.GetRayDirections()[x + (y+1) * m_FinalImage->GetWidth()];
       rayInit(&ray, camera.GetPosition(), normalize(dir), vec2(x,y));
-      ray.dox = camera.GetPosition();
-      ray.doy = camera.GetPosition();
-      ray.ddx = normalize(dirx);
-      ray.ddy = normalize(diry);
+      ray.hasDifferentials = false;
+      ray.dox = vec3(0);
+      ray.doy = vec3(0);
+      ray.ddx = vec3(0);
+      ray.ddy = vec3(0);
+
+      //ray.dox = camera.GetPosition();
+      //ray.doy = camera.GetPosition();
+      //ray.ddx = normalize(dirx);
+      //ray.ddy = normalize(diry);
       Intersection intersection;
       auto colorr = trace_ray(scene, &ray, tree, &intersection);
       auto color = vec4(colorr.r, colorr.g, colorr.b, 1);
-			color = glm::clamp(color, glm::vec4(0.0f), glm::vec4(1.0f));
-			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(color);
+
+      m_accumulationData[x + y * m_FinalImage->GetWidth()] += color;
+
+      glm::vec4 accumulatedColor = m_accumulationData[x + y * m_FinalImage->GetWidth()];
+      accumulatedColor /= (float)m_frameIndex;
+
+			accumulatedColor = glm::clamp(accumulatedColor, glm::vec4(0.0f), glm::vec4(1.0f));
+			m_ImageData[x + y * m_FinalImage->GetWidth()] = Utils::ConvertToRGBA(accumulatedColor);
 		}
 	}
 
 	m_FinalImage->SetData(m_ImageData);
+
+  if(m_settings.accumulate)
+    m_frameIndex++;
+  else
+    m_frameIndex = 1;
 }

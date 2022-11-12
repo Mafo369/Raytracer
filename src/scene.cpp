@@ -17,6 +17,8 @@
 #include "shapes/cube.h"
 #include "shapes/plane.h"
 
+#include "Material.h"
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 glm::vec3 extractScale(const glm::mat4 &m)

@@ -47,6 +47,9 @@ class Object {
     Object(std::shared_ptr<Material> material, Transform transform);
     virtual ~Object();
     virtual bool intersect(Ray* ray, Intersection* intersection) const = 0;
+    virtual Intersection sample(const Intersection& inter, const point2& u) const = 0;
+    virtual Intersection sample(const point2& u) const = 0;
+    virtual float pdf(const Intersection& inter, const vec3& wi) const = 0;
 
     Ray transformRay(Ray* ray) const;
 

@@ -3,7 +3,7 @@
 #include "defines.h"
 #include <vector>
 #include "raytracer.h"
-#include "Light.h"
+//#include "Light.h"
 #include "sampling/sampler.h"
 
 class Material {

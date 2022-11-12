@@ -64,7 +64,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 {
   color3 ret = color3(0, 0, 0);
 
-  if (ray->depth > 6)
+  if (ray->depth > scene->depth)
     return color3(0.f);
 
   if (intersectKdTree(scene, tree, ray, intersection))
@@ -73,20 +73,26 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
     // Compute necessary differential information for texture filtering
     if(ray->hasDifferentials)
       intersection->computeDifferentials(ray);
-
-    // if skybox return directly the corresponding color
-    if(intersection->face != -1){
-      return intersection->mat->textureColor(intersection->u, intersection->v, intersection->face);
+    
+    // shading
+    size_t lightsCount = scene->lights.size();
+    for (size_t i = 0; i < lightsCount; i++)
+    {
+      vec3 v = ray->dir * -1.0f;
+      if(scene->lights[i]->isAmbient()){
+        ret += intersection->mat->ambientColor(ray, intersection, scene->lights[i]->getColor());
+        continue;
+      }
+      auto intensity = scene->lights[i]->intensityAt(intersection->position, scene, tree, v, intersection); 
+      if(intensity > 0.0f){
+        ret += intersection->mat->shade(intersection, v, scene->lights[i], intensity);
+      }
     }
 
-    //if(!isBlack(intersection->mat->m_emission)){
-    //  return intersection->mat->m_diffuseColor * intersection->mat->m_emission / (4.f * Pi  * (5.f * 5.f));
-    //}
 
-
-    //// If max contribution, we stop
-    //if (ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0)
-    //  return color3(1.f);
+    // If max contribution, we stop
+    if (ret.r >= 1.f && ret.g >= 1.f && ret.b >= 1.f && ray->depth > 0)
+      return color3(1.f);
 
     // Scatter
     if(!isBlack(intersection->mat->m_emission)){
@@ -113,7 +119,7 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 }
 
 // whitted
-//color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, Sampler* sampler)
+//color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, bool show_lights, Sampler* sampler)
 //{
 //  color3 ret = color3(0, 0, 0);
 //
@@ -186,7 +192,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(4, 4, true, 1);
+    new StratifiedSampler(2, 2, true, 1);
 
   for (size_t j = 0; j < img->height; j++)
   {

@@ -24,8 +24,8 @@ PointLight::PointLight(vec3 position, color3 color, float size){
   m_position = position;
   m_color = color;
   m_size = size;
-  m_shadowMin = 15;
-  m_shadowMax = 25;
+  m_shadowMin = 2;
+  m_shadowMax = 5;
   m_samples.push_back(position);
 }
 
@@ -222,4 +222,11 @@ DirectLight::~DirectLight(){
 
 vec3 DirectLight::getDirection(point3 p){
   return m_position;
+}
+
+color3 ShapeLight::sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const {
+  Intersection pShape = m_shape->sample(inter, u);
+  *wi = normalize(pShape.position - inter.position);
+  *pdf = m_shape->pdf(inter, *wi);
+  return L(pShape, -*wi);
 }

@@ -1,4 +1,5 @@
 #include "sphere.h"
+#include "../sampling/sampling.h"
 
 #define PHIMAX (2.f * M_PI)
 #define THETAMAX M_PI
@@ -148,4 +149,59 @@ bool Sphere::intersect(Ray *ray, Intersection *intersection) const {
     return true;
   }
   return false;
+}
+
+Intersection Sphere::sample(const point2& u) const {
+  point3 pObj = point3(0) + geom.sphere.radius * UniformSampleSphere(u);
+  Intersection it;
+  it.normal = normalize(transform.getTransform() * vec3(pObj.x, pObj.y, pObj.z));
+  pObj *= geom.sphere.radius / length(pObj - point3(0));
+  it.position = transform.transformFrom(pObj);
+  return it;
+}
+
+Intersection Sphere::sample(const Intersection& inter, const point2& u) const {
+  point3 pCenter = geom.sphere.center;
+  vec3 wc = normalize(pCenter - inter.position);
+  vec3 wcX, wcY;
+  CoordinateSystem(wc, &wcX, &wcY); 
+
+  vec3 normal = inter.isOutside ? inter.normal : -inter.normal;
+  point3 pOrigin = inter.position + (acne_eps * normal);
+  auto dist = length(pOrigin - pCenter);
+  auto radius2 = geom.sphere.radius * geom.sphere.radius;
+  if((dist * dist) <= radius2)
+    return sample(u);
+
+  dist = length(inter.position - pCenter);
+  float sinThetaMax2 = radius2 / (dist * dist);
+  float cosThetaMax = sqrt(max(0.f, 1.f - sinThetaMax2));
+  float cosTheta = (1.f - u[0]) + u[0] * cosThetaMax;
+  float sinTheta = sqrt(max(0.f, 1.f - cosTheta * cosTheta));
+  float phi = u[1] * 2.f * Pi;
+
+  float ds = dist * cosTheta - sqrt(max(0.f, radius2 - dist * dist * sinTheta * sinTheta));
+  float cosAlpha = (dist * dist + radius2 - ds * ds) / (2.f * dist * geom.sphere.radius);
+  float sinAlpha = sqrt(max(0.f, 1.f - cosAlpha * cosAlpha));
+
+  vec3 nObj = SphericalDirection(sinAlpha, cosAlpha, phi, -wcX, -wcY, -wc);
+  point3 pObj = geom.sphere.radius * point3(nObj.x, nObj.y, nObj.z);
+
+  Intersection it;
+  pObj *= geom.sphere.radius / length(pObj - point3(0));
+
+  it.position = transform.transformFrom(pObj);
+  it.normal = transform.getTransform() * nObj;
+  return it;
+}
+
+float Sphere::pdf(const Intersection& inter, const vec3& wi) const {
+  point3 pCenter = transform.transformFrom(point3(0));
+  point3 pOrigin = inter.position + (acne_eps * inter.normal);
+  if(length_sq(pOrigin - pCenter) <= geom.sphere.radius * geom.sphere.radius)
+    return 1.f; // TODO: return default object pdf
+
+  float sinThetaMax2 = geom.sphere.radius * geom.sphere.radius / length_sq(inter.position - pCenter);
+  float cosThetaMax = sqrt(max(0.f, 1.f - sinThetaMax2));
+  return UniformConePdf(cosThetaMax);
 }

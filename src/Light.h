@@ -3,6 +3,7 @@
 #include "defines.h"
 #include "scene.h"
 #include "kdtree.h"
+#include "Object.h"
 
 class Light {
   public:
@@ -81,43 +82,18 @@ class AreaLight : public Light {
     Object* m_t2;
 };
 
-//
-//#include "raytracer.h"
-//
-//class AreaLight : public Light {
-//  public:
-//    // AreaLight Interface
-//    AreaLight() = default;
-//    virtual color3 L(const Intersection &intr, const vec3 &w) const = 0;
-//};
-//
-//class DiffuseAreaLight : public AreaLight {
-//  public:
-//    // DiffuseAreaLight Public Methods
-//    DiffuseAreaLight(const color3 &Lemit, int nSamples,
-//                     Object *shape,
-//                     bool twoSided);
-//    color3 L(const Intersection &intr, const vec3 &w) const {
-//        return (twoSided || dot(intr.normal, w) > 0) ? Lemit : color3(0.f);
-//    }
-//    color3 Power() const;
-//    color3 Sample_Li(const Intersection &ref, const point2 &u, vec3 *wo,
-//                       float *pdf) const;
-//    float Pdf_Li(const Intersection &, const vec3 &, Scene*, KdTree*) const;
-//    color3 Sample_Le(const point2 &u1, const point2 &u2, float time,
-//                       Ray *ray, vec3 *nLight, float *pdfPos,
-//                       float *pdfDir) const;
-//    void Pdf_Le(const Ray &, const vec3 &, float *pdfPos,
-//                float *pdfDir) const;
-//
-//  protected:
-//    // DiffuseAreaLight Protected Data
-//    const color3 Lemit;
-//    Object* shape;
-//    // Added after book publication: by default, DiffuseAreaLights still
-//    // only emit in the hemimsphere around the surface normal.  However,
-//    // this behavior can now be overridden to give emission on both sides.
-//    const bool twoSided;
-//    const float area;
-//};
-//
+class ShapeLight : public Light {
+  public:
+    ShapeLight(vec3 position , color3 color, Object* obj) : Light() { m_shape = obj; m_position = position; m_color = color; }
+    float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override { return 0; }
+    vec3 getDirection(point3 p) override { return vec3(0); };
+    vec3 getLightPoint(point3 p, int c, float r) {return vec3(0);}
+    color3 L(const Intersection& inter, const vec3& w) const {
+      return dot(inter.normal, w) > 0.f ? m_color : color3(0);
+    }
+    color3 sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const;
+    ~ShapeLight() {}
+  private:
+    Object* m_shape;
+    const float m_area = 1.f;
+};

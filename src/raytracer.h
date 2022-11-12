@@ -5,7 +5,6 @@
 #include "scene.h"
 #include "ray.h"
 
-
 //! An intersection contains all the information to shade an intersection point.
 typedef struct intersection_s { 
   vec3 normal; //! the normal of the intersection point

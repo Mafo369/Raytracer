@@ -12,11 +12,17 @@ using namespace Walnut;
 CameraI::CameraI(float verticalFOV, float nearClip, float farClip)
 	: m_VerticalFOV(verticalFOV), m_NearClip(nearClip), m_FarClip(farClip)
 {
-	m_ForwardDirection = glm::vec3(0, 0, -1);
-	m_Position = glm::vec3(0, 0, 3);
+  auto from = glm::vec3(0., -60, 16);
+  auto at = glm::vec3(0, 0, 11);
+
+  m_ForwardDirection = normalize(at - from);
+  m_Position = from;
+
+	//m_ForwardDirection = glm::vec3(0, 0, -1);
+	//m_Position = glm::vec3(0, 0, 3);
 }
 
-void CameraI::OnUpdate(float ts)
+bool CameraI::OnUpdate(float ts)
 {
 	glm::vec2 mousePos = Input::GetMousePosition();
 	glm::vec2 delta = (mousePos - m_LastMousePosition) * 0.002f;
@@ -25,14 +31,15 @@ void CameraI::OnUpdate(float ts)
 	if (!Input::IsMouseButtonDown(MouseButton::Right))
 	{
 		Input::SetCursorMode(CursorMode::Normal);
-		return;
+		return false;
 	}
 
 	Input::SetCursorMode(CursorMode::Locked);
 
 	bool moved = false;
 
-	constexpr glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
+	//constexpr glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
+	constexpr glm::vec3 upDirection(0.0f, 0.0f, 1.0f);
 	glm::vec3 rightDirection = glm::cross(m_ForwardDirection, upDirection);
 
 	float speed = 5.0f;
@@ -76,7 +83,7 @@ void CameraI::OnUpdate(float ts)
 		float yawDelta = delta.x * GetRotationSpeed();
 
 		glm::quat q = glm::normalize(glm::cross(glm::angleAxis(-pitchDelta, rightDirection),
-			glm::angleAxis(-yawDelta, glm::vec3(0.f, 1.0f, 0.0f))));
+			glm::angleAxis(-yawDelta, glm::vec3(0.f, 0.0f, 1.0f))));
 		m_ForwardDirection = glm::rotate(q, m_ForwardDirection);
 
 		moved = true;
@@ -87,6 +94,7 @@ void CameraI::OnUpdate(float ts)
 		RecalculateView();
 		RecalculateRayDirections();
 	}
+  return moved;
 }
 
 void CameraI::OnResize(uint32_t width, uint32_t height)

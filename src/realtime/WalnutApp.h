@@ -27,7 +27,8 @@ public:
 
 	virtual void OnUpdate(float ts) override
 	{
-		m_Camera.OnUpdate(ts);
+		if(m_Camera.OnUpdate(ts))
+      m_Renderer.ResetFrameIndex();
 	}
 
 	virtual void OnUIRender() override
@@ -38,11 +39,27 @@ public:
 		{
 			Render();
 		}
+
+    ImGui::Checkbox("Accumulate", &m_Renderer.getSettings().accumulate);
+
+    ImGui::InputInt("Depth", &m_Renderer.scene->depth);
+
+    if(ImGui::Button("Reset"))
+      m_Renderer.ResetFrameIndex();
+
 		ImGui::End();
 
     ImGui::Begin("Scene");
     const std::string cameraPos = glm::to_string(m_Camera.GetPosition());
     ImGui::Text(cameraPos.c_str());
+
+    auto light = m_Renderer.scene->objects[m_Renderer.scene->objects.size()-1];
+    ImGui::DragFloat("Light intensity", glm::value_ptr(light->mat->m_emission), 1, 1, 100000);
+    light->mat->m_emission.y = light->mat->m_emission.x;
+    light->mat->m_emission.z = light->mat->m_emission.x;
+
+    ImGui::Separator();
+
     for(size_t i = 0; i < m_Renderer.scene->objects.size(); i++){
       ImGui::PushID(i);
 
@@ -56,18 +73,18 @@ public:
         ImGui::Separator();
       }
 
-      auto objMat1 = std::dynamic_pointer_cast<Blinn>(m_Renderer.scene->objects[i]->mat);
-      if(objMat1 != nullptr){
-        ImGui::DragFloat("ior", &objMat1->m_IOR, 0.1, 1.0, 6.0);
-        ImGui::DragFloat("shininess", &objMat1->m_shininess, 1, 0.0, 200);
-        ImGui::ColorEdit3("dif", glm::value_ptr(objMat1->m_diffuseColor));
-        ImGui::ColorEdit3("spec", glm::value_ptr(objMat1->m_specularColor));
-        ImGui::DragFloat3("reflection", glm::value_ptr(objMat1->m_reflection),0.1, 0, 1);
-        ImGui::DragFloat3("refraction", glm::value_ptr(objMat1->m_refraction),0.1, 0, 1);
-        ImGui::DragFloat3("absorption", glm::value_ptr(objMat1->m_absorption),0.1, 0, 1);
+    //  auto objMat1 = std::dynamic_pointer_cast<Blinn>(m_Renderer.scene->objects[i]->mat);
+    //  if(objMat1 != nullptr){
+    //    ImGui::DragFloat("ior", &objMat1->m_IOR, 0.1, 1.0, 6.0);
+    //    ImGui::DragFloat("shininess", &objMat1->m_shininess, 1, 0.0, 200);
+    //    ImGui::ColorEdit3("dif", glm::value_ptr(objMat1->m_diffuseColor));
+    //    ImGui::ColorEdit3("spec", glm::value_ptr(objMat1->m_specularColor));
+    //    ImGui::DragFloat3("reflection", glm::value_ptr(objMat1->m_reflection),0.1, 0, 1);
+    //    ImGui::DragFloat3("refraction", glm::value_ptr(objMat1->m_refraction),0.1, 0, 1);
+    //    ImGui::DragFloat3("absorption", glm::value_ptr(objMat1->m_absorption),0.1, 0, 1);
 
-        ImGui::Separator();
-      }
+    //    ImGui::Separator();
+    //  }
 
       ImGui::PopID();
     }
