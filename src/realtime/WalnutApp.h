@@ -58,6 +58,9 @@ public:
     light->mat->m_emission.y = light->mat->m_emission.x;
     light->mat->m_emission.z = light->mat->m_emission.x;
 
+    ImGui::DragFloat("Fog y", &m_Renderer.scene->ysol, 1, -100, 100);
+
+
     ImGui::Separator();
 
     for(size_t i = 0; i < m_Renderer.scene->objects.size(); i++){

@@ -196,7 +196,7 @@ inline float PowerHeuristic(int nf, float fPdf, int ng, float gPdf) {
 //    return normal * cos(the) + (v0 * cos(phi) + v1 * sin(phi)) * sin(the);
 //}
 
-inline vec3 random_dir(vec3 normal) {
+inline vec3 random_dir(const vec3& normal) {
   float r1 = uniform01(engine);
   float r2 = uniform01(engine);
 
@@ -209,6 +209,35 @@ inline vec3 random_dir(vec3 normal) {
   vec3 tangent2 = cross(tangent1, normal);
 
   return dir_rand_local[2] * normal + dir_rand_local[0] * tangent1 + dir_rand_local[1] * tangent2;
+  //float r1 = uniform01(engine);
+	//float r2 = uniform01(engine);
+	//float sr2 = sqrt(1. - r2);
+	//vec3 direction_aleatoire_repere_local(cos(2 * M_PI*r1)*sr2, sin(2 * M_PI*r1)*sr2, sqrt(r2));
+	///*vec3 aleatoire(uniform(engine) - 0.5, uniform(engine) - 0.5, uniform(engine) - 0.5);	
+	//vec3 tangent1 = cross(N, aleatoire); tangent1.normalize();*/
+	//vec3 tangent1;
+	//vec3 absN(abs(N[0]), abs(N[1]), abs(N[2]));
+	//if (absN[0] <= absN[1] && absN[0]<=absN[2]) {
+	//	tangent1 = vec3(0, -N[2], N[1]);
+	//}else
+	//	if (absN[1] <= absN[0] && absN[1]<=absN[2]) {
+	//		tangent1 = vec3(-N[2], 0, N[0]);
+	//	} else
+	//		tangent1 = vec3(-N[1], N[0], 0);
+  //tangent1 = normalize(tangent1);
+	//vec3 tangent2 = cross(tangent1, N);
+
+	//return direction_aleatoire_repere_local[2] * N + direction_aleatoire_repere_local[0] * tangent1 + direction_aleatoire_repere_local[1] * tangent2;
+}
+
+inline vec3 random_uniform() {
+  float r1 = uniform01(engine);
+  float r2 = uniform01(engine);
+  vec3 result;
+  result[0] = 2.f * cos(2.f * Pi * r1)*sqrt(r2*(1. - r2));
+  result[1] = 2.f * sin(2.f * Pi * r1)*sqrt(r2*(1. - r2));
+  result[2] = 1.f - 2.f * r2;
+  return result;
 }
 
 inline vec3 uniformHemisphereDir(vec3 normal){

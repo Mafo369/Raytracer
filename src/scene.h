@@ -20,7 +20,8 @@ typedef struct scene_s {
   Camera* cam; //! the scene have one camera
   color3 skyColor; //! the sky color, could be extended to a sky function ;)
   texture* m_skyTexture = nullptr;
-  int depth = 3;
+  int depth = 5;
+  float ysol = -12.f;
 } Scene;
 
 //! create a new sphere structure

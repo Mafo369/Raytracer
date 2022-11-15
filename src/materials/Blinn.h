@@ -8,8 +8,9 @@ class Blinn : public Material {
     Blinn();
     ~Blinn() override;
 
-    color3 f(const vec3& wo, const vec3& wi);
+    color3 f(const vec3& wo, const vec3& wi, const vec3& n) override {return color3(0); }
     color3 sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, float* pdf, int type) override;
+    float pdf(const vec3& wo, const vec3& wi, const vec3& n) override { return 0.f; };
     color3 shade(Intersection *intersection, vec3 v, Light* light, float intensity) override;
     color3 textureColor(float u, float v, int face) override;
     color3 ambientColor(Ray* ray, Intersection* intersection, color3 lightColor) override;

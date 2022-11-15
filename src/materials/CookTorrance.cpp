@@ -102,50 +102,82 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
   auto ret = color3(0.0);
   if(m_transparent) {
     // REFRACTION + REFLECTION
-
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-    point3 v0 = point3(0, 1, 0);
-    if(dot(v0, normal))
-      v0 = point3(0,0,1);
-    point3 v1 = normalize(cross(v0, normal));
-    float rnd = sqrt(uniform01(engine));
-    float rndReflection = rnd * 0.0001;
-    float rndRefraction = rnd * 0.0001;
-    float factor = uniform01(engine) * 2.0 * M_PI;
-    
-    vec3 n1 = normalize(normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
-    vec3 n2 = normalize(normal + (v0 * rndRefraction * cos(factor)) + (v1 * rndRefraction * sin(factor)));
 
-    //normal = n1;
-
-    vec3 r = reflect(ray->dir, normal);
-    Ray ray_ref;
-
-    rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
-    Intersection inter;
-    color3 reflectionColor = trace_ray(scene, &ray_ref, tree, &inter);
-    float LdotH = dot(ray_ref.dir, normal);
-
-    float refractionRatio = 
-      intersection->isOutside ? (1.f/m_IOR) : m_IOR;
+    float LdotH = dot(-ray->dir, normal);
     float f = intersection->isOutside ? 
         RDM_Fresnel(LdotH, 1.f, m_IOR) : 
         RDM_Fresnel(LdotH, m_IOR, 1.f);
 
-    vec3 unit_direction = normalize( ray->dir );
-
-    auto refractionColor = color3(0.f);
+    Ray new_ray;
+    color3 factor = color3(1);
     if( f < 1.0f ){
-      //normal = n2;
-      vec3 refr = refract(unit_direction, normal, refractionRatio);
-      Ray ray_refr;
-      rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr, ray->pixel,0, 100000, ray->depth + 1);
-
-      Intersection refInter;
-      refractionColor += trace_ray(scene, &ray_refr, tree, &refInter);
+      if(uniform01(engine) < f){ // reflect
+        vec3 r = reflect(ray->dir, normal);
+        rayInit(&new_ray, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
+        factor = m_specularColor;
+      }
+      else { // refract 
+        float refractionRatio = 
+          intersection->isOutside ? (1.f/m_IOR) : m_IOR;
+        vec3 refr = refract(ray->dir, normal, refractionRatio);
+        rayInit(&new_ray, intersection->position + (acne_eps * refr), refr, ray->pixel,0, 100000, ray->depth + 1);
+      }
     }
-    
-    ret += ( reflectionColor * f * m_specularColor ) + refractionColor * (1.0f - f);
+    else
+    {
+      vec3 r = reflect(ray->dir, normal);
+      rayInit(&new_ray, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
+      factor = m_specularColor;
+    }
+    Intersection new_inter;
+    color3 color = factor * trace_ray(scene, &new_ray, tree, &new_inter);
+    ret += color;
+
+
+
+    //point3 v0 = point3(0, 1, 0);
+    //if(dot(v0, normal))
+    //  v0 = point3(0,0,1);
+    //point3 v1 = normalize(cross(v0, normal));
+    //float rnd = sqrt(uniform01(engine));
+    //float rndReflection = rnd * 0.0001;
+    //float rndRefraction = rnd * 0.0001;
+    //float factor = uniform01(engine) * 2.0 * M_PI;
+    //
+    //vec3 n1 = normalize(normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
+    //vec3 n2 = normalize(normal + (v0 * rndRefraction * cos(factor)) + (v1 * rndRefraction * sin(factor)));
+
+    ////normal = n1;
+
+    //vec3 r = reflect(ray->dir, normal);
+    //Ray ray_ref;
+
+    //rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
+    //Intersection inter;
+    //color3 reflectionColor = trace_ray(scene, &ray_ref, tree, &inter);
+    //float LdotH = dot(ray_ref.dir, normal);
+
+    //float refractionRatio = 
+    //  intersection->isOutside ? (1.f/m_IOR) : m_IOR;
+    //float f = intersection->isOutside ? 
+    //    RDM_Fresnel(LdotH, 1.f, m_IOR) : 
+    //    RDM_Fresnel(LdotH, m_IOR, 1.f);
+
+    //vec3 unit_direction = normalize( ray->dir );
+
+    //auto refractionColor = color3(0.f);
+    //if( f < 1.0f ){
+    //  //normal = n2;
+    //  vec3 refr = refract(unit_direction, normal, refractionRatio);
+    //  Ray ray_refr;
+    //  rayInit(&ray_refr, intersection->position + (acne_eps * refr), refr, ray->pixel,0, 100000, ray->depth + 1);
+
+    //  Intersection refInter;
+    //  refractionColor += trace_ray(scene, &ray_refr, tree, &refInter);
+    //}
+    //
+    //ret += ( reflectionColor * f * m_specularColor ) + refractionColor * (1.0f - f);
   } 
   else
   {
@@ -225,9 +257,9 @@ color3 CookTorrance::sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, f
     h = h / length(h);
     float LdotH = dot(*wi, h);
 
-    float f = isOutside ? RDM_Fresnel(LdotH, 1.f, m_IOR) : RDM_Fresnel(LdotH, m_IOR, 1.f);
+    float fr = isOutside ? RDM_Fresnel(LdotH, 1.f, m_IOR) : RDM_Fresnel(LdotH, m_IOR, 1.f);
     
-    return f * m_specularColor;
+    return fr * m_specularColor;
   }
   else if(type == 1){
     if(m_transparent) {
@@ -243,16 +275,49 @@ color3 CookTorrance::sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, f
       float LdotH = dot(r, h);
 
       float refractionRatio = isOutside ? (1.f/m_IOR) : m_IOR;
-      float f = isOutside ? RDM_Fresnel(LdotH, 1.f, m_IOR) : RDM_Fresnel(LdotH, m_IOR, 1.f);
+      float fr = isOutside ? RDM_Fresnel(LdotH, 1.f, m_IOR) : RDM_Fresnel(LdotH, m_IOR, 1.f);
 
       vec3 unit_direction = normalize( -wo );
 
-      if( f < 1.0f ){
+      if( fr < 1.0f ){
         *wi = refract(unit_direction, normal, refractionRatio);
         *pdf = 1;
-        return vec3(1.0f - f);
+        return vec3(1.0f - fr);
       }
     } 
   }
+  else if(type == 2){
+    vec3 wh = Beckmann_Sample_wh(wo, u, m_roughness, normal);
+    *wi = normalize(reflect(wo, wh));
+
+    float LdotH = dot(*wi, wh);
+    float LdotN = dot(*wi, normal);
+    *pdf = BeckmannPdf(wo, wh, normal, m_roughness, LdotH, LdotN) / (4.f * dot(wo, wh));
+
+    return f(wo, *wi, normal);
+  }
   return color3(0);
+}
+
+color3 CookTorrance::f(const vec3& wo, const vec3& wi, const vec3& n) {
+  float LdotN = abs(dot(wi, n));
+  vec3 vl = wo + wi;
+  vec3 h = vl;
+  if(h.x == 0 && h.y == 0 && h.z == 0) 
+    return color3(0);
+  h = normalize(h);
+  float LdotH = dot(wi, h);
+  float NdotH = dot(n, h);
+  float VdotH = dot(wo, h);
+  float VdotN = abs(dot(wo, n));
+  return RDM_bsdf(LdotH, NdotH, VdotH, LdotN, VdotN, m_texture, 
+             m_diffuseColor, m_specularColor, m_roughness, m_IOR, 0, 0, -1) * LdotN;
+}
+
+float CookTorrance::pdf(const vec3& wo, const vec3& wi, const vec3& n) {
+  //if(!SameHemisphere(wo, wi)) return 0;
+  vec3 wh = normalize(wo + wi);
+  float LdotH = dot(wi, wh);
+  float LdotN = dot(wi, n);
+  return BeckmannPdf(wo, wh, n, m_roughness, LdotH, LdotN) / (4.f * dot(wo, wh));
 }

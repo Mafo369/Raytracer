@@ -14,6 +14,8 @@ class Light {
     virtual vec3 getDirection(point3 p) = 0;
     virtual float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) = 0;
     virtual std::vector<vec3> getSamples() { return m_samples; }
+    virtual color3 sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const = 0;
+    virtual float pdf_Li(const Intersection& it, const vec3& wi) const = 0;
     bool isAmbient() { return m_ambient; }
     void setAmbient(bool ambient) { m_ambient = ambient; }
     bool is_shadowed(vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree);
@@ -35,6 +37,8 @@ class PointLight : public Light {
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
     vec3 getDirection(point3 p) override;
     vec3 getLightPoint(point3 p, int c, float r);
+    color3 sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const override { return color3(0); }
+    float pdf_Li(const Intersection& it, const vec3& wi) const override { return 0.f; }
     ~PointLight();
   private:
     int m_shadowMin;
@@ -47,6 +51,8 @@ class AmbientLight : public Light {
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override;
     vec3 getDirection(point3 p) override;
     ~AmbientLight();
+    color3 sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const override { return color3(0); }
+    float pdf_Li(const Intersection& it, const vec3& wi) const override { return 0.f; }
   private:
 };
 
@@ -57,6 +63,8 @@ class DirectLight : public Light {
     vec3 getDirection(point3 p) override;
     bool isDirectional() override { return true; }
     ~DirectLight();
+    color3 sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const override { return color3(0); }
+    float pdf_Li(const Intersection& it, const vec3& wi) const override { return 0.f; }
   private:
 };
 
@@ -68,6 +76,8 @@ class AreaLight : public Light {
     point3 pointOnLight(float u, float v);
     vec3 getDirection(point3 p) override;
     void setup(Scene* scene);
+    color3 sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const override { return color3(0); }
+    float pdf_Li(const Intersection& it, const vec3& wi) const override { return 0.f; }
   private:
     float intensity;
     vec3 m_corner;
@@ -91,7 +101,8 @@ class ShapeLight : public Light {
     color3 L(const Intersection& inter, const vec3& w) const {
       return dot(inter.normal, w) > 0.f ? m_color : color3(0);
     }
-    color3 sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const;
+    color3 sample_Li(const Intersection& inter, const point2& u, vec3* wi, float* pdf) const override;
+    float pdf_Li(const Intersection& it, const vec3& wi) const override;
     ~ShapeLight() {}
   private:
     Object* m_shape;

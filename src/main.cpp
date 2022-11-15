@@ -31,15 +31,33 @@ int main(int argc, char *argv[]) {
   Scene* scene = parseScene(scene_id);
 
   printf("render scene %d\n", scene_id);
+  float posLight = -5;
+  auto lightSize = 4.f;
 
-  renderImage(img, scene);
-  freeScene(scene);
-  scene = NULL;
+  int i = 97;
+  for(; posLight < 5; posLight+=0.3){
+    Transform modemMatrixE;
+    modemMatrixE.scale(lightSize, lightSize, lightSize);
+    modemMatrixE.translate(vec3(posLight,0,24.5));
+    auto light = scene->objects[scene->objects.size()-1];
+    light->geom.sphere.center = modemMatrixE.transformFrom(vec3(0));
+    light->geom.sphere.radius = lightSize;
+    light->transform = modemMatrixE;
+    basename[4] = char(i);
+    printf("save image to %s\n", basename);
+    renderImage(img, scene);
 
-  printf("save image to %s\n", basename);
-  saveImage(img, basename);
+    saveImage(img, basename);
+    freeImage(img);
+    img = initImage(WIDTH, HEIGHT);
+
+    i++;
+  }
   freeImage(img);
-  img = NULL;
+    img = NULL;
+    freeScene(scene);
+    scene = NULL;
+
   printf("done. Goodbye\n");
 
   return 0;
