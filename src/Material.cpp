@@ -1,6 +1,37 @@
 #include "Material.h"
 #include "Light.h"
 
+bool computeBrdfData(BrdfData& data, const vec3& v, const vec3& wi, const vec3& n, const vec2& uv, 
+                     const color3& baseColor, const float& metalness, const float& roughness){
+  vec3 vl = v + wi;
+  vec3 h = vl;
+  h = normalize(h);
+
+  float LdotN = dot(wi, n);
+  float VdotN = dot(v, n);
+
+  // Backfacing
+  if(LdotN <= 0.0f || VdotN <= 0.0f) return false;
+
+  data.LdotN = min(max(0.00001f, LdotN), 1.0f);
+  data.VdotN = min(max(0.00001f, VdotN), 1.0f);
+
+  data.LdotH = dot(wi, h);
+  data.NdotH = dot(n, h);
+  data.VdotH = dot(v, h);
+  data.uv = uv;
+
+  data.specularF0 = baseColorToSpecularF0(baseColor, metalness);
+  data.diffuseReflectance = baseColorToDiffuseReflectance(baseColor, metalness);
+
+  data.roughness = roughness;
+
+  // Pre-calculate some more BRDF terms
+	data.F = evalFresnel(data.specularF0, shadowedF90(data.specularF0), data.LdotH);
+
+  return true;
+};
+
 color3 specularReflect(Ray* ray, Intersection* intersection, Scene* scene, KdTree* tree, Sampler* sampler){
   float pdf;
   vec3 wi;

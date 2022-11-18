@@ -1443,7 +1443,7 @@ Scene* initScene15(){
   modelMatrix7.rotate(vec3(0,0,1), (150.f));
   modelMatrix7.rotate(vec3(0,1,0), (30.f));
   modelMatrix7.translate(vec3(-8,-6,8.5));
-  //addObject(scene, initSphere(mat3, modelMatrix7));
+  addObject(scene, initSphere(mat3, modelMatrix7));
 
   Transform modelMatrix6;
   modelMatrix6.scale(0.75, 0.75, 0.75);
@@ -1452,7 +1452,7 @@ Scene* initScene15(){
   //addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix6);
 
   auto lightSize = 4.f;
-  auto lightIntensity = 99000.f * 4.f * M_PI / (4. * M_PI * lightSize*lightSize * M_PI);
+  auto lightIntensity = /*99000.f*/ 5000 * 4.f * M_PI / (4. * M_PI * lightSize*lightSize * M_PI);
   auto matE = std::make_shared<Blinn>();
   matE->m_emission = color3(lightIntensity);
   matE->m_diffuseColor = color3(1.f);
@@ -1569,6 +1569,154 @@ Scene* initScene16(){
   return scene;
 }
 
+Scene* initScene17(){
+  Scene *scene = initScene();
+  auto from = point3(0., -60, 16);
+  auto at = vec3(0, 0, 11);
+  setSimpleCamera(scene, from, at, vec3(0, 0.0, 1), 30, float(WIDTH), float(HEIGHT), 0, 1);
+  setSkyColor(scene, color3(0., 0., 0.)); 
+
+  auto mat = std::make_shared<Blinn>();
+  mat->m_diffuseColor = color3(0.8);
+  mat->m_specularColor = color3(0);
+
+  Transform modelMatrix;
+  modelMatrix.scale(32,32,32);
+  modelMatrix.translate(vec3(0,0,12));
+  modelMatrix.translate(vec3(0,0,-12));
+  auto ret = new Plane(mat, modelMatrix);
+  ret->geom.type = PLANE;
+  addObject(scene, ret);
+
+  Transform modelMatrix1;
+  modelMatrix1.scale(32,32,32);
+  modelMatrix1.rotate(vec3(1,0,0), (180.f)); 
+  modelMatrix1.translate(vec3(0,0,12));
+  modelMatrix1.translate(vec3(0,0,12));
+  ret = new Plane(mat, modelMatrix1);
+  ret->geom.type = PLANE;
+  addObject(scene, ret);
+
+  auto matBehind = std::make_shared<Blinn>();
+  //matBehind->m_diffuseColor = color3(1.0, 1., 1.0);
+  auto walltext = new image_texture("../assets/walltext.png");
+  Transform walltextT;
+  //walltextT.scale(0.5, 0.5, 0.5);
+  walltextT.translate(vec3(0, -.19, 0));
+  walltext->m_transform = walltextT;
+  matBehind->m_texture = walltext;
+  Transform modelMatrix2;
+  modelMatrix2.scale(32,32,32);
+  //modelMatrix2.scale(21,21,21);
+  modelMatrix2.rotate(vec3(1,0,0), (90.f));
+  modelMatrix2.translate(vec3(0,0,12));
+  modelMatrix2.translate(vec3(0,20,0));
+  ret = new Plane(mat, modelMatrix2);
+  ret->geom.type = PLANE;
+  addObject(scene, ret);
+
+  auto mat1 = std::make_shared<Blinn>();
+  mat1->m_diffuseColor = color3(1, 0.2, 0.2);
+  mat1->m_specularColor = color3(0);
+
+  Transform modelMatrix3;
+  modelMatrix3.scale(32,32,32);
+  modelMatrix3.rotate(vec3(0,1,0), (90.f));
+  modelMatrix3.translate(vec3(0,0,12));
+  modelMatrix3.translate(vec3(-15,0,0));
+  ret = new Plane(mat1, modelMatrix3);
+  ret->geom.type = PLANE;
+  addObject(scene, ret);
+
+  auto mat2 = std::make_shared<Blinn>();
+  mat2->m_specularColor = color3(0);
+  mat2->m_diffuseColor = color3(0.2, 0.2, 1.0);
+
+  Transform modelMatrix4;
+  modelMatrix4.scale(32,32,32);
+  modelMatrix4.rotate(vec3(0,1,0), (-90.f));
+  modelMatrix4.translate(vec3(0,0,12));
+  modelMatrix4.translate(vec3(15,0,0));
+  ret = new Plane(mat2, modelMatrix4);
+  ret->geom.type = PLANE;
+  addObject(scene, ret);
+
+  auto mat3 = std::make_shared<CookTorrance>();
+  mat3->m_diffuseColor = color3(0.6, 0.2, 0.2);
+  //mat3->m_specularColor = color3(0.4, 0., 0.);
+  mat3->m_roughness = 0.1;
+  mat3->m_IOR = 3.5;
+
+  auto mat4 = std::make_shared<CookTorrance>(true);
+  //mat4->m_diffuseColor = color3(0.2, 0.8, 0.2);
+  mat4->m_diffuseColor = color3(1);
+  mat4->m_specularColor = color3(1);
+  //mat4->m_roughness = 0.1;
+  //mat4->m_refraction = color3(1);
+  //mat4->m_reflection = color3(1);
+  mat4->m_IOR = 1.5;
+
+  //auto mat3 = std::make_shared<CookTorrance>(true);
+  //mat3->m_diffuseColor = color3(0.8, 0.2, 0.2);
+  //mat3->m_specularColor = color3(0.7f);
+  //mat3->m_IOR = 1.15;
+  //mat3->m_roughness = 0.1;
+
+  //auto mat4 = std::make_shared<CookTorrance>();
+  //mat4->m_diffuseColor = color3(0.0, 1., 0.0);
+  //mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
+  //mat4->m_IOR = 1.8;
+  //mat4->m_roughness = 0.1;
+
+  //auto mat4 = std::make_shared<CookTorrance>();
+  ////mat4->m_diffuseColor = color3(0.0, 1., 0.0);
+  //auto balltex =  new image_texture("../assets/6ball.png");
+  ////Transform balltexT;
+  ////balltexT.rotate(vec3(0,0,1), 60);
+  ////balltex->m_transform = balltexT;
+  //mat4->m_texture = balltex;
+  //mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
+  //mat4->m_IOR = 4.0;
+  //mat4->m_roughness = 0.04;
+
+  Transform modelMatrix5;
+  modelMatrix5.scale(4.5, 4.5, 4.5);
+  modelMatrix5.rotate(vec3(0,0,1), (150.f));
+  modelMatrix5.rotate(vec3(0,1,0), (30.f));
+  modelMatrix5.translate(vec3(0,-2,13.5));
+  addObject(scene, initSphere(mat4, modelMatrix5));
+
+  Transform modelMatrix7;
+  modelMatrix7.scale(4.5, 4.5, 4.5);
+  modelMatrix7.rotate(vec3(0,0,1), (150.f));
+  modelMatrix7.rotate(vec3(0,1,0), (30.f));
+  modelMatrix7.translate(vec3(-8,-6,8.5));
+  addObject(scene, initSphere(mat3, modelMatrix7));
+
+  Transform modelMatrix6;
+  modelMatrix6.scale(0.75, 0.75, 0.75);
+  modelMatrix6.rotate(vec3(0,0,1), (30.f)); 
+  modelMatrix6.translate(vec3(-4.5,5,0));
+  //addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix6);
+
+  auto lightSize = 4.f;
+  auto lightIntensity = /*99000.f*/ 10000 * 4.f * M_PI / (4. * M_PI * lightSize*lightSize * M_PI);
+  auto matE = std::make_shared<CookTorrance>();
+  matE->m_emission = color3(lightIntensity);
+  matE->m_diffuseColor = color3(1.f);
+
+  Transform modemMatrixE;
+  //modemMatrixE.scale(lightSize, lightSize, lightSize);
+  //modemMatrixE.translate(vec3(-2,0,24.5));
+  addObject(scene, initSphere(matE, modemMatrixE));
+
+  //addLight(scene, initPointLight(point3(0, 0, 17), color3(0.5f), lightSize));
+  auto obj = initSphere(matE, modemMatrixE);
+  auto light = new ShapeLight(point3(0,0,17), color3(2000), obj);
+  //addLight(scene, light);
+  return scene;
+}
+
 Scene* parseScene(int sceneId){
   Scene *scene = NULL;
   switch (sceneId) {
@@ -1622,6 +1770,9 @@ Scene* parseScene(int sceneId){
     break;
   case 16:
     scene = initScene16();
+    break;
+  case 17:
+    scene = initScene17();
     break;
 
   default:

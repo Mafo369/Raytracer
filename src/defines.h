@@ -24,6 +24,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/matrix_transform_2d.hpp>
+#include <glm/gtx/compatibility.hpp>
 using namespace glm;
 
 typedef vec3 point3;

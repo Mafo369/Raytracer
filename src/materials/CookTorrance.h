@@ -4,7 +4,7 @@
 
 class CookTorrance : public Material {
   public:
-    CookTorrance(bool transparent);
+    CookTorrance(bool transparent=false);
     ~CookTorrance() override;
 
     color3 f(const vec3& wo, const vec3& wi, const vec3& n) override;

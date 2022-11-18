@@ -68,7 +68,7 @@ public:
 
       auto objMat = std::dynamic_pointer_cast<CookTorrance>(m_Renderer.scene->objects[i]->mat);
       if(objMat != nullptr){
-        ImGui::DragFloat("ior", &objMat->m_IOR, 0.1, 1.0, 6.0);
+        ImGui::DragFloat("ior", &objMat->m_IOR, 0.1, 0.0, 6.0);
         ImGui::DragFloat("roughness", &objMat->m_roughness, 0.01, 0.0, 3.0);
         ImGui::ColorEdit3("dif", glm::value_ptr(objMat->m_diffuseColor));
         ImGui::ColorEdit3("spec", glm::value_ptr(objMat->m_specularColor));

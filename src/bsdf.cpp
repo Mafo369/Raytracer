@@ -162,19 +162,17 @@ float RDM_Smith(float LdotH, float LdotN, float VdotH, float VdotN,
 // VdotH : View . Half
 // LdotN : Light . Norm
 // VdotN : View . Norm
-color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
-                  float VdotN, float roughness, float IOR, color3 specularColor)
+color3 RDM_bsdf_s(BrdfData& data)
 {
 
   //! \todo specular term of the bsdf, using D = RDB_Beckmann, F = RDM_Fresnel, G
   //! = RDM_Smith
 
-  float d = RDM_Beckmann(NdotH, roughness);
-  float f = RDM_Fresnel(LdotH, 1.f, IOR);
+  float d = RDM_Beckmann(data.NdotH, data.roughness);
   //float f = schlick(LdotH, m->IOR, 1.f);
-  float g = RDM_Smith(LdotH, LdotN, VdotH, VdotN, roughness);
+  float g = RDM_Smith(data.LdotH, data.LdotN, data.VdotH, data.VdotN, data.roughness);
 
-  return color3(specularColor * ((d * f * g) / (4.f * LdotN * VdotN)));
+  return color3(data.specularF0 * ((d * data.F * g) / (4.f * data.LdotN * data.VdotN)));
 }
 
 color3 RDM_btdf(float LdotH, float NdotH, float VdotH, float LdotN,
@@ -207,20 +205,20 @@ color3 RDM_bsdf_d(color3 diffuseColor)
 // LdotN : Light . Norm
 // VdtoN : View . Norm
 // compute bsdf * cos(Oi)
-color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                texture* texture, color3 diffuseColor, color3 specularColor, float roughness, float IOR, float uTex, float vTex, int face)
+color3 RDM_bsdf(BrdfData& data, texture* texture, int face)
 {
 
   //! \todo compute bsdf diffuse and specular term
   if(texture != nullptr){
     color3 texColor;
     if(face == -1)
-      texColor = (texture->value(uTex, vTex));
+      texColor = (texture->value(data.uv.x, data.uv.y));
     else
-      texColor = (texture->value(uTex, vTex, face));
-    return color3((texColor / float(M_PI)) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, roughness, IOR, specularColor));
+      texColor = (texture->value(data.uv.x, data.uv.y, face));
+    return color3((texColor / float(M_PI)) + RDM_bsdf_s(data));
   }
-  return color3(RDM_bsdf_d(diffuseColor) + RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN, VdotN, roughness, IOR, specularColor));
+  color3 specular = RDM_bsdf_s(data);
+  return color3((vec3(1) - data.F) * RDM_bsdf_d(data.diffuseReflectance) + specular);
 }
 
 color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN,

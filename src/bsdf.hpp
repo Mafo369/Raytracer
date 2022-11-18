@@ -1,12 +1,11 @@
 #pragma once
 
 #include "scene.h"
+#include "Material.h"
 
-color3 RDM_bsdf(float LdotH, float NdotH, float VdotH, float LdotN, float VdotN,
-                texture* texture, color3 diffuseColor, color3 specularColor, float roughness, float IOR, float uTex, float vTex, int face);
+color3 RDM_bsdf(BrdfData& data, texture* texture, int face);
 
-color3 RDM_bsdf_s(float LdotH, float NdotH, float VdotH, float LdotN,
-                  float VdotN, float roughness, float IOR, color3 specularColor);
+color3 RDM_bsdf_s(BrdfData& data);
 
 color3 RDM_brdf(float LdotH, float NdotH, float VdotH, float LdotN,
                   float VdotN, float extIOR, float intIOR, float roughness, color3 specularColor);
