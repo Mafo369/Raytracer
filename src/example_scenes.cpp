@@ -15,6 +15,8 @@
 #include "shapes/plane.h"
 #include "Camera.h"
 
+#include "mediums/Fog.h"
+
 #include <glm/gtc/matrix_transform.hpp>
 
 //CookTorrance* mat_lib[] = {
@@ -116,10 +118,9 @@ Scene *initScene0() {
   //t1.scale(0.25,0.25,0.25);
   //addObject(scene, initSphere(mat1, t1));
 
-  auto mat2 = std::make_shared<CookTorrance>(false);
+  auto mat2 = std::make_shared<CookTorrance>(TRANSPARENT);
   mat2->m_IOR = 1.3;
   mat2->m_roughness = 0.5;
-  mat2->m_transparent = true;
   mat2->m_specularColor = color3(1.f, 1.f, 1.f);
   mat2->m_diffuseColor = color3(1.f, 1.f, 1.f);
   Transform t2;
@@ -127,7 +128,7 @@ Scene *initScene0() {
   t2.scale(0.25,0.25,0.25);
   addObject(scene, initSphere(mat2, t2));
 
-  auto mat3 = std::make_shared<CookTorrance>(false);
+  auto mat3 = std::make_shared<CookTorrance>();
   mat3->m_IOR = 4.0;
   mat3->m_roughness = 1.05;
   mat3->m_specularColor = color3(0.f, 0.f, 1.f);
@@ -137,7 +138,7 @@ Scene *initScene0() {
   t3.scale(0.08,0.08,0.08);
   addObject(scene, initSphere(mat3, t3));
 
-  auto mat4 = std::make_shared<CookTorrance>(false);
+  auto mat4 = std::make_shared<CookTorrance>();
   mat4->m_IOR = 4.0;
   mat4->m_roughness = 0.05;
   mat4->m_specularColor = color3(0.6f);
@@ -447,7 +448,7 @@ void addObjectsFromFile(const char *filename, Scene *scene, std::shared_ptr<Mate
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
-  auto mat = std::make_shared<CookTorrance>(false);
+  auto mat = std::make_shared<CookTorrance>();
   
   readObjToTriangleMesh(filename, attrib, shapes, materials);
 
@@ -1330,6 +1331,7 @@ Scene* initScene15(){
   setSimpleCamera(scene, from, at, vec3(0, 0.0, 1), 30, float(WIDTH), float(HEIGHT), 0, 1);
   setSkyColor(scene, color3(0., 0., 0.)); 
 
+  scene->medium = new Fog(0.04, false);
   auto mat = std::make_shared<Blinn>();
   mat->m_diffuseColor = color3(0.3);
   mat->m_specularColor = color3(0);
@@ -1452,7 +1454,7 @@ Scene* initScene15(){
   //addObjectsFromFile("../assets/teapot.obj", scene, mat3, modelMatrix6);
 
   auto lightSize = 4.f;
-  auto lightIntensity = /*99000.f*/ 5000 * 4.f * M_PI / (4. * M_PI * lightSize*lightSize * M_PI);
+  auto lightIntensity = 99000.f * 4.f * M_PI / (4. * M_PI * lightSize*lightSize * M_PI);
   auto matE = std::make_shared<Blinn>();
   matE->m_emission = color3(lightIntensity);
   matE->m_diffuseColor = color3(1.f);
@@ -1537,7 +1539,7 @@ Scene* initScene16(){
   mat3->m_specularColor = color3(0.7f);
   mat3->m_shininess = 20;
 
-  auto mat4 = std::make_shared<CookTorrance>(true);
+  auto mat4 = std::make_shared<CookTorrance>(TRANSPARENT);
   mat4->m_diffuseColor = color3(0.0, 0., 0.0);
   mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
   mat4->m_IOR = 1.3;
@@ -1641,13 +1643,13 @@ Scene* initScene17(){
   ret->geom.type = PLANE;
   addObject(scene, ret);
 
-  auto mat3 = std::make_shared<CookTorrance>();
+  auto mat3 = std::make_shared<CookTorrance>(SPECULAR);
   mat3->m_diffuseColor = color3(0.6, 0.2, 0.2);
   //mat3->m_specularColor = color3(0.4, 0., 0.);
-  mat3->m_roughness = 0.1;
-  mat3->m_IOR = 3.5;
+  mat3->m_roughness = 0.5;
+  mat3->m_IOR = 1.01;
 
-  auto mat4 = std::make_shared<CookTorrance>(true);
+  auto mat4 = std::make_shared<CookTorrance>(TRANSPARENT);
   //mat4->m_diffuseColor = color3(0.2, 0.8, 0.2);
   mat4->m_diffuseColor = color3(1);
   mat4->m_specularColor = color3(1);

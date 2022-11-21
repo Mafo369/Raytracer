@@ -3,12 +3,12 @@
 #include "../sampling/sampling.h"
 #include "../Light.h"  
 
-CookTorrance::CookTorrance(bool transparent){
+CookTorrance::CookTorrance(MatType type){
   m_IOR = 1.0;
   m_roughness = 0.1;
   m_specularColor = color3(1.f);
   m_diffuseColor = color3(1.f);
-  m_transparent = transparent;
+  m_type = type;
 }
 
 color3 CookTorrance::shade(Intersection *intersection, vec3 v, Light* light, float intensity) {
@@ -25,7 +25,7 @@ color3 CookTorrance::shade(Intersection *intersection, vec3 v, Light* light, flo
   //! \todo compute bsdf, return the shaded color taking into account the
   //! lightcolor
 
-  if (m_transparent){
+  if (m_type == TRANSPARENT){
     for(auto& sample : samples){
       vec3 lp = sample - intersectionPos;
       vec3 l = lp / length(lp);
@@ -243,7 +243,7 @@ vec3 sampleSpecularMicrofacet(vec3 Vlocal, float alpha, float alphaSquared, vec3
 
 color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) {
   auto ret = color3(0.0);
-  if(m_transparent) {
+  if(m_type == TRANSPARENT) {
     // REFRACTION + REFLECTION
     vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
 
@@ -327,10 +327,9 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     const float3 Nlocal = float3(0.0f, 0.0f, 1.0f);
 
     vec3 rayDirectionLocal = vec3(0.0f, 0.0f, 0.0f);
-    bool specular = true;
     color3 sampleWeight;
 
-    if(!specular){
+    if(m_type == DIFFUSE){
       BrdfData data;
       // Sample diffuse ray using cosine-weighted hemisphere sampling 
       rayDirectionLocal = sampleHemisphereCook(vec2(uniform01(engine), uniform01(engine)));
@@ -347,7 +346,7 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
         sampleWeight *= (vec3(1.0f, 1.0f, 1.0f) - evalFresnel(data.specularF0, shadowedF90(data.specularF0), VdotH));
       }
     }
-    else if(specular){
+    else if(m_type == SPECULAR){
       vec2 u = vec2(uniform01(engine), uniform01(engine));
       float alpha = m_roughness * m_roughness;
       auto specularF0 = baseColorToSpecularF0(m_diffuseColor, m_IOR);
@@ -371,121 +370,6 @@ color3 CookTorrance::scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersec
     auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection, false);
     ret += reflColor * sampleWeight;
 
-    // Indirect illumination
-    //color3 iColor = color3(0,0,0);
-    //auto specularColor = intersection->mat->m_specularColor;
-    //float proba = 1. - (specularColor.r + specularColor.g + specularColor.b) / 3;
-    //vec3 R = normalize(reflect(ray->dir, intersection->normal));
-    //bool sample_diffuse;
-    //if(uniform01(engine) < proba){
-    //  sample_diffuse = true;
-    //  dirA = random_dir(intersection->normal);
-    //}
-    //else
-    //{
-    //  sample_diffuse = false;
-    //  //dirA = random_Cook(R);
-    //  dirA = random_dir(R);
-    //}
-    //if(dot(dirA, intersection->normal) < 0) return ret;
-    //if(dot(dirA, R) < 0) return ret;
-
-
-    //Ray ray_ref;
-    //rayInit(&ray_ref, intersection->position + (acne_eps * dirA), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
-    //ray_ref.dox = vec3(0);
-    //ray_ref.doy = vec3(0);
-    //ray_ref.ddx = vec3(0);
-    //ray_ref.ddy = vec3(0);
-
-    //float pdfCook = dot(R, dirA) / Pi;
-    //float pdf = proba * dot(intersection->normal, dirA)/(Pi) + (1.f - proba) * pdfCook;
-    //if(pdf <= 0) return ret;
-
-    //Intersection temp_intersection;
-    //auto reflColor = trace_ray(scene, &ray_ref, tree, &temp_intersection, false);
-
-    //if(sample_diffuse)
-    //  iColor += reflColor * intersection->mat->m_diffuseColor * (dot(intersection->normal, dirA)/(Pi) / pdf);
-    //else{
-    //  vec3 v = -ray->dir;
-    //  vec3 n = intersection->normal;
-    //  float LdotN = abs(dot(dirA, n));
-    //  vec3 vl = v + dirA;
-    //  vec3 h = vl;
-    //  if(h.x == 0 && h.y == 0 && h.z == 0) 
-    //    return ret;
-    //  h = normalize(h);
-    //  float LdotH = dot(dirA, h);
-    //  float NdotH = dot(dirA, h);
-    //  float VdotH = dot(dirA, h);
-    //  float VdotN = abs(dot(v, dirA));
-    //  color3 cookBrdf = RDM_bsdf_s(LdotH, NdotH, VdotH, LdotN,
-    //                               VdotN, m_roughness, m_IOR, m_specularColor);
-    //  iColor += reflColor * (dot(intersection->normal, dirA) * cookBrdf/ pdf) * m_specularColor;
-    //}
-    //
-    //ret += iColor;
-
-
-    //point3 v0 = point3(0, 1, 0);
-    //if(dot(v0, intersection->normal))
-    //  v0 = point3(0,0,1);
-    //point3 v1 = normalize(cross(v0, intersection->normal));
-    //float rnd = sqrt(uniform01(engine));
-    //float rndReflection = rnd * m_roughness;
-    //float factor = uniform01(engine) * 2.0 * M_PI;
-    //vec3 n1 = normalize(intersection->normal + (v0 * rndReflection * cos(factor)) + (v1 * rndReflection * sin(factor)));
-
-    ////// REFLECTION
-    //vec3 r = reflect(ray->dir, n1);
-    //Ray ray_ref;
-    //rayInit(&ray_ref, intersection->position + (acne_eps * r), r, ray->pixel,0, 100000, ray->depth + 1);
-
-    //Intersection inter;
-    //color3 cr = trace_ray(scene, &ray_ref, tree, &inter);
-    //float LdotH = dot(ray_ref.dir, intersection->normal);
-    //float f = RDM_Fresnel(LdotH, 1.f, m_IOR);
-
-    //ret += (f * cr * m_specularColor);
-
-    //// Indirect illumination
-    //vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-    //color3 iColor = color3(0,0,0);
-    //vec3 dirA = normalize(random_dir(normal));
-    //Ray ray_gi;
-    //rayInit(&ray_gi, intersection->position + (acne_eps * normal), normalize(dirA), ray->pixel,0, 100000, ray->depth + 1);
-    //
-    //ray_gi.dox =  vec3(0);
-    //ray_gi.doy =  vec3(0);
-    //ray_gi.ddx =  vec3(0);
-    //ray_gi.ddy =  vec3(0);
-
-    //Intersection temp_intersection;
-    //auto reflColor = trace_ray(scene, &ray_gi, tree, &temp_intersection, false);
-
-    //if(!temp_intersection.hit){
-    //  if(scene->m_skyTexture != nullptr){
-    //    vec3 dir = dirA;
-    //    float z = asin(-dir.z) / float(M_PI) + 0.5;
-    //    float x = dir.x / (abs(dir.x) + abs(dir.y));
-    //    float y = dir.y / (abs(dir.x) + abs(dir.y));
-    //    point3 p = point3(0.5, 0.5, 0.0) + z * (x * point3(0.5, 0.5, 0.0) + y * point3(-0.5, 0.5, 0.0));
-    //    // TODO: Multiply with intensity var
-    //    color3 env = 0.7f * scene->m_skyTexture->value(p.x, p.y);
-    //    iColor += m_diffuseColor * env;
-    //  }
-    //}
-    //else if(intersection->isOutside){
-    //  if(m_texture != nullptr){
-    //    iColor += reflColor * m_texture->value(intersection->u, intersection->v);
-    //  }
-    //  else
-    //  {
-    //    iColor += reflColor * m_diffuseColor;
-    //  }
-    //}
-    //ret += iColor;
   }
 
 
@@ -509,7 +393,7 @@ color3 CookTorrance::sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, f
     return fr * m_specularColor;
   }
   else if(type == 1){
-    if(m_transparent) {
+    if(m_type == TRANSPARENT) {
       // REFRACTION + REFLECTION
 
       bool isOutside = dot(-wo, normal) < 0;

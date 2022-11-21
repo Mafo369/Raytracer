@@ -5,6 +5,7 @@
 
 #include "scene.h"
 #include "Object.h"
+#include "Medium.h"
 #include <string.h>
 #include <algorithm>
 
@@ -119,6 +120,8 @@ Scene * initScene() {
 void freeScene(Scene *scene) {
     std::for_each(scene->objects.begin(), scene->objects.end(), freeObject);
     std::for_each(scene->lights.begin(), scene->lights.end(), freeLight);
+    if(scene->medium != nullptr)
+      delete scene->medium;
     delete scene;
 }
 

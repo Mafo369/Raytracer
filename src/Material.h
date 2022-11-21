@@ -6,6 +6,12 @@
 //#include "Light.h"
 #include "sampling/sampler.h"
 
+enum MatType {
+  DIFFUSE=0,
+  SPECULAR=1,
+  TRANSPARENT=2
+};
+
 typedef struct s_BrdfData {
   float LdotH;
   float NdotH;

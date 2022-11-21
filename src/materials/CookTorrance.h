@@ -4,7 +4,7 @@
 
 class CookTorrance : public Material {
   public:
-    CookTorrance(bool transparent=false);
+    CookTorrance(MatType type = DIFFUSE);
     ~CookTorrance() override;
 
     color3 f(const vec3& wo, const vec3& wi, const vec3& n) override;
@@ -16,5 +16,5 @@ class CookTorrance : public Material {
     color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) override;
 
     float m_roughness; //! 0.001 - 0.01 : very smooth finish with slight imperfections. 0.1 : relatively rough. 0.3-0.7 extremely rough 
-    bool m_transparent;
+    MatType m_type;
 };

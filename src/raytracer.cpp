@@ -21,6 +21,7 @@
 #include "Light.h"
 #include "Object.h"
 #include "Camera.h"
+#include "Medium.h"
 
 #include "sampling/stratified.h"
 
@@ -57,78 +58,6 @@ bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
     }
   }
   return hasIntersection;
-}
-
-color3 EstimateDirect(Ray* ray, const Intersection& it, const point2& uScattering, Light* light,
-                      const point2& uLight, Scene* scene, KdTree* tree, Sampler* sampler, bool specular) {
-  color3 Ld(0.f);
-  vec3 wi;
-  float lightPdf = 0, scatteringPdf = 0;
-  color3 Li = light->sample_Li(it, uLight, &wi, &lightPdf);
-  if(lightPdf > 0 && !isBlack(Li)){
-    color3 f;
-    if(it.normal != vec3(0)){
-      const Intersection& isect = (const Intersection&)it;
-      vec3 wo = -ray->dir;
-      vec3 normal = isect.isOutside ? isect.normal : -isect.normal;
-      f = it.mat->f(wo, wi, normal) * abs(dot(wi, normal));
-      scatteringPdf = it.mat->pdf(wo, wi, normal);
-    }
-    else
-    {
-      f = color3(0);
-      scatteringPdf = 1.f;
-    }
-    if(!isBlack(f)){
-      if(!isBlack(Li)){
-        float weight = PowerHeuristic(1, lightPdf, 1, scatteringPdf);
-        Ld += f * Li * weight / lightPdf;
-      }
-    }
-  }
-
-  color3 f;
-  bool sampledSpecular = false;
-  if(it.normal != vec3(0)){
-    const Intersection& isect = (const Intersection&)it;
-    vec3 wo = -ray->dir;
-    vec3 normal = it.isOutside ? it.normal : -it.normal;
-    f = isect.mat->sample_f(wo, &wi, normal, uScattering, &scatteringPdf, 2);
-    f *= abs(dot(wi, it.normal));
-  }
-  else
-  {
-    f = color3(0);
-    scatteringPdf = 0.f;
-  }
-  if(!isBlack(f) && scatteringPdf > 0.f){
-    float weight = 1;
-    if(!sampledSpecular){
-      lightPdf = light->pdf_Li(it, wi);
-      if(lightPdf == 0)
-        return Ld;
-      weight = PowerHeuristic(1, scatteringPdf, 1, lightPdf);
-    }
-    Intersection lightIsect;
-    Ray new_ray;
-    new_ray.hasDifferentials = false;
-    rayInit(&new_ray, it.position + (acne_eps * wi), wi, ray->pixel, 0, 10000);
-    bool foundSurfaceInteraction = intersectKdTree(scene, tree, &new_ray, &lightIsect);
-    
-    color3 Li(0.f);
-    if(!foundSurfaceInteraction) {
-      Li = color3(light->getColor());
-    }
-
-    if(!isBlack(Li))
-      Ld += f * Li * weight / scatteringPdf;
-  }
-  return Ld;
-}
-
-float int_exponential(float y0, float ysol, float beta, float s, float uy){
-  float result = 0.1 * exp((-y0 + ysol) * beta) * (1.f - exp(-s * uy*beta)) / (uy*beta);
-  return result;
 }
 
 // pathtracer
@@ -168,142 +97,14 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
     }
   }
 
+
+  if(ray->tmax < 0 || !intersection->hit || ray->dir.z == 0) return ret;
+
+  if(scene->medium != nullptr)
+    ret = ret * scene->medium->tr(*ray, scene->ysol) + scene->medium->sample(*ray, scene, tree, scene->ysol);
+
   return ret;
 
-  //if(ray->tmax < 0 || !intersection->hit || ray->dir.z == 0) return ret;
-
-  //vec3 Lv(0.f);
-  //
-  //float ysol = scene->ysol;
-
-  //bool is_uniform_fog = false;
-  //float beta = is_uniform_fog ? 0.04 : 0.04;
-  //float p_uniform = 0.25;
-
-  //bool uniform_sampling_ray = true;
-  //int phase = 0; // 0: uniform, 1: schlick, 2: rayleigh
-
-  //float int_ext;
-  //if(is_uniform_fog){
-  //  int_ext = beta * ray->tmax;
-  //}
-  //else
-  //{
-  //  int_ext = int_exponential(ray->orig.z, ysol, beta, ray->tmax, ray->dir.z);
-  //}
-  //float T = exp(-int_ext);
-
-  //float randt, probat;
-  //float clamped_t = min(10000.f, ray->tmax);
-  //if(uniform_sampling_ray){
-  //  randt = uniform01(engine) * clamped_t;
-  //  probat = 1. / clamped_t;
-  //}
-  //else
-  //{
-  //  float alpha = 5. / clamped_t;
-  //  do{
-  //    randt = -log(uniform01(engine)) / alpha;
-  //  } while(randt > clamped_t);
-  //  float normalization = 1.f / alpha * (1.f - exp(-alpha * clamped_t));
-  //  probat = exp(-alpha * randt) / normalization;
-  //}
-
-  //float int_ext_partiel;
-  //if(is_uniform_fog){
-  //  int_ext_partiel = beta * randt;
-  //}
-  //else
-  //{
-  //  int_ext_partiel = int_exponential(ray->orig.z, ysol, beta, randt, ray->dir.z);
-  //}
-  //vec3 randP = ray->orig + randt * ray->dir;
-
-  //vec3 randDir;
-  //float probaDir;
-  //auto sphereL = scene->objects[scene->objects.size()-1];
-  //vec3 axePO = normalize(randP - sphereL->geom.sphere.center);
-  //vec3 ptA;
-
-  //bool is_uniform;
-  //if(uniform01(engine) < p_uniform){
-  //  randDir = random_uniform();
-  //  is_uniform = true;
-  //}
-  //else
-  //{
-  //  vec3 dirA = random_dir(axePO);
-  //  ptA = dirA * sphereL->geom.sphere.radius + sphereL->geom.sphere.center;
-  //  randDir = normalize(ptA - randP);
-  //  is_uniform = false;
-  //}
-
-  //float phase_f;
-  //float k = 0.4;
-  //switch(phase){
-  //  case 0: 
-  //    phase_f = 0.3f / (4.f * M_PI);
-  //    break;
-  //  case 1:
-  //    phase_f = (1. - (k*k)) / (4.f * Pi * (1. + k * dot(randDir, -ray->dir)));
-  //    break;
-  //  case 2:
-  //    phase_f = 3./(16. * Pi) * (1.f + sqr(dot(randDir, ray->dir)));
-  //    break;
-  //  default:
-  //    phase_f = 0.3f / (4.f * M_PI);
-  //    break;
-  //}
-
-
-  //Ray L_Ray;
-  //L_Ray.hasDifferentials = false;
-  //rayInit(&L_Ray, randP, randDir, ray->pixel, 0, 100000, ray->depth+1);
-  //Intersection interL;
-  //color3 L = trace_ray(scene, &L_Ray, tree, &interL);
-
-  //float V;
-  //if(is_uniform){
-  //  V = 1;
-  //}
-  //else
-  //{
-  //  float d_light2 = length_sq(ptA - randP);
-  //  if(interL.hit && L_Ray.tmax * L_Ray.tmax < d_light2*0.9){
-  //    V = 0;
-  //  }else
-  //  {
-  //    V = 1;
-  //  }
-  //}
-
-  //if(V == 0) {
-  //  Lv = vec3(0);
-  //}
-  //else
-  //{
-  //  vec3 interN = interL.normal;
-  //  vec3 interP = interL.position;
-
-  //  float pdf_uniform = 1.f / (4.f * Pi);
-  //  float J = dot(interN, -randDir) / glm::length_sq(interP - randt);
-  //  float pdf_light = (interL.hit && !isBlack(interL.mat->m_emission)) ? (dot(normalize(interP - sphereL->geom.sphere.center), axePO) / (Pi * sqr(sphereL->geom.sphere.radius)) / J) : 0.f;
-
-  //  probaDir = p_uniform * pdf_uniform + (1.f - p_uniform) * pdf_light;
-
-  //  float ext;
-  //  if(is_uniform_fog){
-  //    ext = beta;
-  //  }
-  //  else
-  //  {
-  //    ext = 0.1 * exp(-beta * (randP.z - ysol));
-  //  }
-
-  //  Lv = L * phase_f * ext * exp(-int_ext_partiel) / (probat * probaDir); 
-  //}
-
-  //return ret * T + Lv;
 }
 
 // whitted

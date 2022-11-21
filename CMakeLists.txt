@@ -1,6 +1,6 @@
 project(RayTracer)
 
-set(CMAKE_CXX_FLAGS "-Wall -std=c++20 -g -fopenmp -O")
+set(CMAKE_CXX_FLAGS "-Wall -std=c++20 -fopenmp -O")
 
 set(mrt_SRCS
   src/image.cpp
@@ -25,6 +25,7 @@ set(mrt_SRCS
   src/sampling/sampler.cpp
   src/sampling/stratified.cpp
   src/Material.cpp
+  src/mediums/Fog.cpp
   )
 
 add_subdirectory(libs/Walnut/)

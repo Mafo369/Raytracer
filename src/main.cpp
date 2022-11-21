@@ -11,6 +11,12 @@ int main(int argc, char *argv[]) {
     exit(0);
   }
 
+#ifdef NDEBUG
+  std::cout << "######### REALEASE MODE #########" << std::endl;
+#else
+  std::cout << "######### DEBUG MODE #########" << std::endl;
+#endif
+
   if(strcmp(argv[1], "-rt") == 0){
     while (g_ApplicationRunning)
     {
