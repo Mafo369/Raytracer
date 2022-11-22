@@ -181,7 +181,7 @@ void renderImage(RenderImage *img, Scene *scene)
   auto startTime = std::chrono::system_clock::now();
 
   auto sampler = 
-    new StratifiedSampler(8, 8, true, 1);
+    new StratifiedSampler(1, 1, true, 1);
   std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
 
   for (size_t j = 0; j < img->height; j++)

@@ -144,6 +144,15 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
     scene_id = atoi(argv[3]);
   }
   Scene* scene = parseScene(scene_id);
+  float posLight = -5;
+  auto lightSize = 4.f;
+  Transform modemMatrixE;
+  modemMatrixE.scale(lightSize, lightSize, lightSize);
+  modemMatrixE.translate(vec3(posLight,0,24.5));
+  auto light = scene->objects[scene->objects.size()-1];
+  light->geom.sphere.center = modemMatrixE.transformFrom(vec3(0));
+  light->geom.sphere.radius = lightSize;
+  light->transform = modemMatrixE;
   auto layer = std::make_shared<ExampleLayer>(scene);
   app->PushLayer(layer);
 	app->SetMenubarCallback([app]()
