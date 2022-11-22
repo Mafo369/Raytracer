@@ -5,110 +5,106 @@
 #include "kdtree.h"
 #include "ray.h"
 #include "scene.h"
-#include <stdio.h>
-#include <cmath>
-#include <string.h>
-#include <iostream>
 #include <chrono>
+#include <cmath>
+#include <iostream>
+#include <stdio.h>
+#include <string.h>
 
 #include <glm/gtc/epsilon.hpp>
-#include <random>
 #include <omp.h>
+#include <random>
 
-#include "textures.hpp"
 #include "bsdf.hpp"
+#include "textures.hpp"
 
-#include "Light.h"
-#include "Object.h"
 #include "Camera.h"
+#include "Light.h"
 #include "Medium.h"
+#include "Object.h"
 
 #include "sampling/stratified.h"
 
 // Mostly for debugging purposes
-bool intersectScene(const Scene *scene, Ray *ray, Intersection *intersection)
-{
-  bool hasIntersection = false;
-  size_t objectCount = scene->objects.size();
+bool intersectScene( const Scene* scene, Ray* ray, Intersection* intersection ) {
+    bool hasIntersection = false;
+    size_t objectCount   = scene->objects.size();
 
-  //!\todo loop on each object of the scene to compute intersection
+    //!\todo loop on each object of the scene to compute intersection
 
-  float dist;
+    float dist;
 
-  for (size_t i = 0; i < objectCount; i++)
-  {
-    Intersection temp;
-    if(scene->objects[i]->intersect(ray, &temp)){
-      float temp_dist = ray->tmax;
-      if (hasIntersection)
-      {
-        if (temp_dist < dist)
-        {
-          dist = temp_dist;
-          *intersection = temp;
+    for ( size_t i = 0; i < objectCount; i++ ) {
+        Intersection temp;
+        if ( scene->objects[i]->intersect( ray, &temp ) ) {
+            float temp_dist = ray->tmax;
+            if ( hasIntersection ) {
+                if ( temp_dist < dist ) {
+                    dist          = temp_dist;
+                    *intersection = temp;
+                }
+            }
+            else {
+                hasIntersection = true;
+                *intersection   = temp;
+                dist            = temp_dist;
+            }
         }
-      }
-      else
-      {
-        hasIntersection = true;
-        *intersection = temp;
-        dist = temp_dist;
-      }
-
     }
-  }
-  return hasIntersection;
+    return hasIntersection;
 }
 
 // pathtracer
-color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, bool show_lights, Sampler* sampler)
-{
-  color3 ret = color3(0, 0, 0);
+color3 trace_ray( Scene* scene,
+                  Ray* ray,
+                  KdTree* tree,
+                  Intersection* intersection,
+                  bool show_lights,
+                  Sampler* sampler ) {
+    color3 ret = color3( 0, 0, 0 );
 
-  if (ray->depth > scene->depth)
-    return color3(0.f);
+    if ( ray->depth > scene->depth ) return color3( 0.f );
 
-  if (intersectKdTree(scene, tree, ray, intersection))
-  {
-    intersection->hit = true;
-    // Compute necessary differential information for texture filtering
-    if(ray->hasDifferentials)
-      intersection->computeDifferentials(ray);
-    
-    // Scatter
-    if(!isBlack(intersection->mat->m_emission)){
-      auto lightRadius = scene->objects[scene->objects.size()-1]->geom.sphere.radius;
-      return show_lights ? (intersection->mat->m_emission / (lightRadius * lightRadius )) : vec3(0);
+    if ( intersectKdTree( scene, tree, ray, intersection ) ) {
+        intersection->hit = true;
+        // Compute necessary differential information for texture filtering
+        if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
+
+        // Scatter
+        if ( !isBlack( intersection->mat->m_emission ) ) {
+            auto lightRadius = scene->objects[scene->objects.size() - 1]->geom.sphere.radius;
+            return show_lights ? ( intersection->mat->m_emission / ( lightRadius * lightRadius ) )
+                               : vec3( 0 );
+        }
+        else {
+            ret += intersection->mat->scatterColor( scene, tree, ray, intersection );
+        }
     }
-    else
-    {
-      ret += intersection->mat->scatterColor(scene, tree, ray, intersection);
+    else {
+        if ( scene->m_skyTexture != nullptr && ray->depth == 0 ) {
+            vec3 pixelUV = vec3( (float)ray->pixel.x / scene->cam->imgWidth,
+                                 (float)ray->pixel.y / scene->cam->imgHeight,
+                                 0.f );
+            vec3 p       = glm::mod( scene->m_skyTexture->m_transform.transformTo( pixelUV ), 1.f );
+            ret          = scene->skyColor * scene->m_skyTexture->value( p.x, p.y );
+        }
+        else {
+            ret = scene->skyColor;
+        }
     }
-  }
-  else
-  {
-    if(scene->m_skyTexture != nullptr && ray->depth == 0){
-      vec3 pixelUV = vec3((float)ray->pixel.x / scene->cam->imgWidth, (float)ray->pixel.y / scene->cam->imgHeight, 0.f);
-      vec3 p = glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f);
-      ret = scene->skyColor * scene->m_skyTexture->value(p.x, p.y);
-    }
-    else{
-      ret = scene->skyColor;
-    }
-  }
 
+    if ( ray->tmax < 0 || !intersection->hit || ray->dir.z == 0 ) return ret;
 
-  if(ray->tmax < 0 || !intersection->hit || ray->dir.z == 0) return ret;
+    if ( scene->medium != nullptr )
+        ret = ret * scene->medium->tr( *ray, scene->ysol ) +
+              scene->medium->sample( *ray, scene, tree, scene->ysol );
 
-  if(scene->medium != nullptr)
-    ret = ret * scene->medium->tr(*ray, scene->ysol) + scene->medium->sample(*ray, scene, tree, scene->ysol);
-
-  return ret;
-
+    return ret;
 }
 
 // whitted
-//color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, bool show_lights, Sampler* sampler)
+// color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, bool
+// show_lights, Sampler* sampler)
 //{
 //  color3 ret = color3(0, 0, 0);
 //
@@ -124,7 +120,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 //
 //    // if skybox return directly the corresponding color
 //    if(intersection->face != -1){
-//      return intersection->mat->textureColor(intersection->u, intersection->v, intersection->face);
+//      return intersection->mat->textureColor(intersection->u, intersection->v,
+//      intersection->face);
 //    }
 //
 //    // shading
@@ -136,8 +133,8 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 //        ret += intersection->mat->ambientColor(ray, intersection, scene->lights[i]->getColor());
 //        continue;
 //      }
-//      auto intensity = scene->lights[i]->intensityAt(intersection->position, scene, tree, v, intersection); 
-//      if(intensity > 0.0f){
+//      auto intensity = scene->lights[i]->intensityAt(intersection->position, scene, tree, v,
+//      intersection); if(intensity > 0.0f){
 //        ret += intersection->mat->shade(intersection, v, scene->lights[i], intensity);
 //      }
 //    }
@@ -154,9 +151,10 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 //  else
 //  {
 //    if(scene->m_skyTexture != nullptr && ray->depth == 0){
-//      vec3 pixelUV = vec3((float)ray->pixel.x / scene->cam->imgWidth, (float)ray->pixel.y / scene->cam->imgHeight, 0.f);
-//      vec3 p = glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f);
-//      ret = scene->skyColor * scene->m_skyTexture->value(p.x, p.y);
+//      vec3 pixelUV = vec3((float)ray->pixel.x / scene->cam->imgWidth, (float)ray->pixel.y /
+//      scene->cam->imgHeight, 0.f); vec3 p =
+//      glm::mod(scene->m_skyTexture->m_transform.transformTo(pixelUV), 1.f); ret = scene->skyColor
+//      * scene->m_skyTexture->value(p.x, p.y);
 //    }
 //    else{
 //      ret = scene->skyColor;
@@ -166,70 +164,72 @@ color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersectio
 //  return glm::clamp(ret, color3(0,0,0), color3(1,1,1));
 //}
 
-void scaleDifferentials(Ray* ray, float s){
-  ray->dox = ray->orig + (ray->dox - ray->orig) * s;
-  ray->doy = ray->orig + (ray->doy - ray->orig) * s;
-  ray->ddx = ray->dir + (ray->ddx - ray->dir) * s;
-  ray->ddy = ray->dir + (ray->ddy - ray->dir) * s;
+void scaleDifferentials( Ray* ray, float s ) {
+    ray->dox = ray->orig + ( ray->dox - ray->orig ) * s;
+    ray->doy = ray->orig + ( ray->doy - ray->orig ) * s;
+    ray->ddx = ray->dir + ( ray->ddx - ray->dir ) * s;
+    ray->ddy = ray->dir + ( ray->ddy - ray->dir ) * s;
 }
 
-void renderImage(RenderImage *img, Scene *scene)
-{
+void renderImage( RenderImage* img, Scene* scene ) {
 
-  KdTree *tree = initKdTree(scene);
+    KdTree* tree = initKdTree( scene );
 
-  auto startTime = std::chrono::system_clock::now();
+    auto startTime = std::chrono::system_clock::now();
 
-  auto sampler = 
-    new StratifiedSampler(1, 1, true, 1);
-  std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
+    auto sampler = new StratifiedSampler( 1, 1, true, 1 );
+    std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
 
-  for (size_t j = 0; j < img->height; j++)
-  {
-    if (j != 0)
-      printf("\033[A\r");
-    float progress = (float)j / img->height * 100.f;
-    printf("progress\t[");
-    int cpt = 0;
-    for (cpt = 0; cpt < progress; cpt += 5)
-      printf(".");
-    for (; cpt < 100; cpt += 5)
-      printf(" ");
-    printf("]\n");
+    for ( size_t j = 0; j < img->height; j++ ) {
+        if ( j != 0 ) printf( "\033[A\r" );
+        float progress = (float)j / img->height * 100.f;
+        printf( "progress\t[" );
+        int cpt = 0;
+        for ( cpt = 0; cpt < progress; cpt += 5 )
+            printf( "." );
+        for ( ; cpt < 100; cpt += 5 )
+            printf( " " );
+        printf( "]\n" );
 #pragma omp parallel
-    {
-    std::unique_ptr<Sampler> tileSampler = sampler->Clone(time(NULL));
-#pragma omp for schedule(dynamic)
-    for (size_t i = 0; i < img->width; i++)
-    {
-      color3 pixel_color(0,0,0);
-      color3 *ptr = getPixelPtr(img, i, j);
-      auto pixel = vec2(i, j);
+        {
+            std::unique_ptr<Sampler> tileSampler = sampler->Clone( time( NULL ) );
+#pragma omp for schedule( dynamic )
+            for ( size_t i = 0; i < img->width; i++ ) {
+                color3 pixel_color( 0, 0, 0 );
+                color3* ptr = getPixelPtr( img, i, j );
+                auto pixel  = vec2( i, j );
 
-      tileSampler->StartPixel(pixel);
-      do {
-        CameraSample cameraSample = tileSampler->GetCameraSample(pixel);
-        Ray rx;
-        rx.hasDifferentials = false;
-        scene->cam->get_ray(cameraSample.xy.x, cameraSample.xy.y, cameraSample.uv.x, cameraSample.uv.y, &rx, vec2(int(i), int(j)));
-        if(rx.hasDifferentials)
-          scaleDifferentials(&rx, 1.f / sqrt(tileSampler->samplesPerPixel));
-        Intersection intersection;
-        pixel_color += trace_ray(scene, &rx, tree, &intersection, sampler);
-      }while(tileSampler->StartNextSample());
+                tileSampler->StartPixel( pixel );
+                do {
+                    CameraSample cameraSample = tileSampler->GetCameraSample( pixel );
+                    Ray rx;
+                    rx.hasDifferentials = false;
+                    scene->cam->get_ray( cameraSample.xy.x,
+                                         cameraSample.xy.y,
+                                         cameraSample.uv.x,
+                                         cameraSample.uv.y,
+                                         &rx,
+                                         vec2( int( i ), int( j ) ) );
+                    if ( rx.hasDifferentials )
+                        scaleDifferentials( &rx, 1.f / sqrt( tileSampler->samplesPerPixel ) );
+                    Intersection intersection;
+                    pixel_color += trace_ray( scene, &rx, tree, &intersection, sampler );
+                } while ( tileSampler->StartNextSample() );
 
-      color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;
+                color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;
 
-      // gamma-correction
-      avgColor.r = powf(avgColor.r, 1.0f  / 2.2);
-      avgColor.g = powf(avgColor.g, 1.0f  / 2.2);
-      avgColor.b = powf(avgColor.b, 1.0f  / 2.2);
+                // gamma-correction
+                avgColor.r = powf( avgColor.r, 1.0f / 2.2 );
+                avgColor.g = powf( avgColor.g, 1.0f / 2.2 );
+                avgColor.b = powf( avgColor.b, 1.0f / 2.2 );
 
-      *ptr = avgColor;
+                *ptr = avgColor;
+            }
+        }
     }
-  }
-  }
-  auto stopTime = std::chrono::system_clock::now();
-  std::cout << "Rendering took "<< std::chrono::duration_cast<std::chrono::duration<double>>(
-                    stopTime - startTime).count() << "s" << std::endl;
+    auto stopTime = std::chrono::system_clock::now();
+    std::cout
+        << "Rendering took "
+        << std::chrono::duration_cast<std::chrono::duration<double>>( stopTime - startTime ).count()
+        << "s" << std::endl;
 }
