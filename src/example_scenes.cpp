@@ -19,71 +19,6 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
-// CookTorrance* mat_lib[] = {
-//    /* bunny glass */
-//    {1.05, 2.2, {1.0, 1.0, 1.0}, {1.0, 1.0, 1.0}, TRANSPARENT },
-//
-//    /* specular black phenolic */
-//    {1.072, 0.0588, {1.0, 0.824, 0.945}, {0.002, 0.002, 0.003}},
-//
-//    /* specular blue phenolic */
-//    {1.1051, 0.0568, {0.005, 0.013, 0.032}, {1.0, 0.748, 0.718}},
-//
-//    /* specular green phenolic */
-//    {1.1051, 0.0567, {0.006, 0.026, 0.022}, {1.0, 0.739, 0.721}},
-//
-//    /* specular white phenolic */
-//    {1.1022, 0.0579, {0.286, 0.235, 0.128}, {1.0, 0.766, 0.762}},
-//
-//    /* marron plastic */
-//    {1.0893, 0.0604, {0.202, 0.035, 0.033}, {1.0, 0.857, 0.866}},
-//
-//    /* purple paint */
-//    {1.1382, 0.0886, {0.301, 0.034, 0.039}, {1.0, 0.992, 0.98}},
-//
-//    /* red specular plastic */
-//    {1.0771, 0.0589, {0.26, 0.036, 0.014}, {1.0, 0.852, 1.172}},
-//
-//    /* green acrylic */
-//    {1.1481, 0.0625, {0.016, 0.073, 0.04}, {1.0, 1.056, 1.146}},
-//
-//    /* blue acrylic */
-//    {1.1153, 0.068, {0.012, 0.036, 0.106}, {1.0, 0.965, 1.07}},
-//
-//    {1.51, 2.2, {1.0, 1.0, 1.0}, {1.0, .0, .0}, TRANSPARENT },
-//};
-
-// Material mat_lib[] = {
-//    /* nickel */
-//    {2.4449, 0.0681, {1.0, 0.882, 0.786}, {0.014, 0.012, 0.012}},
-//
-//    /* specular black phenolic */
-//    {1.072, 0.0588, {1.0, 0.824, 0.945}, {0.002, 0.002, 0.003}},
-//
-//    /* specular blue phenolic */
-//    {1.1051, 0.0568, {0.005, 0.013, 0.032}, {1.0, 0.748, 0.718}},
-//
-//    /* specular green phenolic */
-//    {1.1051, 0.0567, {0.006, 0.026, 0.022}, {1.0, 0.739, 0.721}},
-//
-//    /* specular white phenolic */
-//    {1.1022, 0.0579, {0.286, 0.235, 0.128}, {1.0, 0.766, 0.762}},
-//
-//    /* marron plastic */
-//    {1.0893, 0.0604, {0.202, 0.035, 0.033}, {1.0, 0.857, 0.866}},
-//
-//    /* purple paint */
-//    {1.1382, 0.0886, {0.301, 0.034, 0.039}, {1.0, 0.992, 0.98}},
-//
-//    /* red specular plastic */
-//    {1.0771, 0.0589, {0.26, 0.036, 0.014}, {1.0, 0.852, 1.172}},
-//
-//    /* green acrylic */
-//    {1.1481, 0.0625, {0.016, 0.073, 0.04}, {1.0, 1.056, 1.146}},
-//
-//    /* blue acrylic */
-//    {1.1153, 0.068, {0.012, 0.036, 0.106}, {1.0, 0.965, 1.07}}};
-
 Scene* initScene0() {
     Scene* scene = initScene();
     auto from    = point3( 1, 0.6, 1 );
@@ -128,8 +63,7 @@ Scene* initScene0() {
     auto mat2             = std::make_shared<CookTorrance>( TRANSPARENT );
     mat2->m_IOR           = 1.3;
     mat2->m_roughness     = 0.5;
-    mat2->m_specularColor = color3( 1.f, 1.f, 1.f );
-    mat2->m_diffuseColor  = color3( 1.f, 1.f, 1.f );
+    mat2->m_albedo  = color3( 1.f, 1.f, 1.f );
     Transform t2;
     t2.translate( vec3( 0.3, 1.25, 0.3 ) );
     t2.scale( 0.25, 0.25, 0.25 );
@@ -138,8 +72,7 @@ Scene* initScene0() {
     auto mat3             = std::make_shared<CookTorrance>();
     mat3->m_IOR           = 4.0;
     mat3->m_roughness     = 1.05;
-    mat3->m_specularColor = color3( 0.f, 0.f, 1.f );
-    mat3->m_diffuseColor  = color3( 0.f, 0.f, 1.f );
+    mat3->m_albedo  = color3( 0.f, 0.f, 1.f );
     Transform t3;
     t3.translate( vec3( -6, 1.0, -6.0 ) );
     t3.scale( 0.08, 0.08, 0.08 );
@@ -148,8 +81,7 @@ Scene* initScene0() {
     auto mat4             = std::make_shared<CookTorrance>();
     mat4->m_IOR           = 4.0;
     mat4->m_roughness     = 0.05;
-    mat4->m_specularColor = color3( 0.6f );
-    mat4->m_diffuseColor  = color3( 0.6f );
+    mat4->m_albedo  = color3( 0.6f );
 
     Transform t4;
     t4.rotate( vec3( -1, 0, 0 ), 90 );
@@ -510,20 +442,20 @@ void addObjectsFromFile( const char* filename,
                 int matIndex          = shapes[s].mesh.material_ids[f];
                 mat->m_IOR            = materials[matIndex].ior;
                 mat->m_roughness      = materials[matIndex].ior;
-                mat->m_diffuseColor.r = materials[matIndex].diffuse[0];
-                mat->m_diffuseColor.g = materials[matIndex].diffuse[1];
-                mat->m_diffuseColor.b = materials[matIndex].diffuse[2];
+                mat->m_albedo.r = materials[matIndex].diffuse[0];
+                mat->m_albedo.g = materials[matIndex].diffuse[1];
+                mat->m_albedo.b = materials[matIndex].diffuse[2];
                 // mat.m_texture = new image_texture(materials[matIndex].diffuse_texname.c_str());
                 if ( materials[matIndex].specular[0] == 0 && materials[matIndex].specular[1] == 0 &&
                      materials[matIndex].specular[1] == 0 ) {
-                    mat->m_specularColor.r = materials[matIndex].diffuse[0];
-                    mat->m_specularColor.g = materials[matIndex].diffuse[1];
-                    mat->m_specularColor.b = materials[matIndex].diffuse[2];
+                    //mat->m_specularColor.r = materials[matIndex].diffuse[0];
+                    //mat->m_specularColor.g = materials[matIndex].diffuse[1];
+                    //mat->m_specularColor.b = materials[matIndex].diffuse[2];
                 }
                 else {
-                    mat->m_specularColor.r = materials[matIndex].specular[0];
-                    mat->m_specularColor.g = materials[matIndex].specular[1];
-                    mat->m_specularColor.b = materials[matIndex].specular[2];
+                    //mat->m_specularColor.r = materials[matIndex].specular[0];
+                    //mat->m_specularColor.g = materials[matIndex].specular[1];
+                    //mat->m_specularColor.b = materials[matIndex].specular[2];
                 }
                 addObject( scene,
                            initSmoothTriangle( v0,
@@ -862,7 +794,7 @@ Scene* initScene10() {
     setSkyColor( scene, color3( 0., 0., 0. ) );
 
     auto mat             = std::make_shared<Blinn>();
-    mat->m_diffuseColor  = color3( 1 );
+    mat->m_albedo  = color3( 1 );
     mat->m_specularColor = color3( 0 );
 
     Transform modelMatrix;
@@ -892,7 +824,7 @@ Scene* initScene10() {
     addObject( scene, ret );
 
     auto mat1             = std::make_shared<Blinn>();
-    mat1->m_diffuseColor  = color3( 1, 0.5, 0.5 );
+    mat1->m_albedo  = color3( 1, 0.5, 0.5 );
     mat1->m_specularColor = color3( 0 );
 
     Transform modelMatrix3;
@@ -906,7 +838,7 @@ Scene* initScene10() {
 
     auto mat2             = std::make_shared<Blinn>();
     mat2->m_specularColor = color3( 0 );
-    mat2->m_diffuseColor  = color3( 0.5, 0.5, 1.0 );
+    mat2->m_albedo  = color3( 0.5, 0.5, 1.0 );
 
     Transform modelMatrix4;
     modelMatrix4.scale( 32, 32, 32 );
@@ -918,13 +850,13 @@ Scene* initScene10() {
     addObject( scene, ret );
 
     auto mat3             = std::make_shared<Blinn>();
-    mat3->m_diffuseColor  = color3( 0.8, 0.2, 0.2 );
+    mat3->m_albedo  = color3( 0.8, 0.2, 0.2 );
     mat3->m_specularColor = color3( 0.7f );
     mat3->m_shininess     = 20;
     mat3->m_reflection    = vec3( 0.7 );
 
     auto mat4             = std::make_shared<Blinn>();
-    mat4->m_diffuseColor  = color3( 0.1, 0.1, 0.9 );
+    mat4->m_albedo  = color3( 0.1, 0.1, 0.9 );
     mat4->m_specularColor = color3( 0.9f, 0.9, 1.0 ) * 0.8f;
     mat4->m_IOR           = 1.52;
     mat4->m_shininess     = 10;
@@ -972,7 +904,7 @@ Scene* initScene11() {
     scene->m_skyTexture->m_transform = texSky;
 
     auto mat            = std::make_shared<Blinn>();
-    mat->m_diffuseColor = color3( 1, 1, 1 );
+    mat->m_albedo = color3( 1, 1, 1 );
     mat->m_texture      = new checker_texture( color3( 0.2, 0.2, 0.2 ), color3( 0.6, 0.6, 0.6 ) );
     Transform texT;
     texT.scale( 0.01, 0.01, 0.01 );
@@ -1016,7 +948,7 @@ Scene* initScene11() {
     addObject( scene, initSphere( mat2, modelMatrix2 ) );
 
     auto mat3             = std::make_shared<Blinn>();
-    mat3->m_diffuseColor  = color3( 0 );
+    mat3->m_albedo  = color3( 0 );
     mat3->m_specularColor = color3( 0.8 );
     mat3->m_shininess     = 100;
     mat3->m_refraction    = vec3( 1.0 );
@@ -1053,7 +985,7 @@ Scene* initScene12() {
     scene->m_skyTexture->m_transform = texSky;
 
     auto mat             = std::make_shared<Blinn>();
-    mat->m_diffuseColor  = color3( 0.3 );
+    mat->m_albedo  = color3( 0.3 );
     mat->m_specularColor = color3( 0.1 );
     mat->m_shininess     = 50;
 
@@ -1160,7 +1092,7 @@ Scene* initScene13() {
     scene->m_skyTexture->m_transform = texSky;
 
     auto mat            = std::make_shared<Blinn>();
-    mat->m_diffuseColor = color3( 1, 1, 1 );
+    mat->m_albedo = color3( 1, 1, 1 );
     mat->m_texture      = new checker_texture( color3( 0.5, 0.5, 0.7 ), color3( 1 ) );
     Transform texCheck;
     texCheck.scale( 0.003, 0.003, 0.003 );
@@ -1194,7 +1126,7 @@ Scene* initScene13() {
     // addObjectsFromFile("../assets/plane.obj", scene, mat, modelMatrix);
 
     auto mat1             = std::make_shared<Blinn>();
-    mat1->m_diffuseColor  = color3( 0.8, 0.2, 0.2 );
+    mat1->m_albedo  = color3( 0.8, 0.2, 0.2 );
     mat1->m_specularColor = color3( 0.8 );
     mat1->m_shininess     = 100;
     mat1->m_reflection    = vec3( 0.3 );
@@ -1206,7 +1138,7 @@ Scene* initScene13() {
     addObjectsFromFile( "../assets/teapot.obj", scene, mat1, modelMatrix1 );
 
     auto mat2             = std::make_shared<Blinn>();
-    mat2->m_diffuseColor  = color3( 0 );
+    mat2->m_albedo  = color3( 0 );
     mat2->m_specularColor = color3( 0.8 );
     mat2->m_shininess     = 100;
     mat2->m_reflection    = vec3( 0.8f );
@@ -1217,7 +1149,7 @@ Scene* initScene13() {
     addObject( scene, initSphere( mat2, modelMatrix3 ) );
 
     auto mat3             = std::make_shared<Blinn>();
-    mat3->m_diffuseColor  = color3( 0 );
+    mat3->m_albedo  = color3( 0 );
     mat3->m_specularColor = color3( 0.8 );
     mat3->m_shininess     = 50;
     mat3->m_reflection    = vec3( 0.8f );
@@ -1229,7 +1161,7 @@ Scene* initScene13() {
     addObject( scene, initSphere( mat3, modelMatrix4 ) );
 
     auto mat4             = std::make_shared<Blinn>();
-    mat4->m_diffuseColor  = color3( 0 );
+    mat4->m_albedo  = color3( 0 );
     mat4->m_specularColor = color3( 0.8 );
     mat4->m_shininess     = 20;
     mat4->m_reflection    = vec3( 0.8f );
@@ -1241,7 +1173,7 @@ Scene* initScene13() {
     addObject( scene, initSphere( mat4, modelMatrix5 ) );
 
     auto mat5             = std::make_shared<Blinn>();
-    mat5->m_diffuseColor  = color3( 0 );
+    mat5->m_albedo  = color3( 0 );
     mat5->m_specularColor = color3( 0.8 );
     mat5->m_shininess     = 10;
     mat5->m_reflection    = vec3( 0.8f );
@@ -1253,7 +1185,7 @@ Scene* initScene13() {
     addObject( scene, initSphere( mat5, modelMatrix6 ) );
 
     auto mat6             = std::make_shared<Blinn>();
-    mat6->m_diffuseColor  = color3( 0 );
+    mat6->m_albedo  = color3( 0 );
     mat6->m_specularColor = color3( 0.8 );
     mat6->m_shininess     = 50;
     mat6->m_refraction    = vec3( 0.8 );
@@ -1281,7 +1213,7 @@ Scene* initScene14() {
     setSkyColor( scene, color3( 0., 0., 0. ) );
 
     auto mat             = std::make_shared<Blinn>();
-    mat->m_diffuseColor  = color3( 1 );
+    mat->m_albedo  = color3( 1 );
     mat->m_specularColor = color3( 0 );
 
     Transform modelMatrix;
@@ -1311,7 +1243,7 @@ Scene* initScene14() {
     addObject( scene, ret );
 
     auto mat1             = std::make_shared<Blinn>();
-    mat1->m_diffuseColor  = color3( 1, 0.2, 0.2 );
+    mat1->m_albedo  = color3( 1, 0.2, 0.2 );
     mat1->m_specularColor = color3( 0 );
 
     Transform modelMatrix3;
@@ -1325,7 +1257,7 @@ Scene* initScene14() {
 
     auto mat2             = std::make_shared<Blinn>();
     mat2->m_specularColor = color3( 0 );
-    mat2->m_diffuseColor  = color3( 0.2, 0.2, 1.0 );
+    mat2->m_albedo  = color3( 0.2, 0.2, 1.0 );
 
     Transform modelMatrix4;
     modelMatrix4.scale( 32, 32, 32 );
@@ -1337,12 +1269,12 @@ Scene* initScene14() {
     addObject( scene, ret );
 
     auto mat3             = std::make_shared<Blinn>();
-    mat3->m_diffuseColor  = color3( 0.8, 0.2, 0.2 );
+    mat3->m_albedo  = color3( 0.8, 0.2, 0.2 );
     mat3->m_specularColor = color3( 0.7f );
     mat3->m_shininess     = 20;
 
     auto mat4             = std::make_shared<Blinn>();
-    mat4->m_diffuseColor  = color3( 0.2, 0.8, 0.2 );
+    mat4->m_albedo  = color3( 0.2, 0.8, 0.2 );
     mat4->m_specularColor = color3( 0.9f, 0.9, 1.0 ) * 0.8f;
     mat4->m_shininess     = 10;
 
@@ -1381,7 +1313,7 @@ Scene* initScene15() {
 
     scene->medium        = new Fog( 0.04, false );
     auto mat             = std::make_shared<Blinn>();
-    mat->m_diffuseColor  = color3( 0.3 );
+    mat->m_albedo  = color3( 0.3 );
     mat->m_specularColor = color3( 0 );
 
     Transform modelMatrix;
@@ -1420,7 +1352,7 @@ Scene* initScene15() {
     addObject( scene, ret );
 
     auto mat1             = std::make_shared<Blinn>();
-    mat1->m_diffuseColor  = color3( 1, 0.2, 0.2 );
+    mat1->m_albedo  = color3( 1, 0.2, 0.2 );
     mat1->m_specularColor = color3( 0 );
 
     Transform modelMatrix3;
@@ -1434,7 +1366,7 @@ Scene* initScene15() {
 
     auto mat2             = std::make_shared<Blinn>();
     mat2->m_specularColor = color3( 0 );
-    mat2->m_diffuseColor  = color3( 0.2, 0.2, 1.0 );
+    mat2->m_albedo  = color3( 0.2, 0.2, 1.0 );
 
     Transform modelMatrix4;
     modelMatrix4.scale( 32, 32, 32 );
@@ -1446,7 +1378,7 @@ Scene* initScene15() {
     addObject( scene, ret );
 
     auto mat3             = std::make_shared<Blinn>();
-    mat3->m_diffuseColor  = color3( 0.8, 0.2, 0.2 );
+    mat3->m_albedo  = color3( 0.8, 0.2, 0.2 );
     mat3->m_specularColor = color3( 0 );
 
     auto mat4 = std::make_shared<Blinn>();
@@ -1505,7 +1437,7 @@ Scene* initScene15() {
     auto lightIntensity  = 99000.f * 4.f * M_PI / ( 4. * M_PI * lightSize * lightSize * M_PI );
     auto matE            = std::make_shared<Blinn>();
     matE->m_emission     = color3( lightIntensity );
-    matE->m_diffuseColor = color3( 1.f );
+    matE->m_albedo = color3( 1.f );
 
     Transform modemMatrixE;
     // modemMatrixE.scale(lightSize, lightSize, lightSize);
@@ -1528,7 +1460,7 @@ Scene* initScene16() {
     setSkyColor( scene, color3( 0., 0., 0. ) );
 
     auto mat             = std::make_shared<Blinn>();
-    mat->m_diffuseColor  = color3( 1 );
+    mat->m_albedo  = color3( 1 );
     mat->m_specularColor = color3( 0 );
 
     Transform modelMatrix;
@@ -1558,7 +1490,7 @@ Scene* initScene16() {
     addObject( scene, ret );
 
     auto mat1             = std::make_shared<Blinn>();
-    mat1->m_diffuseColor  = color3( 1, 0.2, 0.2 );
+    mat1->m_albedo  = color3( 1, 0.2, 0.2 );
     mat1->m_specularColor = color3( 0 );
 
     Transform modelMatrix3;
@@ -1572,7 +1504,7 @@ Scene* initScene16() {
 
     auto mat2             = std::make_shared<Blinn>();
     mat2->m_specularColor = color3( 0 );
-    mat2->m_diffuseColor  = color3( 0.2, 0.2, 1.0 );
+    mat2->m_albedo  = color3( 0.2, 0.2, 1.0 );
 
     Transform modelMatrix4;
     modelMatrix4.scale( 32, 32, 32 );
@@ -1584,13 +1516,12 @@ Scene* initScene16() {
     addObject( scene, ret );
 
     auto mat3             = std::make_shared<Blinn>();
-    mat3->m_diffuseColor  = color3( 0.8, 0.2, 0.2 );
+    mat3->m_albedo  = color3( 0.8, 0.2, 0.2 );
     mat3->m_specularColor = color3( 0.7f );
     mat3->m_shininess     = 20;
 
     auto mat4             = std::make_shared<CookTorrance>( TRANSPARENT );
-    mat4->m_diffuseColor  = color3( 0.0, 0., 0.0 );
-    mat4->m_specularColor = color3( 0.9f, 0.9, 1.0 ) * 0.8f;
+    mat4->m_albedo  = color3( 0.0, 0., 0.0 );
     mat4->m_IOR           = 1.3;
     mat4->m_roughness     = 0.04;
 
@@ -1629,7 +1560,7 @@ Scene* initScene17() {
     setSkyColor( scene, color3( 0., 0., 0. ) );
 
     auto mat             = std::make_shared<Blinn>();
-    mat->m_diffuseColor  = color3( 0.8 );
+    mat->m_albedo  = color3( 0.8 );
     mat->m_specularColor = color3( 0 );
 
     Transform modelMatrix;
@@ -1650,10 +1581,8 @@ Scene* initScene17() {
     addObject( scene, ret );
 
     auto matBehind = std::make_shared<Blinn>();
-    // matBehind->m_diffuseColor = color3(1.0, 1., 1.0);
     auto walltext = new image_texture( "../assets/walltext.png" );
     Transform walltextT;
-    // walltextT.scale(0.5, 0.5, 0.5);
     walltextT.translate( vec3( 0, -.19, 0 ) );
     walltext->m_transform = walltextT;
     matBehind->m_texture  = walltext;
@@ -1668,7 +1597,7 @@ Scene* initScene17() {
     addObject( scene, ret );
 
     auto mat1             = std::make_shared<Blinn>();
-    mat1->m_diffuseColor  = color3( 1, 0.2, 0.2 );
+    mat1->m_albedo  = color3( 1, 0.2, 0.2 );
     mat1->m_specularColor = color3( 0 );
 
     Transform modelMatrix3;
@@ -1682,7 +1611,7 @@ Scene* initScene17() {
 
     auto mat2             = std::make_shared<Blinn>();
     mat2->m_specularColor = color3( 0 );
-    mat2->m_diffuseColor  = color3( 0.2, 0.2, 1.0 );
+    mat2->m_albedo  = color3( 0.2, 0.2, 1.0 );
 
     Transform modelMatrix4;
     modelMatrix4.scale( 32, 32, 32 );
@@ -1694,42 +1623,13 @@ Scene* initScene17() {
     addObject( scene, ret );
 
     auto mat3            = std::make_shared<CookTorrance>( SPECULAR );
-    mat3->m_diffuseColor = color3( 0.6, 0.2, 0.2 );
-    // mat3->m_specularColor = color3(0.4, 0., 0.);
+    mat3->m_albedo = color3( 0.6, 0.2, 0.2 );
     mat3->m_roughness = 0.5;
     mat3->m_IOR       = 1.01;
 
     auto mat4 = std::make_shared<CookTorrance>( TRANSPARENT );
-    // mat4->m_diffuseColor = color3(0.2, 0.8, 0.2);
-    mat4->m_diffuseColor  = color3( 1 );
-    mat4->m_specularColor = color3( 1 );
-    // mat4->m_roughness = 0.1;
-    // mat4->m_refraction = color3(1);
-    // mat4->m_reflection = color3(1);
+    mat4->m_albedo  = color3( 1 );
     mat4->m_IOR = 1.5;
-
-    // auto mat3 = std::make_shared<CookTorrance>(true);
-    // mat3->m_diffuseColor = color3(0.8, 0.2, 0.2);
-    // mat3->m_specularColor = color3(0.7f);
-    // mat3->m_IOR = 1.15;
-    // mat3->m_roughness = 0.1;
-
-    // auto mat4 = std::make_shared<CookTorrance>();
-    // mat4->m_diffuseColor = color3(0.0, 1., 0.0);
-    // mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
-    // mat4->m_IOR = 1.8;
-    // mat4->m_roughness = 0.1;
-
-    // auto mat4 = std::make_shared<CookTorrance>();
-    ////mat4->m_diffuseColor = color3(0.0, 1., 0.0);
-    // auto balltex =  new image_texture("../assets/6ball.png");
-    ////Transform balltexT;
-    ////balltexT.rotate(vec3(0,0,1), 60);
-    ////balltex->m_transform = balltexT;
-    // mat4->m_texture = balltex;
-    // mat4->m_specularColor = color3(0.9f, 0.9, 1.0) * 0.8f;
-    // mat4->m_IOR = 4.0;
-    // mat4->m_roughness = 0.04;
 
     Transform modelMatrix5;
     modelMatrix5.scale( 4.5, 4.5, 4.5 );
@@ -1756,7 +1656,7 @@ Scene* initScene17() {
         /*99000.f*/ 10000 * 4.f * M_PI / ( 4. * M_PI * lightSize * lightSize * M_PI );
     auto matE            = std::make_shared<CookTorrance>();
     matE->m_emission     = color3( lightIntensity );
-    matE->m_diffuseColor = color3( 1.f );
+    matE->m_albedo = color3( 1.f );
 
     Transform modemMatrixE;
     // modemMatrixE.scale(lightSize, lightSize, lightSize);
@@ -1767,6 +1667,181 @@ Scene* initScene17() {
     auto obj   = initSphere( matE, modemMatrixE );
     auto light = new ShapeLight( point3( 0, 0, 17 ), color3( 2000 ), obj );
     // addLight(scene, light);
+    return scene;
+}
+
+Scene* initScene18() {
+    Scene* scene = initScene();
+    auto from    = point3( 0, 0.9, 2 );
+    auto at      = vec3( 0, 0.5, 0 );
+    setSimpleCamera( scene,
+                     from,
+                     at,
+                     vec3( 0, 1, 0 ),
+                     90,
+                     (float)WIDTH,
+                     (float)HEIGHT,
+                     0.04,
+                     glm::length( at - from ) );
+
+    setSkyColor( scene, color3( 0.f ) );
+
+    auto left = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/left.png");
+    auto right = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/right.png");
+    auto front = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/front.png");
+    auto back = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/back.png");
+    auto up = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/top.png");
+    auto down = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/bottom.png");
+    
+    auto matSky = std::make_shared<CookTorrance>();
+    matSky->m_texture = new CubeMapTexture(left, right, front, back, up, down);
+    matSky->m_albedo = color3(0,0,0);
+    Transform skyboxT;
+    skyboxT.scale(50, 50, 50);
+    addObject(scene, initCube(matSky, skyboxT));
+
+    auto mat             = std::make_shared<Blinn>();
+    mat->m_albedo  = color3( 0.4f );
+    mat->m_specularColor = color3( 0.0f );
+    mat->m_shininess = 0.f;
+
+    Transform modelMatrix;
+    modelMatrix.scale( 5, 1.3, 1 );
+    modelMatrix.rotate(vec3(-1,0,0), 90);
+    auto ret       = new Plane( mat, modelMatrix );
+    ret->geom.type = PLANE;
+    addObject( scene, ret );
+
+    auto mat1 = std::make_shared<CookTorrance>( SPECULAR );
+    mat1->m_roughness = 0.01;
+    mat1->m_metalness = 1.0;
+    mat1->m_albedo = color3( 1.f );
+    Transform t0;
+    t0.scale(0.5,0.5,0.5);
+    t0.translate(vec3(0,0.5,0));
+    addObject(scene, initSphere(mat1, t0));
+
+    auto mat2 = std::make_shared<CookTorrance>( TRANSPARENT );
+    mat2->m_IOR = 1.3;
+    mat2->m_roughness = 0.01;
+    mat2->m_albedo = color3( 1.f );
+    Transform t1;
+    t1.scale(0.5,0.5,0.5);
+    t1.translate(vec3(-1.2,0.5,0));
+    addObject(scene, initSphere(mat2, t1));
+
+    auto mat3 = std::make_shared<CookTorrance>( SPECULAR );
+    mat3->m_roughness = 0.005;
+    mat3->m_metalness = 0.02;
+    mat3->m_albedo = color3( 0.f, 1.f, 0.95f );
+    Transform t2;
+    t2.scale(0.5,0.5,0.5);
+    t2.translate(vec3(1.2,0.5,0));
+    addObject(scene, initSphere(mat3, t2));
+
+    auto lightSize = 0.01f;
+    auto lightIntensity =
+        0.012 * 4.f * M_PI / ( 4. * M_PI * lightSize * lightSize * M_PI );
+    auto matE            = std::make_shared<CookTorrance>();
+    matE->m_emission     = color3(lightIntensity);
+    matE->m_albedo = color3( 1.f );
+
+    Transform modemMatrixE;
+    modemMatrixE.scale(lightSize, lightSize, lightSize);
+    modemMatrixE.translate(vec3(0,5.0,5));
+    addObject( scene, initSphere( matE, modemMatrixE ) );
+
+    return scene;
+}
+
+Scene* initScene19() {
+    Scene* scene = initScene();
+    auto from    = point3( -3.5, -2, 7.2 );
+    auto at      = vec3( 3.0, -2.4, 2.6 );
+    setSimpleCamera( scene,
+                     from,
+                     at,
+                     vec3( 0, 1, 0 ),
+                     80,
+                     (float)WIDTH,
+                     (float)HEIGHT,
+                     0.04,
+                     glm::length( at - from ) );
+
+    setSkyColor( scene, color3( 0.f ) );
+
+    auto left = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/left.png");
+    auto right = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/right.png");
+    auto front = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/front.png");
+    auto back = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/back.png");
+    auto up = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/top.png");
+    auto down = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/bottom.png");
+    
+    auto matSky = std::make_shared<CookTorrance>();
+    matSky->m_texture = new CubeMapTexture(left, right, front, back, up, down);
+    matSky->m_albedo = color3(0,0,0);
+    Transform skyboxT;
+    skyboxT.scale(50, 50, 50);
+    addObject(scene, initCube(matSky, skyboxT));
+
+    float metalness = 0.01;
+    float y = -6.4;
+    for(int i = 0; i < 7; i++){
+      float x = -2;
+      float roughness = 0.01;
+      for(int j = 0; j < 7; j++){
+        auto mat3 = std::make_shared<CookTorrance>( DIFFUSE );
+        mat3->m_roughness = roughness;
+        mat3->m_metalness = metalness;
+        mat3->m_albedo = color3( 0.9f, 0, 0 );
+        Transform t2;
+        t2.scale(0.5,0.5,0.5);
+        t2.translate(vec3(x,y,0));
+        addObject(scene, initSphere(mat3, t2));
+        roughness += 0.14;
+        x += 1.2;
+      }
+      metalness += 0.14;
+      y += 1.2;
+      std::cout <<"rough: " << roughness<< std::endl;
+    }
+    std::cout << "metal: " << metalness << std::endl;
+
+    metalness = 0.01;
+    y = -6.4;
+    for(int i = 0; i < 7; i++){
+      float x = 8.6;
+      float roughness = 0.01;
+      for(int j = 0; j < 7; j++){
+        auto mat3 = std::make_shared<CookTorrance>( SPECULAR );
+        mat3->m_roughness = roughness;
+        mat3->m_metalness = metalness;
+        mat3->m_albedo = color3( 0.8, 0.1, 0.f );
+        Transform t2;
+        t2.scale(0.5,0.5,0.5);
+        t2.translate(vec3( 6,y, x));
+        addObject(scene, initSphere(mat3, t2));
+        roughness += 0.14;
+        x -= 1.2;
+      }
+      metalness += 0.14;
+      y += 1.2;
+      std::cout <<"rough: " << roughness<< std::endl;
+    }
+    std::cout << "metal: " << metalness << std::endl;
+
+    auto lightSize = 0.01f;
+    auto lightIntensity =
+        0.09 * 4.f * M_PI / ( 4. * M_PI * lightSize * lightSize * M_PI );
+    auto matE            = std::make_shared<CookTorrance>();
+    matE->m_emission     = color3( lightIntensity );
+    matE->m_albedo = color3( 1.f );
+
+    Transform modemMatrixE;
+    modemMatrixE.scale(lightSize, lightSize, lightSize);
+    modemMatrixE.translate(vec3(-8,-1.5,15));
+    addObject( scene, initSphere( matE, modemMatrixE ) );
+
     return scene;
 }
 
@@ -1826,6 +1901,12 @@ Scene* parseScene( int sceneId ) {
         break;
     case 17:
         scene = initScene17();
+        break;
+    case 18:
+        scene = initScene18();
+        break;
+    case 19:
+        scene = initScene19();
         break;
 
     default:

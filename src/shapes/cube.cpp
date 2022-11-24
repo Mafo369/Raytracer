@@ -57,8 +57,8 @@ vec2 Cube::cube_uv_up( point3 point ) const {
 }
 
 vec2 Cube::cube_uv_down( point3 point ) const {
-    float u = abs( fmod( 1 - point.x, 2.0f ) / 2.0f );
-    float v = abs( fmod( 1 - point.z, 2.0f ) / 2.0f );
+    float u = abs( fmod( point.x + 1, 2.0f ) / 2.0f );
+    float v = abs( fmod( point.z + 1, 2.0f ) / 2.0f );
     return vec2( u, v );
 }
 

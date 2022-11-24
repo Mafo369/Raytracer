@@ -70,25 +70,25 @@ public:
       if(objMat != nullptr){
         ImGui::InputInt("type", reinterpret_cast<int*>(&objMat->m_type), 1, 0, 2);
         ImGui::DragFloat("ior", &objMat->m_IOR, 0.1, 0.0, 6.0);
-        ImGui::DragFloat("roughness", &objMat->m_roughness, 0.01, 0.0, 3.0);
-        ImGui::ColorEdit3("dif", glm::value_ptr(objMat->m_diffuseColor));
-        ImGui::ColorEdit3("spec", glm::value_ptr(objMat->m_specularColor));
+        ImGui::DragFloat("metalness", &objMat->m_metalness, 0.001, 0.0, 1.0);
+        ImGui::DragFloat("roughness", &objMat->m_roughness, 0.001, 0.0, 1.0);
+        ImGui::ColorEdit3("albedo", glm::value_ptr(objMat->m_albedo));
 
         ImGui::Separator();
       }
 
-    //  auto objMat1 = std::dynamic_pointer_cast<Blinn>(m_Renderer.scene->objects[i]->mat);
-    //  if(objMat1 != nullptr){
-    //    ImGui::DragFloat("ior", &objMat1->m_IOR, 0.1, 1.0, 6.0);
-    //    ImGui::DragFloat("shininess", &objMat1->m_shininess, 1, 0.0, 200);
-    //    ImGui::ColorEdit3("dif", glm::value_ptr(objMat1->m_diffuseColor));
-    //    ImGui::ColorEdit3("spec", glm::value_ptr(objMat1->m_specularColor));
-    //    ImGui::DragFloat3("reflection", glm::value_ptr(objMat1->m_reflection),0.1, 0, 1);
-    //    ImGui::DragFloat3("refraction", glm::value_ptr(objMat1->m_refraction),0.1, 0, 1);
-    //    ImGui::DragFloat3("absorption", glm::value_ptr(objMat1->m_absorption),0.1, 0, 1);
+      auto objMat1 = std::dynamic_pointer_cast<Blinn>(m_Renderer.scene->objects[i]->mat);
+      if(objMat1 != nullptr){
+        ImGui::DragFloat("ior", &objMat1->m_IOR, 0.1, 1.0, 6.0);
+        ImGui::DragFloat("shininess", &objMat1->m_shininess, 1, 0.0, 200);
+        ImGui::ColorEdit3("dif", glm::value_ptr(objMat1->m_albedo));
+        ImGui::ColorEdit3("spec", glm::value_ptr(objMat1->m_specularColor));
+        ImGui::DragFloat3("reflection", glm::value_ptr(objMat1->m_reflection),0.1, 0, 1);
+        ImGui::DragFloat3("refraction", glm::value_ptr(objMat1->m_refraction),0.1, 0, 1);
+        ImGui::DragFloat3("absorption", glm::value_ptr(objMat1->m_absorption),0.1, 0, 1);
 
-    //    ImGui::Separator();
-    //  }
+        ImGui::Separator();
+      }
 
       ImGui::PopID();
     }
@@ -144,15 +144,6 @@ Walnut::Application* Walnut::CreateApplication(int argc, char** argv)
     scene_id = atoi(argv[3]);
   }
   Scene* scene = parseScene(scene_id);
-  float posLight = -5;
-  auto lightSize = 4.f;
-  Transform modemMatrixE;
-  modemMatrixE.scale(lightSize, lightSize, lightSize);
-  modemMatrixE.translate(vec3(posLight,0,24.5));
-  auto light = scene->objects[scene->objects.size()-1];
-  light->geom.sphere.center = modemMatrixE.transformFrom(vec3(0));
-  light->geom.sphere.radius = lightSize;
-  light->transform = modemMatrixE;
   auto layer = std::make_shared<ExampleLayer>(scene);
   app->PushLayer(layer);
 	app->SetMenubarCallback([app]()

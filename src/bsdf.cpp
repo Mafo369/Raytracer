@@ -166,7 +166,7 @@ color3 RDM_bsdf_s( BrdfData& data ) {
     // float f = schlick(LdotH, m->IOR, 1.f);
     float g = RDM_Smith( data.LdotH, data.LdotN, data.VdotH, data.VdotN, data.roughness );
 
-    return color3( data.specularF0 * ( ( d * data.F * g ) / ( 4.f * data.LdotN * data.VdotN ) ) );
+    return color3( ( d * data.F * g ) / ( 4.f * data.LdotN * data.VdotN ) );
 }
 
 color3 RDM_btdf( float LdotH,
@@ -217,7 +217,7 @@ color3 RDM_bsdf( BrdfData& data, texture* texture, int face ) {
         return color3( ( texColor / float( M_PI ) ) + RDM_bsdf_s( data ) );
     }
     color3 specular = RDM_bsdf_s( data );
-    return color3( ( vec3( 1 ) - data.F ) * RDM_bsdf_d( data.diffuseReflectance ) + specular );
+    return ( vec3( 1 ) - data.F ) * RDM_bsdf_d( data.diffuseReflectance ) + specular;
 }
 
 color3 RDM_brdf( float LdotH,

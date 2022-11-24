@@ -31,6 +31,8 @@ bool computeBrdfData( BrdfData& data,
     data.diffuseReflectance = baseColorToDiffuseReflectance( baseColor, metalness );
 
     data.roughness = roughness;
+    data.alpha = roughness * roughness;
+    data.alphaSq = data.alpha * data.alpha;
 
     // Pre-calculate some more BRDF terms
     data.F = evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), data.LdotH );

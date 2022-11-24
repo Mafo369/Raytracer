@@ -36,14 +36,13 @@ typedef struct s_BrdfData {
 // f90 should be 1.0, except for the trick used by Schuler (see 'shadowedF90' function)
 inline vec3 evalFresnelSchlick(vec3 f0, float f90, float NdotS)
 {
-	return f0 + (f90 - f0) * pow(1.0f - NdotS, 5.0f);
+	return f0 + (f90 - f0) * pow(clamp(1.0f - NdotS, 0.0f, 1.0f), 5.0f);
 }
 
 inline vec3 evalFresnel(vec3 f0, float f90, float NdotS)
 {
 	// Default is Schlick's approximation
-	//return evalFresnelSchlick(f0, f90, NdotS);
-	return f0 + (f90 - f0) * pow(1.0f - NdotS, 5.0f);
+	return evalFresnelSchlick(f0, f90, NdotS);
 }
 
 inline vec3 baseColorToSpecularF0(const vec3& baseColor, const float& metalness) {
@@ -89,8 +88,7 @@ class Material {
     virtual color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) = 0;
     texture* m_texture = nullptr;
     color3 m_emission = color3(0,0,0);
-    color3 m_diffuseColor = color3(0,0,0);
-    color3 m_specularColor = color3(0,0,0);
+    color3 m_albedo = color3(0,0,0);
 
     float m_IOR;	//! Index of refraction (for dielectric)
 };

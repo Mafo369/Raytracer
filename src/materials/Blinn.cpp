@@ -10,7 +10,7 @@
 Blinn::Blinn() {
     m_IOR             = 1.0;
     m_specularColor   = color3( 0.7f );
-    m_diffuseColor    = color3( 0.5f );
+    m_albedo    = color3( 0.5f );
     m_shininess       = 20.f;
     m_reflection      = vec3( 0, 0, 0 );
     m_refraction      = vec3( 0, 0, 0 );
@@ -49,7 +49,7 @@ color3 Blinn::shade( Intersection* intersection, vec3 v, Light* light, float int
                     ret += lc * LdotN * ( texColor + s * m_specularColor );
                 }
                 else {
-                    ret += lc * LdotN * ( m_diffuseColor + s * m_specularColor );
+                    ret += lc * LdotN * ( m_albedo + s * m_specularColor );
                 }
             }
         }
@@ -163,7 +163,7 @@ color3 Blinn::ambientColor( Ray* ray, Intersection* intersection, color3 lightCo
         vec3 texColor = m_texture->value( intersection->u, intersection->v, duv );
         return texColor * lightColor;
     }
-    return m_diffuseColor * lightColor;
+    return m_albedo * lightColor;
 }
 
 vec3 Phong_BRDF( const vec3& wi, const vec3& wo, const vec3& N, float phongExponent ) {
@@ -295,7 +295,7 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         ret += trace_ray( scene, &new_ray, tree, &refInter );
     }
     else {
-        float phongExponent = 0.f;
+        float phongExponent = m_shininess;
         // auto sphereL = scene->lights[0];
         auto sphereL = scene->objects[scene->objects.size() - 1];
         vec3 axePO   = normalize( intersection->position - sphereL->geom.sphere.center );
@@ -322,8 +322,8 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
             ret += color3( 0 );
         }
         else {
-            color3 brdf = intersection->mat->m_diffuseColor / Pi +
-                          intersection->mat->m_specularColor *
+            color3 brdf = intersection->mat->m_albedo / Pi +
+                          m_specularColor *
                               Phong_BRDF( wi, ray->dir, intersection->normal, phongExponent );
             float J   = 1. * dot( Np, -wi ) / d_light2;
             float pdf = dot( axePO, dirA ) /
@@ -335,7 +335,7 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
 
         // Indirect illumination
         color3 iColor      = color3( 0, 0, 0 );
-        auto specularColor = intersection->mat->m_specularColor;
+        auto specularColor = m_specularColor;
         float proba        = 1. - ( specularColor.r + specularColor.g + specularColor.b ) / 3;
         vec3 R             = normalize( reflect( ray->dir, intersection->normal ) );
         bool sample_diffuse;
@@ -372,7 +372,7 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection, false );
 
         if ( sample_diffuse )
-            iColor += reflColor * intersection->mat->m_diffuseColor *
+            iColor += reflColor * intersection->mat->m_albedo *
                       ( dot( intersection->normal, dirA ) / ( Pi ) / pdf );
         else
             iColor += reflColor *

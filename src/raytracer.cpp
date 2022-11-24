@@ -29,9 +29,6 @@
 bool intersectScene( const Scene* scene, Ray* ray, Intersection* intersection ) {
     bool hasIntersection = false;
     size_t objectCount   = scene->objects.size();
-
-    //!\todo loop on each object of the scene to compute intersection
-
     float dist;
 
     for ( size_t i = 0; i < objectCount; i++ ) {
@@ -69,6 +66,12 @@ color3 trace_ray( Scene* scene,
         intersection->hit = true;
         // Compute necessary differential information for texture filtering
         if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
+
+        // if skybox return directly the corresponding color
+        if(intersection->face != -1){
+          return intersection->mat->textureColor(intersection->u, intersection->v,
+                                                 intersection->face);
+        }
 
         // Scatter
         if ( !isBlack( intersection->mat->m_emission ) ) {
@@ -177,7 +180,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
 
     auto startTime = std::chrono::system_clock::now();
 
-    auto sampler = new StratifiedSampler( 1, 1, true, 1 );
+    auto sampler = new StratifiedSampler( 8, 8, true, 1 );
     std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
 
     for ( size_t j = 0; j < img->height; j++ ) {
@@ -199,11 +202,13 @@ void renderImage( RenderImage* img, Scene* scene ) {
                 color3* ptr = getPixelPtr( img, i, j );
                 auto pixel  = vec2( i, j );
 
+                //bool doGammaCorrection = true;
+
                 tileSampler->StartPixel( pixel );
                 do {
                     CameraSample cameraSample = tileSampler->GetCameraSample( pixel );
                     Ray rx;
-                    rx.hasDifferentials = false;
+                    rx.hasDifferentials = true;
                     scene->cam->get_ray( cameraSample.xy.x,
                                          cameraSample.xy.y,
                                          cameraSample.uv.x,
@@ -214,14 +219,19 @@ void renderImage( RenderImage* img, Scene* scene ) {
                         scaleDifferentials( &rx, 1.f / sqrt( tileSampler->samplesPerPixel ) );
                     Intersection intersection;
                     pixel_color += trace_ray( scene, &rx, tree, &intersection, sampler );
+                    //if(intersection.face != -1)
+                    //  doGammaCorrection = false;
                 } while ( tileSampler->StartNextSample() );
 
                 color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;
 
-                // gamma-correction
-                avgColor.r = powf( avgColor.r, 1.0f / 2.2 );
-                avgColor.g = powf( avgColor.g, 1.0f / 2.2 );
-                avgColor.b = powf( avgColor.b, 1.0f / 2.2 );
+                //if(doGammaCorrection){
+                //  // gamma-correction
+                //  avgColor.r = powf( avgColor.r, 1.0f / 2.2 );
+                //  avgColor.g = powf( avgColor.g, 1.0f / 2.2 );
+                //  avgColor.b = powf( avgColor.b, 1.0f / 2.2 );
+                //}
+
 
                 *ptr = avgColor;
             }

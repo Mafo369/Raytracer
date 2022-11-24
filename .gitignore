@@ -81,15 +81,9 @@ installed-*
 *.bat
 
 
-# Json
-
-# Auto-generated plugins registration file
-src/MainApplication/Systems.cpp
-src/MainApplication/Version.cpp
-
 # Symlinks
 ./Shaders
-.clang-format
+#.clang-format
 
 tests/external/Catch2
 

@@ -16,5 +16,6 @@ class CookTorrance : public Material {
     color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) override;
 
     float m_roughness; //! 0.001 - 0.01 : very smooth finish with slight imperfections. 0.1 : relatively rough. 0.3-0.7 extremely rough 
+    float m_metalness;
     MatType m_type;
 };

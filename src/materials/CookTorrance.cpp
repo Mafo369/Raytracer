@@ -6,8 +6,8 @@
 CookTorrance::CookTorrance( MatType type ) {
     m_IOR           = 1.0;
     m_roughness     = 0.1;
-    m_specularColor = color3( 1.f );
-    m_diffuseColor  = color3( 1.f );
+    m_metalness = 0.001f;
+    m_albedo  = color3( 1.f );
     m_type          = type;
 }
 
@@ -15,10 +15,7 @@ color3 CookTorrance::shade( Intersection* intersection, vec3 v, Light* light, fl
     color3 ret           = color3( 0.f );
     vec3 n               = intersection->normal;
     vec3 intersectionPos = intersection->position;
-    float uTex           = intersection->u;
-    float vTex           = intersection->v;
     bool outside         = intersection->isOutside;
-    int face             = intersection->face;
     auto lc              = light->getColor();
     auto samples         = light->getSamples();
 
@@ -48,8 +45,8 @@ color3 CookTorrance::shade( Intersection* intersection, vec3 v, Light* light, fl
             float LdotH    = abs( dot( l, hr ) );
             float NdotH    = abs( dot( n, hr ) );
             float VdotH    = abs( dot( v, hr ) );
-            auto brdfColor = RDM_brdf(
-                LdotH, NdotH, VdotH, LdotN, VdotN, extIOR, intIOR, m_roughness, m_specularColor );
+            //auto brdfColor = RDM_brdf(
+            //    LdotH, NdotH, VdotH, LdotN, VdotN, extIOR, intIOR, m_roughness, m_specularColor );
 
             // REFRACTION
             hr             = -extIOR * l - intIOR * v;
@@ -57,11 +54,11 @@ color3 CookTorrance::shade( Intersection* intersection, vec3 v, Light* light, fl
             LdotH          = abs( dot( l, hr ) );
             NdotH          = abs( dot( n, hr ) );
             VdotH          = abs( dot( v, hr ) );
-            auto btdfColor = RDM_btdf(
-                LdotH, NdotH, VdotH, LdotN, VdotN, extIOR, intIOR, m_roughness, m_specularColor );
+            //auto btdfColor = RDM_btdf(
+            //    LdotH, NdotH, VdotH, LdotN, VdotN, extIOR, intIOR, m_roughness, m_specularColor );
 
-            // BSDF
-            ret += ( brdfColor + btdfColor ) * LdotN;
+            //// BSDF
+            //ret += ( brdfColor + btdfColor ) * LdotN;
         }
         ret = lc * ( ret / float( samples.size() ) ) * intensity;
     }
@@ -96,7 +93,7 @@ color3 CookTorrance::textureColor( float u, float v, int face ) {
 color3 CookTorrance::ambientColor( Ray* ray, Intersection* intersection, color3 lightColor ) {
     if ( m_texture != nullptr )
         return m_texture->value( intersection->u, intersection->v ) * lightColor;
-    return m_diffuseColor * lightColor;
+    return m_albedo * lightColor;
 }
 
 vec3 random_Cook( vec3 r ) {
@@ -270,7 +267,6 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                                           : RDM_Fresnel( LdotH, m_IOR, 1.f );
 
         Ray new_ray;
-        color3 factor = color3( 1 );
         if ( f < 1.0f ) {
             if ( uniform01( engine ) < f ) { // reflect
                 vec3 r = reflect( ray->dir, normal );
@@ -281,7 +277,6 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                          0,
                          100000,
                          ray->depth + 1 );
-                factor = m_specularColor;
             }
             else { // refract
                 float refractionRatio = intersection->isOutside ? ( 1.f / m_IOR ) : m_IOR;
@@ -304,10 +299,9 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                      0,
                      100000,
                      ray->depth + 1 );
-            factor = m_specularColor;
         }
         Intersection new_inter;
-        color3 color = factor * trace_ray( scene, &new_ray, tree, &new_inter );
+        color3 color = trace_ray( scene, &new_ray, tree, &new_inter );
         ret += color;
     }
     else {
@@ -342,11 +336,10 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                                   wi,
                                   intersection->normal,
                                   vec2( intersection->u, intersection->v ),
-                                  m_diffuseColor,
-                                  m_IOR,
+                                  m_albedo,
+                                  m_metalness,
                                   m_roughness ) ) {
                 color3 brdf = RDM_bsdf( data, nullptr, -1 );
-                // ret += brdf;
                 float J   = 1. * dot( Np, -wi ) / d_light2;
                 float pdf = dot( axePO, dirA ) /
                             ( Pi * sphereL->geom.sphere.radius * sphereL->geom.sphere.radius );
@@ -359,7 +352,7 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
 
         vec3 V = -ray->dir;
         // Ignore incident ray coming from "below" the hemisphere
-        if ( dot( intersection->normal, V ) <= 0.0f ) return ret;
+        if ( !intersection->isOutside ) return ret;
 
         // Transform view direction into local space of our sampling routines
         // (local space is oriented so that its positive Z axis points along the shading normal)
@@ -380,8 +373,8 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                                   rayDirectionLocal,
                                   Nlocal,
                                   vec2( intersection->u, intersection->v ),
-                                  m_diffuseColor,
-                                  m_IOR,
+                                  m_albedo,
+                                  m_metalness,
                                   m_roughness ) ) {
                 // Function 'diffuseTerm' is predivided by PDF of sampling the cosine weighted
                 // hemisphere
@@ -390,7 +383,7 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                 // Sample a half-vector of specular BRDF. Note that we're reusing random variable
                 // 'u' here, but correctly it should be an new independent random number
                 vec2 u         = vec2( uniform01( engine ), uniform01( engine ) );
-                vec3 Hspecular = sampleBeckmannWalter( Vlocal, vec2( data.alpha ), u );
+                vec3 Hspecular = sampleBeckmannWalter( Vlocal, vec2( data.roughness ), u );
 
                 // Clamp HdotL to small value to prevent numerical instability. Assume that rays
                 // incident from below the hemisphere have been filtered
@@ -402,8 +395,8 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         }
         else if ( m_type == SPECULAR ) {
             vec2 u            = vec2( uniform01( engine ), uniform01( engine ) );
-            float alpha       = m_roughness * m_roughness;
-            auto specularF0   = baseColorToSpecularF0( m_diffuseColor, m_IOR );
+            float alpha       = m_roughness;
+            auto specularF0   = baseColorToSpecularF0( m_albedo, m_metalness );
             rayDirectionLocal = sampleSpecularMicrofacet(
                 Vlocal, alpha, alpha * alpha, specularF0, u, sampleWeight );
         }
@@ -419,7 +412,7 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         if ( dot( intersection->normal, rayDirection ) <= 0.0f ) return ret;
 
         Ray ray_ref;
-        ray_ref.hasDifferentials = false;
+        ray_ref.hasDifferentials = true;
         rayInit( &ray_ref,
                  intersection->position + ( rayDirection * acne_eps ),
                  normalize( rayDirection ),
@@ -451,7 +444,8 @@ CookTorrance::sample_f( vec3 wo, vec3* wi, vec3 normal, const point2& u, float* 
 
         float fr = isOutside ? RDM_Fresnel( LdotH, 1.f, m_IOR ) : RDM_Fresnel( LdotH, m_IOR, 1.f );
 
-        return fr * m_specularColor;
+        return color3(0);
+        //return fr * m_specularColor;
     }
     else if ( type == 1 ) {
         if ( m_type == TRANSPARENT ) {
