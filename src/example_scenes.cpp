@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Sky.h"
 
 #include "mediums/Fog.h"
 
@@ -32,12 +33,12 @@ Scene* initScene0() {
                      (float)HEIGHT,
                      0.,
                      glm::length( at - from ) );
-    image_texture* sky  = new image_texture( "../assets/clouds.png" );
-    scene->m_skyTexture = sky;
-    Transform texSky;
-    texSky.scale( 1, .4, 1 );
-    texSky.translate( vec3( 0, -0.1, 0 ) );
-    scene->m_skyTexture->m_transform = texSky;
+    //image_texture* sky  = new image_texture( "../assets/clouds.png" );
+    //scene->m_skyTexture = sky;
+    //Transform texSky;
+    //texSky.scale( 1, .4, 1 );
+    //texSky.translate( vec3( 0, -0.1, 0 ) );
+    //scene->m_skyTexture->m_transform = texSky;
 
     setSkyColor( scene, color3( 0.52f, 0.8f, 0.9f ) );
     // auto mat = std::make_shared<CookTorrance>(false);
@@ -894,14 +895,14 @@ Scene* initScene11() {
     // distance(from, at));
     setSimpleCamera(
         scene, from, at, vec3( 0.f, 0.f, 1 ), 30.f, float( WIDTH ), float( HEIGHT ), 0., 1 );
-    setSkyColor( scene, color3( 1., 1., 1 ) );
+    //setSkyColor( scene, color3( 1., 1., 1 ) );
 
-    image_texture* sky  = new image_texture( "../assets/clouds.png" );
-    scene->m_skyTexture = sky;
-    Transform texSky;
-    texSky.scale( 1, .4, 1 );
-    texSky.translate( vec3( 0, -0.1, 0 ) );
-    scene->m_skyTexture->m_transform = texSky;
+    //image_texture* sky  = new image_texture( "../assets/clouds.png" );
+    //scene->m_skyTexture = sky;
+    //Transform texSky;
+    //texSky.scale( 1, .4, 1 );
+    //texSky.translate( vec3( 0, -0.1, 0 ) );
+    //scene->m_skyTexture->m_transform = texSky;
 
     auto mat            = std::make_shared<Blinn>();
     mat->m_albedo = color3( 1, 1, 1 );
@@ -975,14 +976,14 @@ Scene* initScene12() {
     // distance(from, at));
     setSimpleCamera(
         scene, from, at, vec3( 0.f, 0.f, 1 ), 25.f, float( WIDTH ), float( HEIGHT ), 1.5, 70 );
-    setSkyColor( scene, color3( 1., 1., 1 ) );
+    //setSkyColor( scene, color3( 1., 1., 1 ) );
 
-    image_texture* sky  = new image_texture( "../assets/clouds.png" );
-    scene->m_skyTexture = sky;
-    Transform texSky;
-    texSky.scale( 1, .4, 1 );
-    texSky.translate( vec3( 0, -0.1, 0 ) );
-    scene->m_skyTexture->m_transform = texSky;
+    //image_texture* sky  = new image_texture( "../assets/clouds.png" );
+    //scene->m_skyTexture = sky;
+    //Transform texSky;
+    //texSky.scale( 1, .4, 1 );
+    //texSky.translate( vec3( 0, -0.1, 0 ) );
+    //scene->m_skyTexture->m_transform = texSky;
 
     auto mat             = std::make_shared<Blinn>();
     mat->m_albedo  = color3( 0.3 );
@@ -1082,14 +1083,14 @@ Scene* initScene13() {
     // distance(from, at));
     setSimpleCamera(
         scene, from, at, vec3( 0.f, 0.f, 1 ), 40.f, float( WIDTH ), float( HEIGHT ), 0, 1 );
-    setSkyColor( scene, color3( 0., 0., 0 ) );
+    //setSkyColor( scene, color3( 0., 0., 0 ) );
 
-    image_texture* sky  = new image_texture( "../assets/clouds.png" );
-    scene->m_skyTexture = sky;
-    Transform texSky;
-    texSky.scale( 1, .4, 1 );
-    texSky.translate( vec3( 0, -0.1, 0 ) );
-    scene->m_skyTexture->m_transform = texSky;
+    //image_texture* sky  = new image_texture( "../assets/clouds.png" );
+    //scene->m_skyTexture = sky;
+    //Transform texSky;
+    //texSky.scale( 1, .4, 1 );
+    //texSky.translate( vec3( 0, -0.1, 0 ) );
+    //scene->m_skyTexture->m_transform = texSky;
 
     auto mat            = std::make_shared<Blinn>();
     mat->m_albedo = color3( 1, 1, 1 );
@@ -1672,7 +1673,7 @@ Scene* initScene17() {
 
 Scene* initScene18() {
     Scene* scene = initScene();
-    auto from    = point3( 0, 0.9, 2 );
+    auto from    = point3( 0, 0.9, 3 );
     auto at      = vec3( 0, 0.5, 0 );
     setSimpleCamera( scene,
                      from,
@@ -1684,7 +1685,8 @@ Scene* initScene18() {
                      0.04,
                      glm::length( at - from ) );
 
-    setSkyColor( scene, color3( 0.f ) );
+    auto sky = new IBL("/home/mafo/dev/Raytracer/assets/rainforest_trail_4k.hdr");
+    scene->sky = sky;
 
     auto left = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/left.png");
     auto right = new image_texture("../assets/Standard-Cube-Map1/StandardCubeMap/right.png");
@@ -1698,12 +1700,12 @@ Scene* initScene18() {
     matSky->m_albedo = color3(0,0,0);
     Transform skyboxT;
     skyboxT.scale(50, 50, 50);
-    addObject(scene, initCube(matSky, skyboxT));
+    //addObject(scene, initCube(matSky, skyboxT));
 
-    auto mat             = std::make_shared<Blinn>();
-    mat->m_albedo  = color3( 0.4f );
-    mat->m_specularColor = color3( 0.0f );
-    mat->m_shininess = 0.f;
+    auto mat             = std::make_shared<CookTorrance>();
+    mat->m_albedo  = color3( 0.6 );
+    mat->m_metalness = 0.0;
+    mat->m_roughness = 0.8;
 
     Transform modelMatrix;
     modelMatrix.scale( 5, 1.3, 1 );
@@ -1722,7 +1724,7 @@ Scene* initScene18() {
     addObject(scene, initSphere(mat1, t0));
 
     auto mat2 = std::make_shared<CookTorrance>( TRANSPARENT );
-    mat2->m_IOR = 1.3;
+    mat2->m_IOR = 1.5;
     mat2->m_roughness = 0.01;
     mat2->m_albedo = color3( 1.f );
     Transform t1;
@@ -1731,13 +1733,34 @@ Scene* initScene18() {
     addObject(scene, initSphere(mat2, t1));
 
     auto mat3 = std::make_shared<CookTorrance>( SPECULAR );
-    mat3->m_roughness = 0.005;
-    mat3->m_metalness = 0.02;
+    mat3->m_roughness = 0.0001;
+    mat3->m_metalness = 0.0000;
     mat3->m_albedo = color3( 0.f, 1.f, 0.95f );
+    //mat3->m_albedo = color3(0.5);
     Transform t2;
     t2.scale(0.5,0.5,0.5);
     t2.translate(vec3(1.2,0.5,0));
     addObject(scene, initSphere(mat3, t2));
+
+    auto mat4 = std::make_shared<CookTorrance>( DIFFUSE );
+    mat4->m_roughness = 0.4;
+    mat4->m_metalness = 0.001;
+    mat4->m_albedo = color3( 0, 1.f, 0 );
+    //mat4->m_albedo = color3(0.5);
+    Transform t3;
+    t3.scale(0.5,0.5,0.5);
+    t3.translate(vec3(2.4,0.5,0));
+    addObject(scene, initSphere(mat4, t3));
+
+    auto mat5 = std::make_shared<CookTorrance>( SPECULAR );
+    mat5->m_roughness = 0.2;
+    mat5->m_metalness = 0.9;
+    mat5->m_albedo = color3( 1.f );
+    //mat5->m_albedo = color3(0.5);
+    Transform t4;
+    t4.scale(0.5,0.5,0.5);
+    t4.translate(vec3(-2.4,0.5,0));
+    addObject(scene, initSphere(mat5, t4));
 
     auto lightSize = 0.01f;
     auto lightIntensity =
@@ -1749,7 +1772,7 @@ Scene* initScene18() {
     Transform modemMatrixE;
     modemMatrixE.scale(lightSize, lightSize, lightSize);
     modemMatrixE.translate(vec3(0,5.0,5));
-    addObject( scene, initSphere( matE, modemMatrixE ) );
+    //addObject( scene, initSphere( matE, modemMatrixE ) );
 
     return scene;
 }

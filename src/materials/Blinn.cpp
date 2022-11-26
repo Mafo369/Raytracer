@@ -425,20 +425,21 @@ color3 Blinn::reflectionColor( Scene* scene,
     Intersection temp_intersection;
     auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection );
 
-    if ( !temp_intersection.hit ) {
-        if ( scene->m_skyTexture != nullptr ) {
-            vec3 dir = r;
-            float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
-            float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) );
-            float y  = dir.y / ( abs( dir.x ) + abs( dir.y ) );
-            point3 p = point3( 0.5, 0.5, 0.0 ) +
-                       z * ( x * point3( 0.5, 0.5, 0.0 ) + y * point3( -0.5, 0.5, 0.0 ) );
-            // TODO: Multiply with intensity var
-            color3 env = 0.7f * scene->m_skyTexture->value( p.x, p.y );
-            color += m_reflection * env;
-        }
-    }
-    else if ( intersection->isOutside ) {
+    //if ( !temp_intersection.hit ) {
+    //    if ( scene->m_skyTexture != nullptr ) {
+    //        vec3 dir = r;
+    //        float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
+    //        float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) );
+    //        float y  = dir.y / ( abs( dir.x ) + abs( dir.y ) );
+    //        point3 p = point3( 0.5, 0.5, 0.0 ) +
+    //                   z * ( x * point3( 0.5, 0.5, 0.0 ) + y * point3( -0.5, 0.5, 0.0 ) );
+    //        // TODO: Multiply with intensity var
+    //        color3 env = 0.7f * scene->m_skyTexture->value( p.x, p.y );
+    //        color += m_reflection * env;
+    //    }
+    //}
+    //else if ( intersection->isOutside ) {
+    if(intersection->isOutside){
         color += ( reflColor * m_reflection );
     }
     return reflColor;
@@ -542,16 +543,16 @@ color3 Blinn::refractionColor( Scene* scene,
             refractionShade += refractionColor;
         }
         else {
-            if ( scene->m_skyTexture != nullptr ) {
-                vec3 dir = refractDir;
-                float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
-                float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );
-                float y  = dir.y / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );
-                point3 p = point3( 0.5, 0.5, 0.0 ) +
-                           z * ( x * point3( 0.5, 0.5, 0.0 ) + y * point3( -0.5, 0.5, 0.0 ) );
-                color3 env = 0.7f * scene->m_skyTexture->value( p.x, p.y );
-                refractionShade += env;
-            }
+            //if ( scene->m_skyTexture != nullptr ) {
+            //    vec3 dir = refractDir;
+            //    float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
+            //    float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );
+            //    float y  = dir.y / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );
+            //    point3 p = point3( 0.5, 0.5, 0.0 ) +
+            //               z * ( x * point3( 0.5, 0.5, 0.0 ) + y * point3( -0.5, 0.5, 0.0 ) );
+            //    color3 env = 0.7f * scene->m_skyTexture->value( p.x, p.y );
+            //    refractionShade += env;
+            //}
         }
     }
     else {

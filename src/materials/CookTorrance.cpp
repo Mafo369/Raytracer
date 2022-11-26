@@ -2,6 +2,9 @@
 #include "../Light.h"
 #include "../bsdf.hpp"
 #include "../sampling/sampling.h"
+#include "../Sky.h"
+
+#define GI 1
 
 CookTorrance::CookTorrance( MatType type ) {
     m_IOR           = 1.0;
@@ -255,6 +258,233 @@ vec3 sampleSpecularMicrofacet( vec3 Vlocal,
     return Llocal;
 }
 
+void createCoordinateSystem(const vec3 &N, vec3 &Nt, vec3 &Nb) 
+{ 
+    if (std::fabs(N.x) > std::fabs(N.y)) 
+        Nt = vec3(N.z, 0, -N.x) / sqrtf(N.x * N.x + N.z * N.z); 
+    else 
+        Nt = vec3(0, -N.z, N.y) / sqrtf(N.y * N.y + N.z * N.z); 
+    Nb = cross(N, Nt); 
+} 
+
+vec3 uniformSampleHemisphere(const float &r1, const float &r2) 
+{ 
+    // cos(theta) = r1 = y
+    // cos^2(theta) + sin^2(theta) = 1 -> sin(theta) = srtf(1 - cos^2(theta))
+    float sinTheta = sqrtf(1 - r1 * r1); 
+    float phi = 2 * M_PI * r2; 
+    float x = sinTheta * cosf(phi); 
+    float z = sinTheta * sinf(phi); 
+    return vec3(x, r1, z); 
+} 
+
+color3 CookTorrance::scratchAPixelScatter(Ray* ray, Scene* scene, KdTree* tree, Intersection* intersection){
+    color3 ret(0);
+    vec3 Nt, Nb;
+    createCoordinateSystem(intersection->normal, Nt, Nb);
+    float r1 = uniform01(engine);
+    float r2 = uniform01(engine);
+    vec3 sample = uniformSampleHemisphere(r1, r2);
+    vec3 wi( 
+    sample.x * Nb.x + sample.y * intersection->normal.x + sample.z * Nt.x, 
+    sample.x * Nb.y + sample.y * intersection->normal.y + sample.z * Nt.y, 
+    sample.x * Nb.z + sample.y * intersection->normal.z + sample.z * Nt.z); 
+
+    color3 directL = color3(0);
+
+    Intersection temp_inter;
+    Ray rayS;
+    vec3 origin = intersection->position + ( acne_eps * wi );
+    rayInit( &rayS, origin, wi, vec2( 0, 0 ), 0.f, 10000 );
+    rayS.shadow = true;
+    rayS.dox    = vec3( 0.f );
+    rayS.doy    = vec3( 0.f );
+    rayS.ddx    = vec3( 0.f );
+    rayS.ddy    = vec3( 0.f );
+    if ( intersectKdTree( scene, tree, &rayS, &temp_inter ) ) { //|| dot(intersection->normal, wi) < 0){
+        ret += color3( 0 );
+    }
+    else {
+        color3 lc = scene->sky->getRadiance(rayS); 
+        directL = r1 * lc;
+    }
+    color3 indirectL = color3(0);
+#ifdef GI
+    float r1I = uniform01(engine);
+    float r2I = uniform01(engine);
+    vec3 sampleI = uniformSampleHemisphere(r1I, r2I);
+    vec3 wiI( 
+    sampleI.x * Nb.x + sampleI.y * intersection->normal.x + sampleI.z * Nt.x, 
+    sampleI.x * Nb.y + sampleI.y * intersection->normal.y + sampleI.z * Nt.y, 
+    sampleI.x * Nb.z + sampleI.y * intersection->normal.z + sampleI.z * Nt.z); 
+
+    Ray ray_ref;
+    ray_ref.hasDifferentials = true;
+    rayInit( &ray_ref,
+             intersection->position + ( wiI * acne_eps ),
+             normalize( wiI ),
+             ray->pixel,
+             0,
+             10000,
+             ray->depth + 1 );
+
+    Intersection temp_intersection;
+    auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection);
+    //float pdf = 1.f / (2.f * Pi);
+    //indirectL = (r1I * reflColor / pdf);
+    indirectL = r1I * reflColor;
+#endif
+
+    ret = m_albedo * (directL + indirectL);
+    //ret = ((m_albedo / Pi) * directL / (1.f / (2.f * Pi))) + indirectL * (m_albedo / Pi);
+    //ret /= 2.f;
+    return ret;
+}
+
+color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersection* intersection) {
+    color3 ret(0);
+    //auto sphereL = scene->objects[scene->objects.size() - 1];
+    ////vec3 axePO   = normalize( intersection->position - sphereL->geom.sphere.center );
+    //vec3 axePO = intersection->normal;
+    //vec3 dirA    = random_dir( axePO );
+    ////vec3 ptA     = dirA * sphereL->geom.sphere.radius + sphereL->geom.sphere.center;
+    ////vec3 wi      = normalize( ptA - intersection->position );
+    //vec3 wi = normalize(dirA);
+
+    //vec3 Np        = dirA;
+    ////float d_light2 = distance( ptA, intersection->position );
+    ////d_light2 *= d_light2;
+    
+    //vec3 Nt, Nb;
+    //createCoordinateSystem(intersection->normal, Nt, Nb);
+    //float r1 = uniform01(engine);
+    //float r2 = uniform01(engine);
+    //vec3 sample = uniformSampleHemisphere(r1, r2);
+    //vec3 wi( 
+    //sample.x * Nb.x + sample.y * intersection->normal.x + sample.z * Nt.x, 
+    //sample.x * Nb.y + sample.y * intersection->normal.y + sample.z * Nt.y, 
+    //sample.x * Nb.z + sample.y * intersection->normal.z + sample.z * Nt.z); 
+
+    vec3 wi = random_dir(intersection->normal);
+
+    Intersection temp_inter;
+    Ray rayS;
+    vec3 origin = intersection->position + ( acne_eps * wi );
+    rayInit( &rayS, origin, wi, vec2( 0, 0 ), 0.f, 100 );
+    rayS.shadow = true;
+    rayS.dox    = vec3( 0.f );
+    rayS.doy    = vec3( 0.f );
+    rayS.ddx    = vec3( 0.f );
+    rayS.ddy    = vec3( 0.f );
+    if ( intersectKdTree( scene, tree, &rayS, &temp_inter ) ) { //|| dot(intersection->normal, wi) < 0){
+        ret += color3( 0 );
+    }
+    else {
+        BrdfData data;
+        if ( computeBrdfData( data,
+                              -ray->dir,
+                              wi,
+                              intersection->normal,
+                              vec2( intersection->u, intersection->v ),
+                              m_albedo,
+                              m_metalness,
+                              m_roughness ) ) {
+            color3 brdf = RDM_bsdf( data, nullptr, -1 );
+            float pdf = 1.f / (2.f * Pi);
+            color3 lc = scene->sky->getRadiance(rayS); 
+            float NdotL = max(dot(intersection->normal, wi), 0.f);
+            pdf = NdotL / Pi;
+            ret += lc * brdf * NdotL / pdf;
+            //ret += lc * brdf * r1 / pdf;
+            //std::cout << glm::to_string(lc) << std::endl;
+            //float J   = 1. * dot( Np, -wi ) / 100.f;
+            //auto ibl = static_cast<IBL*>(scene->sky);
+            //float pdf = dot( axePO, dirA ) / (ibl->m_height * ibl->m_width);
+            //if ( pdf > 0 )
+            //    ret += scene->sky->getRadiance(*ray) * max( 0.f, dot( intersection->normal, wi ) ) * J * brdf /
+            //           pdf;
+        }
+    }
+
+    vec3 V = -ray->dir;
+    // Ignore incident ray coming from "below" the hemisphere
+    if ( !intersection->isOutside ) return ret;
+
+    // Transform view direction into local space of our sampling routines
+    // (local space is oriented so that its positive Z axis points along the shading normal)
+    vec4 qRotationToZ   = getRotationToZAxis( intersection->normal );
+    vec3 Vlocal         = rotatePoint( qRotationToZ, V );
+    const float3 Nlocal = float3( 0.0f, 0.0f, 1.0f );
+
+    vec3 rayDirectionLocal = vec3( 0.0f, 0.0f, 0.0f );
+    color3 sampleWeight;
+
+    if ( m_type == DIFFUSE ) {
+        BrdfData data;
+        // Sample diffuse ray using cosine-weighted hemisphere sampling
+        rayDirectionLocal =
+            sampleHemisphereCook( vec2( uniform01( engine ), uniform01( engine ) ) );
+        if ( computeBrdfData( data,
+                              Vlocal,
+                              rayDirectionLocal,
+                              Nlocal,
+                              vec2( intersection->u, intersection->v ),
+                              m_albedo,
+                              m_metalness,
+                              m_roughness ) ) {
+            // Function 'diffuseTerm' is predivided by PDF of sampling the cosine weighted
+            // hemisphere
+            sampleWeight = data.diffuseReflectance * InvPi;
+
+#if COMBINE_BRDFS_WITH_FRESNEL
+            // Sample a half-vector of specular BRDF. Note that we're reusing random variable
+            // 'u' here, but correctly it should be an new independent random number
+            vec2 u         = vec2( uniform01( engine ), uniform01( engine ) );
+            vec3 Hspecular = sampleBeckmannWalter( Vlocal, vec2( data.alpha ), u );
+
+            // Clamp HdotL to small value to prevent numerical instability. Assume that rays
+            // incident from below the hemisphere have been filtered
+            float VdotH = max( 0.00001f, min( 1.0f, dot( Vlocal, Hspecular ) ) );
+            sampleWeight *=
+                ( vec3( 1.0f, 1.0f, 1.0f ) -
+                  evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), VdotH ) );
+#endif
+        }
+    }
+    else if ( m_type == SPECULAR ) {
+        vec2 u            = vec2( uniform01( engine ), uniform01( engine ) );
+        float alpha       = m_roughness * m_roughness;
+        auto specularF0   = baseColorToSpecularF0( m_albedo, m_metalness );
+        rayDirectionLocal = sampleSpecularMicrofacet(
+            Vlocal, alpha, alpha * alpha, specularF0, u, sampleWeight );
+    }
+
+    // Prevent tracing direction with no contribution
+    if ( luminance( sampleWeight ) == 0.0f ) return ret;
+
+    // Transform sampled direction Llocal back to V vector space
+    auto rayDirection =
+        normalize( rotatePoint( invertRotation( qRotationToZ ), rayDirectionLocal ) );
+
+    // Prevent tracing direction "under" the hemisphere (behind the triangle)
+    if ( dot( intersection->normal, rayDirection ) <= 0.0f ) return ret;
+
+    Ray ray_ref;
+    ray_ref.hasDifferentials = true;
+    rayInit( &ray_ref,
+             intersection->position + ( rayDirection * acne_eps ),
+             normalize( rayDirection ),
+             ray->pixel,
+             0,
+             10000,
+             ray->depth + 1 );
+
+    Intersection temp_intersection;
+    auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection, true );
+    ret += reflColor * sampleWeight;
+    return ret;
+}
+
 color3
 CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection ) {
     auto ret = color3( 0.0 );
@@ -305,125 +535,8 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         ret += color;
     }
     else {
-
-        auto sphereL = scene->objects[scene->objects.size() - 1];
-        vec3 axePO   = normalize( intersection->position - sphereL->geom.sphere.center );
-        vec3 dirA    = random_dir( axePO );
-        vec3 ptA     = dirA * sphereL->geom.sphere.radius + sphereL->geom.sphere.center;
-        vec3 wi      = normalize( ptA - intersection->position );
-
-        vec3 Np        = dirA;
-        float d_light2 = distance( ptA, intersection->position );
-        d_light2 *= d_light2;
-
-        Intersection temp_inter;
-        Ray rayS;
-        vec3 origin = intersection->position + ( acne_eps * wi );
-        rayInit( &rayS, origin, wi, vec2( 0, 0 ), 0.f, sqrt( d_light2 ) );
-        rayS.shadow = true;
-        rayS.dox    = vec3( 0.f );
-        rayS.doy    = vec3( 0.f );
-        rayS.ddx    = vec3( 0.f );
-        rayS.ddy    = vec3( 0.f );
-        if ( intersectKdTree( scene, tree, &rayS, &temp_inter ) &&
-             rayS.tmax * rayS.tmax < d_light2 * 0.99 ) { //|| dot(intersection->normal, wi) < 0){
-            ret += color3( 0 );
-        }
-        else {
-            BrdfData data;
-            if ( computeBrdfData( data,
-                                  -ray->dir,
-                                  wi,
-                                  intersection->normal,
-                                  vec2( intersection->u, intersection->v ),
-                                  m_albedo,
-                                  m_metalness,
-                                  m_roughness ) ) {
-                color3 brdf = RDM_bsdf( data, nullptr, -1 );
-                float J   = 1. * dot( Np, -wi ) / d_light2;
-                float pdf = dot( axePO, dirA ) /
-                            ( Pi * sphereL->geom.sphere.radius * sphereL->geom.sphere.radius );
-                if ( pdf > 0 )
-                    ret += ( sphereL->mat->m_emission / sqr( sphereL->geom.sphere.radius ) *
-                             max( 0.f, dot( intersection->normal, wi ) ) * J * brdf ) /
-                           pdf;
-            }
-        }
-
-        vec3 V = -ray->dir;
-        // Ignore incident ray coming from "below" the hemisphere
-        if ( !intersection->isOutside ) return ret;
-
-        // Transform view direction into local space of our sampling routines
-        // (local space is oriented so that its positive Z axis points along the shading normal)
-        vec4 qRotationToZ   = getRotationToZAxis( intersection->normal );
-        vec3 Vlocal         = rotatePoint( qRotationToZ, V );
-        const float3 Nlocal = float3( 0.0f, 0.0f, 1.0f );
-
-        vec3 rayDirectionLocal = vec3( 0.0f, 0.0f, 0.0f );
-        color3 sampleWeight;
-
-        if ( m_type == DIFFUSE ) {
-            BrdfData data;
-            // Sample diffuse ray using cosine-weighted hemisphere sampling
-            rayDirectionLocal =
-                sampleHemisphereCook( vec2( uniform01( engine ), uniform01( engine ) ) );
-            if ( computeBrdfData( data,
-                                  Vlocal,
-                                  rayDirectionLocal,
-                                  Nlocal,
-                                  vec2( intersection->u, intersection->v ),
-                                  m_albedo,
-                                  m_metalness,
-                                  m_roughness ) ) {
-                // Function 'diffuseTerm' is predivided by PDF of sampling the cosine weighted
-                // hemisphere
-                sampleWeight = data.diffuseReflectance * InvPi;
-
-                // Sample a half-vector of specular BRDF. Note that we're reusing random variable
-                // 'u' here, but correctly it should be an new independent random number
-                vec2 u         = vec2( uniform01( engine ), uniform01( engine ) );
-                vec3 Hspecular = sampleBeckmannWalter( Vlocal, vec2( data.roughness ), u );
-
-                // Clamp HdotL to small value to prevent numerical instability. Assume that rays
-                // incident from below the hemisphere have been filtered
-                float VdotH = max( 0.00001f, min( 1.0f, dot( Vlocal, Hspecular ) ) );
-                sampleWeight *=
-                    ( vec3( 1.0f, 1.0f, 1.0f ) -
-                      evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), VdotH ) );
-            }
-        }
-        else if ( m_type == SPECULAR ) {
-            vec2 u            = vec2( uniform01( engine ), uniform01( engine ) );
-            float alpha       = m_roughness;
-            auto specularF0   = baseColorToSpecularF0( m_albedo, m_metalness );
-            rayDirectionLocal = sampleSpecularMicrofacet(
-                Vlocal, alpha, alpha * alpha, specularF0, u, sampleWeight );
-        }
-
-        // Prevent tracing direction with no contribution
-        if ( luminance( sampleWeight ) == 0.0f ) return ret;
-
-        // Transform sampled direction Llocal back to V vector space
-        auto rayDirection =
-            normalize( rotatePoint( invertRotation( qRotationToZ ), rayDirectionLocal ) );
-
-        // Prevent tracing direction "under" the hemisphere (behind the triangle)
-        if ( dot( intersection->normal, rayDirection ) <= 0.0f ) return ret;
-
-        Ray ray_ref;
-        ray_ref.hasDifferentials = true;
-        rayInit( &ray_ref,
-                 intersection->position + ( rayDirection * acne_eps ),
-                 normalize( rayDirection ),
-                 ray->pixel,
-                 0,
-                 10000,
-                 ray->depth + 1 );
-
-        Intersection temp_intersection;
-        auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection, false );
-        ret += reflColor * sampleWeight;
+        ret += myScatter(ray, scene, tree, intersection);
+        //ret += scratchAPixelScatter(ray, scene, tree, intersection);
     }
 
     return ret;

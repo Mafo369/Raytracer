@@ -167,7 +167,7 @@ void addLight( Scene* scene, Light* light ) {
 }
 
 void setSkyColor( Scene* scene, color3 c ) {
-    scene->skyColor = c;
+    //scene->skyColor = c;
 }
 
 // https://github.com/tinyobjloader/tinyobjloader

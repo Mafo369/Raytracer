@@ -25,6 +25,10 @@
 
 #include "sampling/stratified.h"
 
+#include <stb_image.h>
+#include "Sky.h"
+
+
 // Mostly for debugging purposes
 bool intersectScene( const Scene* scene, Ray* ray, Intersection* intersection ) {
     bool hasIntersection = false;
@@ -84,16 +88,17 @@ color3 trace_ray( Scene* scene,
         }
     }
     else {
-        if ( scene->m_skyTexture != nullptr && ray->depth == 0 ) {
-            vec3 pixelUV = vec3( (float)ray->pixel.x / scene->cam->imgWidth,
-                                 (float)ray->pixel.y / scene->cam->imgHeight,
-                                 0.f );
-            vec3 p       = glm::mod( scene->m_skyTexture->m_transform.transformTo( pixelUV ), 1.f );
-            ret          = scene->skyColor * scene->m_skyTexture->value( p.x, p.y );
-        }
-        else {
-            ret = scene->skyColor;
-        }
+        ret += scene->sky->getRadiance(*ray);
+        //if ( scene->m_skyTexture != nullptr && ray->depth == 0 ) {
+        //    vec3 pixelUV = vec3( (float)ray->pixel.x / scene->cam->imgWidth,
+        //                         (float)ray->pixel.y / scene->cam->imgHeight,
+        //                         0.f );
+        //    vec3 p       = glm::mod( scene->m_skyTexture->m_transform.transformTo( pixelUV ), 1.f );
+        //    ret          = scene->m_skyTexture->value( p.x, p.y );
+        //}
+        //else {
+        //    ret = scene->skyColor;
+        //}
     }
 
     if ( ray->tmax < 0 || !intersection->hit || ray->dir.z == 0 ) return ret;
@@ -180,7 +185,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
 
     auto startTime = std::chrono::system_clock::now();
 
-    auto sampler = new StratifiedSampler( 8, 8, true, 1 );
+    auto sampler = new StratifiedSampler( 44, 44, true, 1 );
     std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
 
     for ( size_t j = 0; j < img->height; j++ ) {
@@ -202,7 +207,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
                 color3* ptr = getPixelPtr( img, i, j );
                 auto pixel  = vec2( i, j );
 
-                //bool doGammaCorrection = true;
+                bool doGammaCorrection = true;
 
                 tileSampler->StartPixel( pixel );
                 do {
@@ -225,14 +230,16 @@ void renderImage( RenderImage* img, Scene* scene ) {
 
                 color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;
 
-                //if(doGammaCorrection){
-                //  // gamma-correction
-                //  avgColor.r = powf( avgColor.r, 1.0f / 2.2 );
-                //  avgColor.g = powf( avgColor.g, 1.0f / 2.2 );
-                //  avgColor.b = powf( avgColor.b, 1.0f / 2.2 );
-                //}
+                if(doGammaCorrection){
+                  // gamma-correction
+                  avgColor.r = powf( avgColor.r, 1.0f / 2.2 );
+                  avgColor.g = powf( avgColor.g, 1.0f / 2.2 );
+                  avgColor.b = powf( avgColor.b, 1.0f / 2.2 );
+                }
 
 
+                //if(avgColor.x < 1 || avgColor.y < 1 || avgColor.z < 1)
+                //  std::cout << glm::to_string(avgColor) << std::endl;
                 *ptr = avgColor;
             }
         }

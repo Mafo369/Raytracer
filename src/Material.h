@@ -36,7 +36,7 @@ typedef struct s_BrdfData {
 // f90 should be 1.0, except for the trick used by Schuler (see 'shadowedF90' function)
 inline vec3 evalFresnelSchlick(vec3 f0, float f90, float NdotS)
 {
-	return f0 + (f90 - f0) * pow(clamp(1.0f - NdotS, 0.0f, 1.0f), 5.0f);
+	return f0 + (f90 - f0) * pow(1.0f - NdotS, 5.0f);
 }
 
 inline vec3 evalFresnel(vec3 f0, float f90, float NdotS)

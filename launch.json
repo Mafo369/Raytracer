@@ -5,9 +5,9 @@
             "name": "C++ Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "/home/mafo/dev/Raytracer/build-Release/mrt",
+            "program": "/home/mafo/dev/Raytracer/build-Debug/mrt",
             "args": ["test1", "1"],
-            "cwd": "/home/mafo/dev/Raytracer/build-Release/"
+            "cwd": "/home/mafo/dev/Raytracer/build-Debug/"
           }
       ]
 }

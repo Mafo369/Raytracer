@@ -26,15 +26,21 @@ set(mrt_SRCS
   src/sampling/stratified.cpp
   src/Material.cpp
   src/mediums/Fog.cpp
+  libs/tinyexr/miniz.c
   )
 
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 add_subdirectory(libs/Walnut/)
 
 add_executable (mrt ${mrt_SRCS})
-
 target_link_libraries(mrt PUBLIC walnut)
 
-target_include_directories (mrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libs/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/lodepng-master/ )
+find_package (OpenImageIO REQUIRED)
+target_link_libraries(mrt PRIVATE OpenImageIO::OpenImageIO)
+
+
+
+target_include_directories (mrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libs/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/lodepng-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/tinyexr/)
 
 
 set(unit_test_SRCS

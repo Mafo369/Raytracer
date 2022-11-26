@@ -19,6 +19,23 @@ float RDM_chiplus( float c ) {
     return ( c > 0.f ) ? 1.f : 0.f;
 }
 
+//float RDM_Beckmann( float NdotH, float alpha ) {
+//
+//    //! \todo compute Beckmann normal distribution
+//
+//    //float phi = RDM_chiplus( NdotH );
+//
+//    float cos2         = NdotH * NdotH;
+//    float tan2         = ( cos2 - 1.0f );
+//    float alpha2       = alpha * alpha;
+//    float e            = exp( tan2 / ( alpha2 * cos2 ) );
+//    float pi_alpha_cos = M_PI * alpha2 * cos2 * cos2;
+//
+//    float d = ( e / pi_alpha_cos );
+//
+//    return d;
+//}
+
 /** Normal Distribution Function : Beckmann
  * NdotH : Norm . Half
  */
@@ -120,28 +137,41 @@ float schlick( float VdotN, float extIOR, float intIOR ) {
     return r02 + ( 1.f - r02 ) * powf( 1.f - cos, 5 );
 }
 
-// DdotH : Dir . Half
-// HdotN : Half . Norm
 float RDM_G1( float DdotH, float DdotN, float alpha ) {
 
     //! \todo compute G1 term of the Smith fonction
 
-    float tanx = sqrtf( 1.f - ( DdotN * DdotN ) ) / DdotN;
-    float b    = 1.f / ( alpha * tanx );
-
-    float k = DdotH / DdotN;
-
-    float phi_k = RDM_chiplus( k );
+    float tanx = sqrt( 1.f - min( 0.99999f, DdotN * DdotN ) );
+    float b    = DdotN / ( max(0.0001f,alpha) * tanx );
 
     if ( b < 1.6f ) {
-        float b2       = b * b;
-        float fraction = ( 3.535f * b + 2.181f * b2 ) / ( 1.f + 2.276f * b + 2.577f * b2 );
-        float g1       = phi_k * fraction;
-        return g1;
+        return (( 3.535f + 2.181f * b ) * b) / ( 1.f + (2.276f + 2.577f * b) * b );
     }
-
-    return phi_k;
+    else
+    {
+        return 1.f;
+    }
 }
+
+// DdotH : Dir . Half
+// HdotN : Half . Norm
+//float RDM_G1( float DdotH, float DdotN, float alpha ) {
+//
+//    //! \todo compute G1 term of the Smith fonction
+//
+//    float tanx = sqrtf( 1.f - ( DdotN * DdotN ) ) / DdotN;
+//    float b    = 1.f / ( max(0.0001f,alpha) * tanx );
+//    float k = DdotH / DdotN;
+//    float phi_k = RDM_chiplus( k );
+//
+//    if ( b < 1.6f ) {
+//        float b2       = b * b;
+//        float fraction = ( 3.535f * b + 2.181f * b2 ) / ( 1.f + 2.276f * b + 2.577f * b2 );
+//        float g1       = phi_k * fraction;
+//        return g1;
+//    }
+//    return phi_k;
+//}
 
 // LdotH : Light . Half
 // LdotN : Light . Norm
@@ -162,11 +192,11 @@ color3 RDM_bsdf_s( BrdfData& data ) {
     //! \todo specular term of the bsdf, using D = RDB_Beckmann, F = RDM_Fresnel, G
     //! = RDM_Smith
 
-    float d = RDM_Beckmann( data.NdotH, data.roughness );
+    float d = RDM_Beckmann( data.NdotH, data.alpha );
     // float f = schlick(LdotH, m->IOR, 1.f);
-    float g = RDM_Smith( data.LdotH, data.LdotN, data.VdotH, data.VdotN, data.roughness );
+    float g = RDM_Smith( data.LdotH, data.LdotN, data.VdotH, data.VdotN, data.alpha );
 
-    return color3( ( d * data.F * g ) / ( 4.f * data.LdotN * data.VdotN ) );
+    return ( d * data.F * g ) / ( 4.f * data.LdotN * data.VdotN );
 }
 
 color3 RDM_btdf( float LdotH,
@@ -216,8 +246,13 @@ color3 RDM_bsdf( BrdfData& data, texture* texture, int face ) {
             texColor = ( texture->value( data.uv.x, data.uv.y, face ) );
         return color3( ( texColor / float( M_PI ) ) + RDM_bsdf_s( data ) );
     }
+    color3 diffuse = RDM_bsdf_d( data.diffuseReflectance );
     color3 specular = RDM_bsdf_s( data );
-    return ( vec3( 1 ) - data.F ) * RDM_bsdf_d( data.diffuseReflectance ) + specular;
+#if COMBINE_BRDFS_WITH_FRESNEL
+    return ( vec3( 1 ) - data.F ) * diffuse + specular;
+#else
+    return diffuse + specular;
+#endif
 }
 
 color3 RDM_brdf( float LdotH,

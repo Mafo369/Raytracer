@@ -86,9 +86,9 @@ void Renderer::Render( const CameraI& camera ) {
             accumulatedColor /= (float)m_frameIndex;
 
             // gamma-correction
-            //accumulatedColor.r = powf( accumulatedColor.r, 1.0f / 2.2 );
-            //accumulatedColor.g = powf( accumulatedColor.g, 1.0f / 2.2 );
-            //accumulatedColor.b = powf( accumulatedColor.b, 1.0f / 2.2 );
+            accumulatedColor.r = powf( accumulatedColor.r, 1.0f / 2.2 );
+            accumulatedColor.g = powf( accumulatedColor.g, 1.0f / 2.2 );
+            accumulatedColor.b = powf( accumulatedColor.b, 1.0f / 2.2 );
 
             accumulatedColor = glm::clamp( accumulatedColor, glm::vec4( 0.0f ), glm::vec4( 1.0f ) );
             m_ImageData[x + y * m_FinalImage->GetWidth()] =

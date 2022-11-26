@@ -1,6 +1,8 @@
 #include "Material.h"
 #include "Light.h"
 
+inline float saturate(float x) { return clamp(x, 0.0f, 1.0f); }
+
 bool computeBrdfData( BrdfData& data,
                       const vec3& v,
                       const vec3& wi,
@@ -22,9 +24,9 @@ bool computeBrdfData( BrdfData& data,
     data.LdotN = min( max( 0.00001f, LdotN ), 1.0f );
     data.VdotN = min( max( 0.00001f, VdotN ), 1.0f );
 
-    data.LdotH = dot( wi, h );
-    data.NdotH = dot( n, h );
-    data.VdotH = dot( v, h );
+    data.LdotH = saturate(dot( wi, h ));
+    data.NdotH = saturate(dot( n, h ));
+    data.VdotH = saturate(dot( v, h ));
     data.uv    = uv;
 
     data.specularF0         = baseColorToSpecularF0( baseColor, metalness );
@@ -88,22 +90,22 @@ color3 specularReflect( Ray* ray,
 
         color3 Li = color3( 0 );
 
-        if ( !temp_intersection.hit ) {
-            if ( scene->m_skyTexture != nullptr ) {
-                vec3 dir = wi;
-                float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
-                float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) );
-                float y  = dir.y / ( abs( dir.x ) + abs( dir.y ) );
-                point3 p = point3( 0.5, 0.5, 0.0 ) +
-                           z * ( x * point3( 0.5, 0.5, 0.0 ) + y * point3( -0.5, 0.5, 0.0 ) );
-                // TODO: Multiply with intensity var
-                color3 env = 0.7f * scene->m_skyTexture->value( p.x, p.y );
-                Li         = env;
-            }
-        }
-        else {
+        //if ( !temp_intersection.hit ) {
+        //    if ( scene->m_skyTexture != nullptr ) {
+        //        vec3 dir = wi;
+        //        float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
+        //        float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) );
+        //        float y  = dir.y / ( abs( dir.x ) + abs( dir.y ) );
+        //        point3 p = point3( 0.5, 0.5, 0.0 ) +
+        //                   z * ( x * point3( 0.5, 0.5, 0.0 ) + y * point3( -0.5, 0.5, 0.0 ) );
+        //        // TODO: Multiply with intensity var
+        //        color3 env = 0.7f * scene->m_skyTexture->value( p.x, p.y );
+        //        Li         = env;
+        //    }
+        //}
+        //else {
             Li = reflColor;
-        }
+        //}
 
         return f * Li;
     }
@@ -180,16 +182,16 @@ color3 specularTransmission( Ray* ray,
             Li = refrColor;
         }
         else {
-            if ( scene->m_skyTexture != nullptr ) {
-                vec3 dir = wi;
-                float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
-                float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );
-                float y  = dir.y / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );
-                point3 p = point3( 0.5, 0.5, 0.0 ) +
-                           z * ( x * point3( 0.5, 0.5, 0.0 ) + y * point3( -0.5, 0.5, 0.0 ) );
-                color3 env = 0.7f * scene->m_skyTexture->value( p.x, p.y );
-                return env;
-            }
+            //if ( scene->m_skyTexture != nullptr ) {
+            //    vec3 dir = wi;
+            //    float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
+            //    float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );
+            //    float y  = dir.y / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );
+            //    point3 p = point3( 0.5, 0.5, 0.0 ) +
+            //               z * ( x * point3( 0.5, 0.5, 0.0 ) + y * point3( -0.5, 0.5, 0.0 ) );
+            //    color3 env = 0.7f * scene->m_skyTexture->value( p.x, p.y );
+            //    return env;
+            //}
         }
 
         return f * Li;

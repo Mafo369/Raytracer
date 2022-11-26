@@ -11,6 +11,7 @@ class Light;
 class Object;
 class Material;
 class Medium;
+class Sky;
 
 typedef std::vector<Object*> Objects;
 typedef std::vector<Light*> Lights;
@@ -19,8 +20,9 @@ typedef struct scene_s {
   Lights lights; //! the scene have several lights
   Objects objects; //! the scene have several objects
   Camera* cam; //! the scene have one camera
-  color3 skyColor; //! the sky color, could be extended to a sky function ;)
-  texture* m_skyTexture = nullptr;
+  //color3 skyColor; //! the sky color, could be extended to a sky function ;)
+  //texture* m_skyTexture = nullptr;
+  Sky* sky;
   int depth = 5;
   Medium* medium = nullptr;
   float ysol = -12.f;
