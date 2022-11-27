@@ -381,15 +381,23 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
     }
     else {
         BrdfData data;
+        color3 albedo;
+        if(m_texture != nullptr){
+          albedo = textureColor(intersection->u, intersection->v, -1) * m_albedo;
+        }
+        else
+        {
+          albedo = m_albedo;
+        }
         if ( computeBrdfData( data,
                               -ray->dir,
                               wi,
                               intersection->normal,
                               vec2( intersection->u, intersection->v ),
-                              m_albedo,
+                              albedo,
                               m_metalness,
                               m_roughness ) ) {
-            color3 brdf = RDM_bsdf( data, nullptr, -1 );
+            color3 brdf = RDM_bsdf( data, m_texture, -1 );
             float pdf = 1.f / (2.f * Pi);
             color3 lc = scene->sky->getRadiance(rayS); 
             float NdotL = max(dot(intersection->normal, wi), 0.f);
@@ -424,12 +432,20 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
         // Sample diffuse ray using cosine-weighted hemisphere sampling
         rayDirectionLocal =
             sampleHemisphereCook( vec2( uniform01( engine ), uniform01( engine ) ) );
+        color3 albedo;
+        if(m_texture != nullptr){
+          albedo = textureColor(intersection->u, intersection->v, -1) * m_albedo;
+        }
+        else
+        {
+          albedo = m_albedo;
+        }
         if ( computeBrdfData( data,
                               Vlocal,
                               rayDirectionLocal,
                               Nlocal,
                               vec2( intersection->u, intersection->v ),
-                              m_albedo,
+                              albedo,
                               m_metalness,
                               m_roughness ) ) {
             // Function 'diffuseTerm' is predivided by PDF of sampling the cosine weighted
@@ -454,7 +470,15 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
     else if ( m_type == SPECULAR ) {
         vec2 u            = vec2( uniform01( engine ), uniform01( engine ) );
         float alpha       = m_roughness * m_roughness;
-        auto specularF0   = baseColorToSpecularF0( m_albedo, m_metalness );
+        color3 albedo;
+        if(m_texture != nullptr){
+          albedo = textureColor(intersection->u, intersection->v, -1) * m_albedo;
+        }
+        else
+        {
+          albedo = m_albedo;
+        }
+        auto specularF0   = baseColorToSpecularF0( albedo, m_metalness );
         rayDirectionLocal = sampleSpecularMicrofacet(
             Vlocal, alpha, alpha * alpha, specularF0, u, sampleWeight );
     }

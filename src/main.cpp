@@ -46,7 +46,7 @@ int main( int argc, char* argv[] ) {
         //light->geom.sphere.center = modemMatrixE.transformFrom( vec3( 0 ) );
         //light->geom.sphere.radius = lightSize;
         //light->transform          = modemMatrixE;
-        basename[4]               = char( i );
+        //basename[4]               = char( i );
         printf( "save image to %s\n", basename );
         renderImage( img, scene );
 

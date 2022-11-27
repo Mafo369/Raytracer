@@ -33,7 +33,7 @@ typedef vec3 point3;
 typedef vec2 point2;
 typedef vec3 color3;
 
-const float acne_eps = 1e-3;
+const float acne_eps = 1e-4;
 
 namespace glm {
 // not really needed, but it makes it easier to follow the book...

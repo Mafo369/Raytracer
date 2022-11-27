@@ -1868,6 +1868,93 @@ Scene* initScene19() {
     return scene;
 }
 
+Scene* initScene20() {
+    Scene* scene = initScene();
+    auto from    = point3( 0, 0.9, 3 );
+    auto at      = vec3( 0, 0.5, 0 );
+    setSimpleCamera( scene,
+                     from,
+                     at,
+                     vec3( 0, 1, 0 ),
+                     90,
+                     (float)WIDTH,
+                     (float)HEIGHT,
+                     0.02,
+                     glm::length( at - from ) );
+
+    //auto sky = new IBL("/home/mafo/dev/Raytracer/assets/rainforest_trail_4k.hdr");
+    auto sky = new IBL("/home/mafo/dev/Raytracer/assets/spaichingen_hill_4k.hdr");
+    Transform skyT;
+    //skyT.rotate(vec3(0,1,0), 80);
+    sky->m_transform = skyT;
+    scene->sky = sky;
+
+    auto mat             = std::make_shared<CookTorrance>( TRANSPARENT );
+    mat->m_IOR = 1.1;
+    mat->m_albedo  = color3( 0.6 );
+    mat->m_metalness = 0.0;
+    mat->m_roughness = 0.8;
+    //auto mat             = std::make_shared<CookTorrance>( TRANSPARENT );
+    //mat->m_albedo  = color3( 0.6 );
+    //mat->m_IOR = 1.1;
+    //mat->m_metalness = 0.0;
+    //mat->m_roughness = 0.8;
+
+    Transform modelMatrix;
+    modelMatrix.scale( 5, 1.3, 1 );
+    modelMatrix.rotate(vec3(-1,0,0), 90);
+    auto ret       = new Plane( mat, modelMatrix );
+    ret->geom.type = PLANE;
+    addObject( scene, ret );
+
+    auto mat1 = std::make_shared<CookTorrance>( SPECULAR );
+    mat1->m_roughness = 0.01;
+    mat1->m_metalness = 1.0;
+    mat1->m_albedo = color3( 1.f );
+    Transform t0;
+    t0.scale(0.75,0.75,0.75);
+    t0.translate(vec3(0,0.,0));
+    addObjectsFromFile("../assets/bunny.obj", scene, mat1, t0);
+
+    auto mat2 = std::make_shared<CookTorrance>( TRANSPARENT );
+    mat2->m_IOR = 1.5;
+    mat2->m_roughness = 0.01;
+    mat2->m_albedo = color3( 1.f );
+    Transform t1;
+    t1.scale(0.75,0.75,0.75);
+    t1.translate(vec3(1.2,0.,0));
+    addObjectsFromFile("../assets/bunny.obj", scene, mat2, t1);
+
+    auto mat3 = std::make_shared<CookTorrance>( SPECULAR );
+    mat3->m_roughness = 0.0001;
+    mat3->m_metalness = 0.0000;
+    mat3->m_albedo = color3( 0.f, 1.f, 0.95f );
+    Transform t2;
+    t2.scale(0.75,0.75,0.75);
+    t2.translate(vec3(-1.2,0.,0));
+    addObjectsFromFile("../assets/bunny.obj", scene, mat3, t2);
+
+    auto mat4 = std::make_shared<CookTorrance>( DIFFUSE );
+    mat4->m_roughness = 0.5;
+    mat4->m_metalness = 0.1;
+    mat4->m_albedo = color3( 0, 1.f, 0 );
+    Transform t3;
+    t3.scale(0.75,0.75,0.75);
+    t3.translate(vec3(-2.4,0.,0));
+    addObjectsFromFile("../assets/bunny.obj", scene, mat4, t3);
+
+    auto mat5 = std::make_shared<CookTorrance>( SPECULAR );
+    mat5->m_roughness = 0.2;
+    mat5->m_metalness = 0.9;
+    mat5->m_albedo = color3( 1.f );
+    Transform t4;
+    t4.scale(0.75,0.75,0.75);
+    t4.translate(vec3(2.4,0.,0));
+    addObjectsFromFile("../assets/bunny.obj", scene, mat5, t4);
+
+    return scene;
+}
+
 Scene* parseScene( int sceneId ) {
     Scene* scene = NULL;
     switch ( sceneId ) {
@@ -1930,6 +2017,9 @@ Scene* parseScene( int sceneId ) {
         break;
     case 19:
         scene = initScene19();
+        break;
+    case 20:
+        scene = initScene20();
         break;
 
     default:

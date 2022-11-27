@@ -23,7 +23,7 @@ typedef struct scene_s {
   //color3 skyColor; //! the sky color, could be extended to a sky function ;)
   //texture* m_skyTexture = nullptr;
   Sky* sky;
-  int depth = 5;
+  int depth = 8;
   Medium* medium = nullptr;
   float ysol = -12.f;
 } Scene;

@@ -25,6 +25,7 @@ typedef struct s_BrdfData {
   float roughness;
   float alpha;
   float alphaSq;
+  float metalness;
 
 } BrdfData;
 

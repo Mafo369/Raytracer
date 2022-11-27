@@ -38,6 +38,7 @@ bool computeBrdfData( BrdfData& data,
 
     // Pre-calculate some more BRDF terms
     data.F = evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), data.LdotH );
+    data.metalness = metalness;
 
     return true;
 };

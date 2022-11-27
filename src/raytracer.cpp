@@ -71,12 +71,6 @@ color3 trace_ray( Scene* scene,
         // Compute necessary differential information for texture filtering
         if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
 
-        // if skybox return directly the corresponding color
-        if(intersection->face != -1){
-          return intersection->mat->textureColor(intersection->u, intersection->v,
-                                                 intersection->face);
-        }
-
         // Scatter
         if ( !isBlack( intersection->mat->m_emission ) ) {
             auto lightRadius = scene->objects[scene->objects.size() - 1]->geom.sphere.radius;
@@ -89,16 +83,6 @@ color3 trace_ray( Scene* scene,
     }
     else {
         ret += scene->sky->getRadiance(*ray);
-        //if ( scene->m_skyTexture != nullptr && ray->depth == 0 ) {
-        //    vec3 pixelUV = vec3( (float)ray->pixel.x / scene->cam->imgWidth,
-        //                         (float)ray->pixel.y / scene->cam->imgHeight,
-        //                         0.f );
-        //    vec3 p       = glm::mod( scene->m_skyTexture->m_transform.transformTo( pixelUV ), 1.f );
-        //    ret          = scene->m_skyTexture->value( p.x, p.y );
-        //}
-        //else {
-        //    ret = scene->skyColor;
-        //}
     }
 
     if ( ray->tmax < 0 || !intersection->hit || ray->dir.z == 0 ) return ret;
@@ -185,7 +169,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
 
     auto startTime = std::chrono::system_clock::now();
 
-    auto sampler = new StratifiedSampler( 44, 44, true, 1 );
+    auto sampler = new StratifiedSampler( 20, 20, true, 4 );
     std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
 
     for ( size_t j = 0; j < img->height; j++ ) {

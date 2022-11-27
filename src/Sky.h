@@ -24,6 +24,7 @@ class IBL : public Sky {
       int n;
       m_pixels = stbi_loadf(filename.c_str(), &m_width, &m_height, &n, 0);
       std::cout << "Channels HDR: " << n << std::endl;
+      std::cout << "Resolution: " << m_width << "x" << m_height << std::endl;
     }
 
     ~IBL() {
@@ -31,30 +32,20 @@ class IBL : public Sky {
     }
 
     vec3 getRadiance(const Ray& ray) const override {
-        vec3 p = normalize(ray.dir);
-        float u = 0.5f * (1.0f + atan2(p.x, -p.z) * InvPi );
-        float v = acos(ray.dir.y) * InvPi;
-        int u2 = u * m_width;
-        int v2 = v * m_height;
+          vec3 dir = m_transform.getInvTransform() * ray.dir;
+          double theta = std::acos(dir.y);
+          double phi = std::atan2(dir.z, dir.x);
+          if(phi<0)phi += 2*M_PI;
 
-        int index = (v2 * m_width + u2) * 3 ;
+          int i = phi/(2*M_PI) * m_width;
+          int j = theta/M_PI * m_height;
 
-        return vec3(m_pixels[index], m_pixels[index+1], m_pixels[index+2]);
-    }
+          int index = 3*i + 3*m_width*j;
 
-    //vec3 getRadiance(const Ray& ray) const override {
-    //      double theta = std::acos(ray.dir.y);
-    //      double phi = std::atan2(ray.dir.z, ray.dir.x);
-    //      if(phi<0)phi += 2*M_PI;
-
-    //      int i = phi/(2*M_PI) * m_width;
-    //      int j = theta/M_PI * m_height;
-
-    //      int index = 3*i + 3*m_width*j;
-
-    //      return vec3(m_pixels[index], m_pixels[index+1], m_pixels[index+2]);
-    //};
-
+          return vec3(m_pixels[index], m_pixels[index+1], m_pixels[index+2]);
+    };
+    
+    Transform m_transform;
 
     int m_width;
     int m_height;

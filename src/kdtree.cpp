@@ -92,7 +92,7 @@ KdTree* initKdTree( Scene* scene ) {
         }
     }
 
-    tree->depthLimit = 40;
+    tree->depthLimit = 80;
     tree->objLimit   = scene->objects.size() * sizeof( Object );
 
     KdTreeNode* root = initNode( false, 0, 0 );

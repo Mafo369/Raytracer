@@ -238,14 +238,17 @@ color3 RDM_bsdf_d( color3 diffuseColor ) {
 color3 RDM_bsdf( BrdfData& data, texture* texture, int face ) {
 
     //! \todo compute bsdf diffuse and specular term
-    if ( texture != nullptr ) {
-        color3 texColor;
-        if ( face == -1 )
-            texColor = ( texture->value( data.uv.x, data.uv.y ) );
-        else
-            texColor = ( texture->value( data.uv.x, data.uv.y, face ) );
-        return color3( ( texColor / float( M_PI ) ) + RDM_bsdf_s( data ) );
-    }
+    //if ( texture != nullptr ) {
+    //    color3 texColor;
+    //    if ( face == -1 )
+    //        texColor = ( texture->value( data.uv.x, data.uv.y ) );
+    //    else
+    //        texColor = ( texture->value( data.uv.x, data.uv.y, face ) );
+    //    //data.diffuseReflectance = baseColorToDiffuseReflectance(texColor, data.metalness);
+    //    //data.specularF0 = baseColorToSpecularF0(texColor, data.metalness);
+    //    //data.F = evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), data.LdotH );
+    //    return color3( ( texColor / float( M_PI ) ) + RDM_bsdf_s( data ) );
+    //}
     color3 diffuse = RDM_bsdf_d( data.diffuseReflectance );
     color3 specular = RDM_bsdf_s( data );
 #if COMBINE_BRDFS_WITH_FRESNEL
