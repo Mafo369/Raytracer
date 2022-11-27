@@ -4,12 +4,14 @@
 
 # :hammer: WIP :hammer:
 
+### Images: ###
+
+![alt text](results/sample_bunny.png)
+![alt text](results/sample_forest.png)
+![alt text](results/sample_indoor.png)
+
 ### Animations: ###
 
 ![alt text](results/anim_dn.gif)
 ![alt text](results/anim_nodn.gif)
 
-### Images: ###
-
-![alt text](results/sample_forest.png)
-![alt text](results/sample_indoor.png)
