@@ -7,6 +7,10 @@ color3 RDM_bsdf( BrdfData& data, texture* texture, int face );
 
 color3 RDM_bsdf_s( BrdfData& data );
 
+float RDM_Beckmann( float NdotH, float alpha );
+
+float RDM_Smith( float LdotH, float LdotN, float VdotH, float VdotN, float alpha );
+
 color3 RDM_brdf( float LdotH,
                  float NdotH,
                  float VdotH,

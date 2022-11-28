@@ -381,9 +381,12 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
     }
     else {
         BrdfData data;
-        color3 albedo;
-        if(m_texture != nullptr){
-          albedo = textureColor(intersection->u, intersection->v, -1) * m_albedo;
+        color3 albedo(0.f);
+        if(m_texture != nullptr && ray->hasDifferentials){
+            vec3 duv[2];
+            duv[0]        = vec3( intersection->dudx, intersection->dvdx, 0 );
+            duv[1]        = vec3( intersection->dudy, intersection->dvdy, 0 );
+            albedo = m_texture->value( intersection->u, intersection->v, duv );
         }
         else
         {
@@ -397,20 +400,12 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
                               albedo,
                               m_metalness,
                               m_roughness ) ) {
-            color3 brdf = RDM_bsdf( data, m_texture, -1 );
+            color3 brdf = RDM_bsdf( data, nullptr, -1 );
             float pdf = 1.f / (2.f * Pi);
             color3 lc = scene->sky->getRadiance(rayS); 
             float NdotL = max(dot(intersection->normal, wi), 0.f);
             pdf = NdotL / Pi;
             ret += lc * brdf * NdotL / pdf;
-            //ret += lc * brdf * r1 / pdf;
-            //std::cout << glm::to_string(lc) << std::endl;
-            //float J   = 1. * dot( Np, -wi ) / 100.f;
-            //auto ibl = static_cast<IBL*>(scene->sky);
-            //float pdf = dot( axePO, dirA ) / (ibl->m_height * ibl->m_width);
-            //if ( pdf > 0 )
-            //    ret += scene->sky->getRadiance(*ray) * max( 0.f, dot( intersection->normal, wi ) ) * J * brdf /
-            //           pdf;
         }
     }
 
@@ -432,9 +427,12 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
         // Sample diffuse ray using cosine-weighted hemisphere sampling
         rayDirectionLocal =
             sampleHemisphereCook( vec2( uniform01( engine ), uniform01( engine ) ) );
-        color3 albedo;
-        if(m_texture != nullptr){
-          albedo = textureColor(intersection->u, intersection->v, -1) * m_albedo;
+        color3 albedo(0.f);
+        if(m_texture != nullptr && ray->hasDifferentials){
+            vec3 duv[2];
+            duv[0]        = vec3( intersection->dudx, intersection->dvdx, 0 );
+            duv[1]        = vec3( intersection->dudy, intersection->dvdy, 0 );
+            albedo = m_texture->value( intersection->u, intersection->v, duv );
         }
         else
         {
@@ -470,9 +468,12 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
     else if ( m_type == SPECULAR ) {
         vec2 u            = vec2( uniform01( engine ), uniform01( engine ) );
         float alpha       = m_roughness * m_roughness;
-        color3 albedo;
-        if(m_texture != nullptr){
-          albedo = textureColor(intersection->u, intersection->v, -1) * m_albedo;
+        color3 albedo(0.f);
+        if(m_texture != nullptr && ray->hasDifferentials){
+            vec3 duv[2];
+            duv[0]        = vec3( intersection->dudx, intersection->dvdx, 0 );
+            duv[1]        = vec3( intersection->dudy, intersection->dvdy, 0 );
+            albedo = m_texture->value( intersection->u, intersection->v, duv );
         }
         else
         {
@@ -518,7 +519,7 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
 
         float LdotH = dot( -ray->dir, normal );
         float f     = intersection->isOutside ? RDM_Fresnel( LdotH, 1.f, m_IOR )
-                                          : RDM_Fresnel( LdotH, m_IOR, 1.f );
+                                              : RDM_Fresnel( LdotH, m_IOR, 1.f );
 
         Ray new_ray;
         if ( f < 1.0f ) {

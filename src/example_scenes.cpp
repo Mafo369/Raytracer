@@ -1742,13 +1742,15 @@ Scene* initScene18() {
     t2.translate(vec3(1.2,0.5,0));
     addObject(scene, initSphere(mat3, t2));
 
-    auto mat4 = std::make_shared<CookTorrance>( DIFFUSE );
-    mat4->m_roughness = 0.4;
-    mat4->m_metalness = 0.001;
-    mat4->m_albedo = color3( 0, 1.f, 0 );
+    auto mat4 = std::make_shared<CookTorrance>( SPECULAR );
+    mat4->m_roughness = 0.1;
+    mat4->m_metalness = 0.01;
+    mat4->m_albedo = color3( 0, 0.f, 0 );
     //mat4->m_albedo = color3(0.5);
+    mat4->m_texture = new image_texture("../assets/pf-s125-ake7011-a.png");
     Transform t3;
     t3.scale(0.5,0.5,0.5);
+    t3.rotate(vec3(1,0,0), 90);
     t3.translate(vec3(2.4,0.5,0));
     addObject(scene, initSphere(mat4, t3));
 
@@ -1889,8 +1891,7 @@ Scene* initScene20() {
     sky->m_transform = skyT;
     scene->sky = sky;
 
-    auto mat             = std::make_shared<CookTorrance>( TRANSPARENT );
-    mat->m_IOR = 1.1;
+    auto mat             = std::make_shared<CookTorrance>();
     mat->m_albedo  = color3( 0.6 );
     mat->m_metalness = 0.0;
     mat->m_roughness = 0.8;
@@ -1914,7 +1915,7 @@ Scene* initScene20() {
     Transform t0;
     t0.scale(0.75,0.75,0.75);
     t0.translate(vec3(0,0.,0));
-    addObjectsFromFile("../assets/bunny.obj", scene, mat1, t0);
+    //addObjectsFromFile("../assets/bunny.obj", scene, mat1, t0);
 
     auto mat2 = std::make_shared<CookTorrance>( TRANSPARENT );
     mat2->m_IOR = 1.5;
@@ -1923,7 +1924,7 @@ Scene* initScene20() {
     Transform t1;
     t1.scale(0.75,0.75,0.75);
     t1.translate(vec3(1.2,0.,0));
-    addObjectsFromFile("../assets/bunny.obj", scene, mat2, t1);
+    //addObjectsFromFile("../assets/bunny.obj", scene, mat2, t1);
 
     auto mat3 = std::make_shared<CookTorrance>( SPECULAR );
     mat3->m_roughness = 0.0001;
@@ -1932,7 +1933,7 @@ Scene* initScene20() {
     Transform t2;
     t2.scale(0.75,0.75,0.75);
     t2.translate(vec3(-1.2,0.,0));
-    addObjectsFromFile("../assets/bunny.obj", scene, mat3, t2);
+    //addObjectsFromFile("../assets/bunny.obj", scene, mat3, t2);
 
     auto mat4 = std::make_shared<CookTorrance>( DIFFUSE );
     mat4->m_roughness = 0.5;
@@ -1950,7 +1951,7 @@ Scene* initScene20() {
     Transform t4;
     t4.scale(0.75,0.75,0.75);
     t4.translate(vec3(2.4,0.,0));
-    addObjectsFromFile("../assets/bunny.obj", scene, mat5, t4);
+    //addObjectsFromFile("../assets/bunny.obj", scene, mat5, t4);
 
     return scene;
 }
