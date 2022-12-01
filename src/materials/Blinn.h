@@ -19,6 +19,9 @@ class Blinn : public Material {
     color3 refractionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, color3 reflectionShade, vec3 normal);
     color3 reflectionColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, color3& color, vec3 normal);
 
+    color3 eval(Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf) override { return color3(0); }
+    color3 sample(Ray* ray, Intersection* intersection, vec3* wi, float* scatteringPdf) override { return color3(0); }
+
     color3 m_specularColor = color3(0,0,0);
     float m_shininess;
     vec3 m_reflection;

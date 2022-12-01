@@ -1,5 +1,6 @@
 #include "Material.h"
 #include "Light.h"
+#include "bsdf.hpp"
 
 inline float saturate(float x) { return clamp(x, 0.0f, 1.0f); }
 
@@ -37,6 +38,7 @@ bool computeBrdfData( BrdfData& data,
     data.alphaSq = data.alpha * data.alpha;
 
     // Pre-calculate some more BRDF terms
+    //data.F = color3(RDM_Fresnel( data.LdotH, 1.f, 2.0 ));
     data.F = evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), data.LdotH );
     data.metalness = metalness;
 

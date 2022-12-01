@@ -32,7 +32,7 @@ typedef struct scene_s {
 Object* initSphere(std::shared_ptr<Material> mat, Transform transform);
 Object *initCube(std::shared_ptr<Material> mat, Transform transform);
 Object* initPlane(vec3 normal, float d, std::shared_ptr<Material> mat);
-Object* initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], std::shared_ptr<Material> mat);
+Object* initTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Transform transform, std::shared_ptr<Material> mat);
 Object *initSmoothTriangle(vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], vec3 n1, vec3 n2, vec3 n3, Transform transform, std::shared_ptr<Material> mat);
 
 //! release memory for the object obj

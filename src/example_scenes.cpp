@@ -412,9 +412,13 @@ void addObjectsFromFile( const char* filename,
                 tinyobj::real_t vx   = attrib.vertices[3 * idx.vertex_index + 0];
                 tinyobj::real_t vy   = attrib.vertices[3 * idx.vertex_index + 1];
                 tinyobj::real_t vz   = attrib.vertices[3 * idx.vertex_index + 2];
-                tinyobj::real_t nx   = attrib.normals[3 * idx.normal_index + 0];
-                tinyobj::real_t ny   = attrib.normals[3 * idx.normal_index + 1];
-                tinyobj::real_t nz   = attrib.normals[3 * idx.normal_index + 2];
+                if(!attrib.normals.empty()){
+                    tinyobj::real_t nx   = attrib.normals[3 * idx.normal_index + 0];
+                    tinyobj::real_t ny   = attrib.normals[3 * idx.normal_index + 1];
+                    tinyobj::real_t nz   = attrib.normals[3 * idx.normal_index + 2];
+                    vec3 n  = point3( nx, ny, nz );
+                    normals.push_back( n );
+                }
                 if ( !attrib.texcoords.empty() ) {
                     tinyobj::real_t tx = attrib.texcoords[2 * idx.texcoord_index + 0];
                     tinyobj::real_t ty = attrib.texcoords[2 * idx.texcoord_index + 1];
@@ -425,9 +429,7 @@ void addObjectsFromFile( const char* filename,
                 // tinyobj::real_t green = attrib.colors[3*idx.vertex_index+1];
                 // tinyobj::real_t blue = attrib.colors[3*idx.vertex_index+2];
                 vec3 v0 = point3( vx, vy, vz );
-                vec3 n  = point3( nx, ny, nz );
                 vector.push_back( v0 );
-                normals.push_back( n );
             }
 
             index_offset += fv;
@@ -435,9 +437,18 @@ void addObjectsFromFile( const char* filename,
             vec3 v0 = vector[0];
             vec3 v1 = vector[1];
             vec3 v2 = vector[2];
-            // vec3 n = normalize(cross(v2v0, v1v0));
+            vec3 n;
+            if(normals.empty()){
+                vec3 v2v0 = v2 - v0;
+                vec3 v1v0 = v1 - v0;
+                n = normalize(cross(v1v0, v2v0));
+                normals = {n, n , n};
+            }
+            else
+            {
+                n = normalize( normals[0] + normals[1] + normals[2] );
+            }
 
-            vec3 n = normalize( normals[0] + normals[1] + normals[2] );
 
             if ( !materials.empty() ) {
                 int matIndex          = shapes[s].mesh.material_ids[f];
@@ -1956,6 +1967,137 @@ Scene* initScene20() {
     return scene;
 }
 
+Scene* initScene21() {
+    Scene* scene = initScene();
+    auto from    = point3( 0, 2, 15 );
+    auto at      = vec3( 0, -2, 2.15 );
+    setSimpleCamera( scene,
+                     from,
+                     at,
+                     vec3( 0, 1, 0 ),
+                     28,
+                     (float)WIDTH,
+                     (float)HEIGHT,
+                     0.001,
+                     glm::length( at - from ) );
+
+    //auto sky = new IBL("/home/mafo/dev/Raytracer/assets/rainforest_trail_4k.hdr");
+    //auto sky = new IBL("/home/mafo/dev/Raytracer/assets/spaichingen_hill_4k.hdr");
+    auto sky = new UniformSky(vec3(0));
+    Transform skyT;
+    //skyT.rotate(vec3(0,1,0), 80);
+    //sky->m_transform = skyT;
+    scene->sky = sky;
+
+    auto lightIntensity =
+        800 * 4.f * M_PI / ( 4. * M_PI * sqr(0.5) * M_PI );
+    auto mat             = std::make_shared<CookTorrance>();
+    mat->m_albedo  = color3( 1.f );
+    mat->m_emission = color3(lightIntensity);
+
+
+    Transform modelMatrix;
+    modelMatrix.scale( 0.5, 0.5, 0.5 );
+    modelMatrix.translate(vec3(10, 10, 4));
+    //addObject(scene, initSphere(mat, modelMatrix));
+
+    auto obj   = initSphere( mat, modelMatrix );
+    auto light = new ShapeLight( point3( 10, 10, 4 ), color3( lightIntensity ), obj );
+    //addLight(scene, light);
+
+    auto mat1 = std::make_shared<CookTorrance>();
+    auto lightIntensity1 = 100;
+    mat1->m_albedo = color3( 1.f );
+    mat1->m_emission = color3(lightIntensity1);
+    Transform t0;
+    t0.scale(0.1,0.1,0.1);
+    t0.translate(vec3(-1.25,0.,0));
+    addObject(scene, initSphere(mat1, t0));
+
+    auto obj0   = initSphere( mat1, t0 );
+    auto light0 = new ShapeLight( point3( -1.25, 0, 0 ), color3( lightIntensity1 ), obj0 );
+    addLight(scene, light0);
+
+    auto mat2 = std::make_shared<CookTorrance>();
+    auto lightIntensity2 = 901.803;
+    mat2->m_albedo = color3( 1.f );
+    mat2->m_emission = color3(lightIntensity2);
+    Transform t1;
+    t1.scale(0.03333,0.03333,0.03333);
+    t1.translate(vec3(-3.75,0.,0));
+    addObject(scene, initSphere(mat2, t1));
+
+    auto obj1   = initSphere( mat2, t1 );
+    auto light1 = new ShapeLight( point3( -3.75, 0, 0 ), color3( lightIntensity2 ), obj1 );
+    addLight(scene, light1);
+
+    auto mat3 = std::make_shared<CookTorrance>();
+    auto lightIntensity3 = 11.1111;
+    mat3->m_albedo = color3( 1.f );
+    mat3->m_emission = color3(lightIntensity3);
+    Transform t2;
+    t2.scale(0.3,0.3,0.3);
+    t2.translate(vec3(1.25,0.,0));
+    addObject(scene, initSphere(mat3, t2));
+
+    auto obj2   = initSphere( mat3, t2 );
+    auto light2 = new ShapeLight( point3( 1.25, 0, 0 ), color3( lightIntensity3 ), obj2 );
+    addLight(scene, light2);
+
+    auto mat4 = std::make_shared<CookTorrance>();
+    auto lightIntensity4 =
+        1.23457 * 4.f * M_PI / ( 4. * M_PI * sqr(0.9) * M_PI );
+    lightIntensity4 = 4;
+    lightIntensity4 = 1.23457;
+    mat4->m_albedo = color3( 1.f );
+    mat4->m_emission = color3(lightIntensity4);
+    Transform t3;
+    t3.scale(0.9,0.9,0.9);
+    t3.translate(vec3(3.75,0.,0));
+    addObject(scene, initSphere(mat4, t3));
+
+    auto obj3   = initSphere( mat4, t3 );
+    auto light4 = new ShapeLight( point3( 3.75, 0, 0 ), color3( lightIntensity4 ), obj3 );
+    addLight(scene, light4);
+
+    auto mat5 = std::make_shared<CookTorrance>( DIFFUSE );
+    mat5->m_roughness = 0.15;
+    mat5->m_metalness = 0.0;
+    mat5->m_albedo = color3( 0.07, 0.09, 0.13 );
+    Transform t4;
+    addObjectsFromFile("../assets/veach_mi/plate1.obj", scene, mat5, t4);
+
+    auto mat6 = std::make_shared<CookTorrance>( DIFFUSE );
+    mat6->m_roughness = 0.20;
+    mat6->m_metalness = 0.0;
+    mat6->m_albedo = color3( 0.07, 0.09, 0.13 );
+    Transform t5;
+    addObjectsFromFile("../assets/veach_mi/plate2.obj", scene, mat6, t5);
+
+    auto mat7 = std::make_shared<CookTorrance>( DIFFUSE );
+    mat7->m_roughness = 0.3;
+    mat7->m_metalness = 0.0;
+    mat7->m_albedo = color3( 0.07, 0.09, 0.13 );
+    Transform t6;
+    addObjectsFromFile("../assets/veach_mi/plate3.obj", scene, mat7, t6);
+
+    auto mat8 = std::make_shared<CookTorrance>( DIFFUSE );
+    mat8->m_roughness = 0.4;
+    mat8->m_metalness = 0.0;
+    mat8->m_albedo = color3( 0.07, 0.09, 0.13 );
+    Transform t7;
+    addObjectsFromFile("../assets/veach_mi/plate4.obj", scene, mat8, t7);
+
+    auto mat9 = std::make_shared<CookTorrance>( DIFFUSE );
+    mat9->m_albedo = color3( 0.4, 0.4, 0.4 );
+    mat9->m_metalness = 0.0;
+    mat9->m_roughness = 1.f;
+    Transform t8;
+    addObjectsFromFile("../assets/veach_mi/floor.obj", scene, mat9, t8);
+
+    return scene;
+}
+
 Scene* parseScene( int sceneId ) {
     Scene* scene = NULL;
     switch ( sceneId ) {
@@ -2021,6 +2163,9 @@ Scene* parseScene( int sceneId ) {
         break;
     case 20:
         scene = initScene20();
+        break;
+    case 21:
+        scene = initScene21();
         break;
 
     default:

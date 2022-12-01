@@ -6,6 +6,23 @@
 
 #define GI 1
 
+float Beckmann_D(float alphaSquared, float NdotH)
+{
+	float cos2Theta = NdotH * NdotH;
+	float numerator = exp((cos2Theta - 1.0f) / (alphaSquared * cos2Theta));
+	float denominator = Pi * alphaSquared * cos2Theta * cos2Theta;
+	return numerator / denominator;
+}
+
+// PDF of sampling a reflection vector L using 'sampleBeckmannWalter'.
+// Note that PDF of sampling given microfacet normal is (D * NdotH). Remaining terms (1.0f / (4.0f * LdotH)) are specific for
+// reflection case, and come from multiplying PDF by jacobian of reflection operator
+float sampleBeckmannWalterReflectionPdf(float alpha, float alphaSquared, float NdotH, float NdotV, float LdotH) {
+	NdotH = max(0.00001f, NdotH);
+	LdotH = max(0.00001f, LdotH);
+	return Beckmann_D(max(0.00001f, alphaSquared), NdotH) * NdotH / (4.0f * LdotH);
+}
+
 CookTorrance::CookTorrance( MatType type ) {
     m_IOR           = 1.0;
     m_roughness     = 0.1;
@@ -365,49 +382,8 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
     //sample.x * Nb.y + sample.y * intersection->normal.y + sample.z * Nt.y, 
     //sample.x * Nb.z + sample.y * intersection->normal.z + sample.z * Nt.z); 
 
-    vec3 wi = random_dir(intersection->normal);
-
-    Intersection temp_inter;
-    Ray rayS;
-    vec3 origin = intersection->position + ( acne_eps * wi );
-    rayInit( &rayS, origin, wi, vec2( 0, 0 ), 0.f, 100 );
-    rayS.shadow = true;
-    rayS.dox    = vec3( 0.f );
-    rayS.doy    = vec3( 0.f );
-    rayS.ddx    = vec3( 0.f );
-    rayS.ddy    = vec3( 0.f );
-    if ( intersectKdTree( scene, tree, &rayS, &temp_inter ) ) { //|| dot(intersection->normal, wi) < 0){
-        ret += color3( 0 );
-    }
-    else {
-        BrdfData data;
-        color3 albedo(0.f);
-        if(m_texture != nullptr && ray->hasDifferentials){
-            vec3 duv[2];
-            duv[0]        = vec3( intersection->dudx, intersection->dvdx, 0 );
-            duv[1]        = vec3( intersection->dudy, intersection->dvdy, 0 );
-            albedo = m_texture->value( intersection->u, intersection->v, duv );
-        }
-        else
-        {
-          albedo = m_albedo;
-        }
-        if ( computeBrdfData( data,
-                              -ray->dir,
-                              wi,
-                              intersection->normal,
-                              vec2( intersection->u, intersection->v ),
-                              albedo,
-                              m_metalness,
-                              m_roughness ) ) {
-            color3 brdf = RDM_bsdf( data, nullptr, -1 );
-            float pdf = 1.f / (2.f * Pi);
-            color3 lc = scene->sky->getRadiance(rayS); 
-            float NdotL = max(dot(intersection->normal, wi), 0.f);
-            pdf = NdotL / Pi;
-            ret += lc * brdf * NdotL / pdf;
-        }
-    }
+    //vec3 wi = random_dir(intersection->normal);
+    //
 
     vec3 V = -ray->dir;
     // Ignore incident ray coming from "below" the hemisphere
@@ -495,7 +471,7 @@ color3 CookTorrance::myScatter(Ray* ray, Scene* scene, KdTree* tree, Intersectio
     if ( dot( intersection->normal, rayDirection ) <= 0.0f ) return ret;
 
     Ray ray_ref;
-    ray_ref.hasDifferentials = true;
+    ray_ref.hasDifferentials = false;
     rayInit( &ray_ref,
              intersection->position + ( rayDirection * acne_eps ),
              normalize( rayDirection ),
@@ -645,4 +621,91 @@ float CookTorrance::pdf( const vec3& wo, const vec3& wi, const vec3& n ) {
     float LdotH = dot( wi, wh );
     float LdotN = dot( wi, n );
     return BeckmannPdf( wo, wh, n, m_roughness, LdotH, LdotN ) / ( 4.f * dot( wo, wh ) );
+}
+
+color3 CookTorrance::eval(Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf) {
+    BrdfData data;
+    color3 bsdf(0);
+    color3 albedo(0);
+    if(m_texture != nullptr && ray->hasDifferentials){
+        vec3 duv[2];
+        duv[0]        = vec3( intersection->dudx, intersection->dvdx, 0 );
+        duv[1]        = vec3( intersection->dudy, intersection->dvdy, 0 );
+        albedo = m_texture->value( intersection->u, intersection->v, duv );
+    }
+    else
+    {
+      albedo = m_albedo;
+    }
+    if ( computeBrdfData( data,
+                          -ray->dir,
+                          wi,
+                          intersection->normal,
+                          vec2( intersection->u, intersection->v ),
+                          albedo,
+                          m_metalness,
+                          m_roughness ) ) {
+        bsdf = RDM_bsdf( data, nullptr, -1 );
+        *scatteringPdf = sampleBeckmannWalterReflectionPdf(data.alpha, data.alphaSq, data.NdotH, data.VdotN, data.LdotH);
+    }
+    return bsdf;
+}
+
+color3 CookTorrance::sample(Ray* ray, Intersection* intersection, vec3* wi, float* scatteringPdf) {
+    vec3 V = -ray->dir;
+    vec2 u(uniform01(engine), uniform01(engine));
+    color3 bsdf(0);
+    // Ignore incident ray coming from "below" the hemisphere
+    if ( !intersection->isOutside ) return bsdf;
+
+    // Transform view direction into local space of our sampling routines
+    // (local space is oriented so that its positive Z axis points along the shading normal)
+    vec4 qRotationToZ   = getRotationToZAxis( intersection->normal );
+    vec3 Vlocal         = rotatePoint( qRotationToZ, V );
+
+    color3 brdf(0);
+    float alpha = m_roughness * m_roughness;
+
+    // Sample a microfacet normal (H) in local space
+    vec3 Hlocal;
+    if ( alpha == 0.0f ) {
+        // Fast path for zero roughness (perfect reflection), also prevents NaNs appearing due to
+        // divisions by zeroes
+        Hlocal = vec3( 0.0f, 0.0f, 1.0f );
+    }
+    else {
+        // For non-zero roughness, this calls VNDF sampling for GG-X distribution or Walter's
+        // sampling for Beckmann distribution
+        Hlocal = sampleBeckmannWalter( Vlocal, vec2( alpha, alpha ), u );
+    }
+
+    // Reflect view direction to obtain light vector
+    vec3 Llocal = reflect( -Vlocal, Hlocal );
+    // Transform sampled direction Llocal back to V vector space
+    *wi = normalize( rotatePoint( invertRotation( qRotationToZ ), Llocal ) );
+
+    BrdfData data;
+    color3 albedo(0.f);
+    if(m_texture != nullptr && ray->hasDifferentials){
+        vec3 duv[2];
+        duv[0]        = vec3( intersection->dudx, intersection->dvdx, 0 );
+        duv[1]        = vec3( intersection->dudy, intersection->dvdy, 0 );
+        albedo = m_texture->value( intersection->u, intersection->v, duv );
+    }
+    else
+    {
+      albedo = m_albedo;
+    }
+    if ( computeBrdfData( data,
+                          -ray->dir,
+                          *wi,
+                          intersection->normal,
+                          vec2( intersection->u, intersection->v ),
+                          albedo,
+                          m_metalness,
+                          m_roughness ) ) {
+        brdf = RDM_bsdf( data, nullptr, -1 );
+        *scatteringPdf = sampleBeckmannWalterReflectionPdf(data.alpha, data.alphaSq, data.NdotH, data.VdotN, data.LdotH);
+    }
+    return brdf;
 }

@@ -14,6 +14,7 @@
 #include "../example_scenes.h"
 #include "../Object.h"
 #include "../materials/Blinn.h"
+#include "../Light.h"
 
 using namespace Walnut;
 
@@ -53,10 +54,15 @@ public:
     const std::string cameraPos = glm::to_string(m_Camera.GetPosition());
     ImGui::Text(cameraPos.c_str());
 
-    auto light = m_Renderer.scene->objects[m_Renderer.scene->objects.size()-1];
-    ImGui::DragFloat("Light intensity", glm::value_ptr(light->mat->m_emission), 1, 1, 100000);
-    light->mat->m_emission.y = light->mat->m_emission.x;
-    light->mat->m_emission.z = light->mat->m_emission.x;
+    //auto light = m_Renderer.scene->objects[m_Renderer.scene->objects.size()-1];
+    //ImGui::DragFloat("Light intensity", glm::value_ptr(light->mat->m_emission), 1, 1, 100000);
+    //light->mat->m_emission.y = light->mat->m_emission.x;
+    //light->mat->m_emission.z = light->mat->m_emission.x;
+    
+    auto light = m_Renderer.scene->lights[0];
+    ImGui::DragFloat("Light intensity", glm::value_ptr(light->m_color), 1, 1, 100000);
+    light->m_color.y = light->m_color.x;
+    light->m_color.z = light->m_color.x;
 
     ImGui::DragFloat("Fog y", &m_Renderer.scene->ysol, 1, -100, 100);
 

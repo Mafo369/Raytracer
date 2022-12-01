@@ -1,6 +1,7 @@
 #include "Light.h"
 #include "raytracer.h"
 #include "scene.h"
+#include "ray.h"
 
 bool Light::is_shadowed( vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree ) {
     Intersection temp_inter;
@@ -248,10 +249,18 @@ vec3 DirectLight::getDirection( point3 p ) {
 }
 
 color3
-ShapeLight::sample_Li( const Intersection& inter, const point2& u, vec3* wi, float* pdf ) const {
+ShapeLight::sample_Li( Scene* scene, KdTree* tree, const Intersection& inter, const point2& u, vec3* wi, float* pdf, bool* visibility ) const {
     Intersection pShape = m_shape->sample( inter, u );
     *wi                 = normalize( pShape.position - inter.position );
     *pdf                = m_shape->pdf( inter, *wi );
+
+    Ray rayS;
+    vec3 origin = inter.position + ( acne_eps * inter.normal );
+    rayS.hasDifferentials = false;
+    rayS.shadow = true;
+    rayInit( &rayS, origin, *wi, vec2( 0, 0 ), 0.f, distance(pShape.position, inter.position)*0.99f );
+    Intersection temp_inter;
+    *visibility =  intersectKdTree( scene, tree, &rayS, &temp_inter );
     return L( pShape, -*wi );
 }
 

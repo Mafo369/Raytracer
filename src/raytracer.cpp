@@ -27,6 +27,7 @@
 
 #include <stb_image.h>
 #include "Sky.h"
+#include "integrator.h"
 
 
 // Mostly for debugging purposes
@@ -71,14 +72,16 @@ color3 trace_ray( Scene* scene,
         // Compute necessary differential information for texture filtering
         if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
 
-        // Scatter
-        if ( !isBlack( intersection->mat->m_emission ) ) {
-            auto lightRadius = scene->objects[scene->objects.size() - 1]->geom.sphere.radius;
-            return show_lights ? ( intersection->mat->m_emission / ( lightRadius * lightRadius ) )
-                               : vec3( 0 );
-        }
-        else {
-            ret += intersection->mat->scatterColor( scene, tree, ray, intersection );
+        for(auto& light : scene->lights){
+            // Scatter
+            if ( !isBlack( intersection->mat->m_emission ) && ray->depth == 0) {
+                ret += static_cast<ShapeLight*>(light)->L(*intersection, -ray->dir);
+                //auto lightRadius = scene->objects[scene->objects.size() - 1]->geom.sphere.radius;
+                //return show_lights ? ( intersection->mat->m_emission / ( lightRadius * lightRadius ) )
+                //                   : vec3( 0 );
+            }
+            ret += directIllumination(scene, tree, ray, intersection, light);
+            //ret += intersection->mat->scatterColor( scene, tree, ray, intersection );
         }
     }
     else {
@@ -169,7 +172,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
 
     auto startTime = std::chrono::system_clock::now();
 
-    auto sampler = new StratifiedSampler( 8, 8, true, 4 );
+    auto sampler = new StratifiedSampler( 16, 16, true, 4 );
     std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
 
     for ( size_t j = 0; j < img->height; j++ ) {
@@ -197,7 +200,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
                 do {
                     CameraSample cameraSample = tileSampler->GetCameraSample( pixel );
                     Ray rx;
-                    rx.hasDifferentials = true;
+                    rx.hasDifferentials = false;
                     scene->cam->get_ray( cameraSample.xy.x,
                                          cameraSample.xy.y,
                                          cameraSample.uv.x,
