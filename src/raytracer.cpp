@@ -25,10 +25,9 @@
 
 #include "sampling/stratified.h"
 
-#include <stb_image.h>
 #include "Sky.h"
 #include "integrator.h"
-
+#include <stb_image.h>
 
 // Mostly for debugging purposes
 bool intersectScene( const Scene* scene, Ray* ray, Intersection* intersection ) {
@@ -64,35 +63,52 @@ color3 trace_ray( Scene* scene,
                   bool show_lights,
                   Sampler* sampler ) {
     color3 ret = color3( 0, 0, 0 );
+    color3 throughput( 1.f );
 
-    if ( ray->depth > scene->depth ) return color3( 0.f );
+    // if ( ray->depth > scene->depth ) return color3( 0.f );
 
-    if ( intersectKdTree( scene, tree, ray, intersection ) ) {
-        intersection->hit = true;
-        // Compute necessary differential information for texture filtering
-        if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
+    int depth;
 
-        for(auto& light : scene->lights){
-            // Scatter
-            if ( !isBlack( intersection->mat->m_emission ) && ray->depth == 0) {
-                ret += static_cast<ShapeLight*>(light)->L(*intersection, -ray->dir);
-                //auto lightRadius = scene->objects[scene->objects.size() - 1]->geom.sphere.radius;
-                //return show_lights ? ( intersection->mat->m_emission / ( lightRadius * lightRadius ) )
-                //                   : vec3( 0 );
+    for ( depth = 0;; depth++ ) {
+
+        if ( intersectKdTree( scene, tree, ray, intersection ) ) {
+            intersection->hit = true;
+            // Compute necessary differential information for texture filtering
+            if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
+
+            if ( !isBlack( intersection->mat->m_emission ) && depth == 0 ) {
+                ret += throughput *
+                       static_cast<ShapeLight*>( scene->lights[0] )->L( *intersection, -ray->dir );
             }
-            ret += directIllumination(scene, tree, ray, intersection, light);
-            //ret += intersection->mat->scatterColor( scene, tree, ray, intersection );
+
+            for ( auto& light : scene->lights ) {
+                // Scatter
+                ret += throughput * directIllumination( scene, tree, ray, intersection, light );
+            }
+            // ret += intersection->mat->scatterColor( scene, tree, ray, intersection );
+            float pdf;
+            vec3 wi;
+            color3 bsdf = intersection->mat->sample( ray, intersection, &wi, &pdf );
+            wi          = normalize( wi );
+            if ( isBlack( bsdf ) || pdf == 0.f ) break;
+
+            throughput *= bsdf * abs( dot( wi, intersection->normal ) ) / pdf;
+
+            rayInit( ray, intersection->position + acne_eps * wi, wi, vec2( 0 ), 0, 10000, 0 );
         }
-    }
-    else {
-        ret += scene->sky->getRadiance(*ray);
-    }
+        else {
+            ret += scene->sky->getRadiance( *ray );
+            break;
+        }
 
-    if ( ray->tmax < 0 || !intersection->hit || ray->dir.z == 0 ) return ret;
+        if ( depth >= 4 ) break;
 
-    if ( scene->medium != nullptr )
-        ret = ret * scene->medium->tr( *ray, scene->ysol ) +
-              scene->medium->sample( *ray, scene, tree, scene->ysol );
+        // if ( ray->tmax < 0 || !intersection->hit || ray->dir.z == 0 ) return ret;
+
+        if ( scene->medium != nullptr )
+            ret = ret * scene->medium->tr( *ray, scene->ysol ) +
+                  scene->medium->sample( *ray, scene, tree, scene->ysol );
+    }
 
     return ret;
 }
@@ -172,7 +188,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
 
     auto startTime = std::chrono::system_clock::now();
 
-    auto sampler = new StratifiedSampler( 16, 16, true, 4 );
+    auto sampler = new StratifiedSampler( 44, 44, true, 4 );
     std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
 
     for ( size_t j = 0; j < img->height; j++ ) {
@@ -194,8 +210,6 @@ void renderImage( RenderImage* img, Scene* scene ) {
                 color3* ptr = getPixelPtr( img, i, j );
                 auto pixel  = vec2( i, j );
 
-                bool doGammaCorrection = true;
-
                 tileSampler->StartPixel( pixel );
                 do {
                     CameraSample cameraSample = tileSampler->GetCameraSample( pixel );
@@ -211,21 +225,16 @@ void renderImage( RenderImage* img, Scene* scene ) {
                         scaleDifferentials( &rx, 1.f / sqrt( tileSampler->samplesPerPixel ) );
                     Intersection intersection;
                     pixel_color += trace_ray( scene, &rx, tree, &intersection, sampler );
-                    //if(intersection.face != -1)
-                    //  doGammaCorrection = false;
                 } while ( tileSampler->StartNextSample() );
 
                 color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;
 
-                if(doGammaCorrection){
-                  // gamma-correction
-                  avgColor.r = powf( avgColor.r, 1.0f / 2.2 );
-                  avgColor.g = powf( avgColor.g, 1.0f / 2.2 );
-                  avgColor.b = powf( avgColor.b, 1.0f / 2.2 );
-                }
+                // gamma-correction
+                avgColor.r = powf( avgColor.r, 1.0f / 2.2 );
+                avgColor.g = powf( avgColor.g, 1.0f / 2.2 );
+                avgColor.b = powf( avgColor.b, 1.0f / 2.2 );
 
-
-                //if(avgColor.x < 1 || avgColor.y < 1 || avgColor.z < 1)
+                // if(avgColor.x < 1 || avgColor.y < 1 || avgColor.z < 1)
                 //  std::cout << glm::to_string(avgColor) << std::endl;
                 *ptr = avgColor;
             }

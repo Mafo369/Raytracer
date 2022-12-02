@@ -1,4 +1,5 @@
 #include "triangle.h"
+#include "../sampling/sampling.h"
 
 bool Triangle::intersect( Ray* ray, Intersection* intersection ) const {
     Ray transformedRay = transformRay( ray );
@@ -45,7 +46,6 @@ bool Triangle::intersect( Ray* ray, Intersection* intersection ) const {
         intersection->v = uv.y;
 
         // From PBR...
-
         if ( ray->hasDifferentials ) {
             vec3 dpdu, dpdv;
             vec3 dndu, dndv;
@@ -78,4 +78,18 @@ bool Triangle::intersect( Ray* ray, Intersection* intersection ) const {
         return true;
     }
     return false;
+}
+
+Intersection Triangle::sample( const Intersection& inter, const point2& u, float* pdf ) const {
+    vec2 b           = UniformSampleTriangle( u );
+    const point3& p0 = geom.triangle.p1;
+    const point3& p1 = geom.triangle.p2;
+    const point3& p2 = geom.triangle.p3;
+    Intersection it;
+    it.position = b[0] * p0 + b[1] * p1 + ( 1.f - b[0] - b[1] ) * p2;
+    it.normal   = normalize( geom.triangle.n2 * b[0] + geom.triangle.n3 * b[1] +
+                           geom.triangle.n1 * ( 1.f - b[0] - b[1] ) );
+    float area  = 0.5 * length( cross( p1 - p0, p2 - p0 ) );
+    *pdf        = 1 / area;
+    return it;
 }

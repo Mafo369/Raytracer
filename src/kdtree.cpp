@@ -417,7 +417,7 @@ void findPlane( Scene* scene, KdTreeNode* node, float& p_, float& k_, float& c_ 
 
 void subdivide( Scene* scene, KdTree* tree, KdTreeNode* node ) {
     //!\todo generate children, compute split position, move objets to children and subdivide if
-    //!needed.
+    //! needed.
 
     int d =
         ( node->depth ) %

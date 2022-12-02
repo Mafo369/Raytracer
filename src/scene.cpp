@@ -61,8 +61,13 @@ Object* initCube( std::shared_ptr<Material> mat, Transform transform ) {
     return ret;
 }
 
-Object*
-initTriangle( vec3 p1, vec3 p2, vec3 p3, vec3 n, vec2 t[3], Transform transform, std::shared_ptr<Material> mat ) {
+Object* initTriangle( vec3 p1,
+                      vec3 p2,
+                      vec3 p3,
+                      vec3 n,
+                      vec2 t[3],
+                      Transform transform,
+                      std::shared_ptr<Material> mat ) {
     auto ret                  = new Triangle( mat, transform );
     ret->geom.type            = TRIANGLE;
     ret->geom.triangle.p1     = p1;
@@ -167,7 +172,7 @@ void addLight( Scene* scene, Light* light ) {
 }
 
 void setSkyColor( Scene* scene, color3 c ) {
-    //scene->skyColor = c;
+    // scene->skyColor = c;
 }
 
 // https://github.com/tinyobjloader/tinyobjloader

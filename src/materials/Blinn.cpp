@@ -10,7 +10,7 @@
 Blinn::Blinn() {
     m_IOR             = 1.0;
     m_specularColor   = color3( 0.7f );
-    m_albedo    = color3( 0.5f );
+    m_albedo          = color3( 0.5f );
     m_shininess       = 20.f;
     m_reflection      = vec3( 0, 0, 0 );
     m_refraction      = vec3( 0, 0, 0 );
@@ -322,9 +322,9 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
             ret += color3( 0 );
         }
         else {
-            color3 brdf = intersection->mat->m_albedo / Pi +
-                          m_specularColor *
-                              Phong_BRDF( wi, ray->dir, intersection->normal, phongExponent );
+            color3 brdf =
+                intersection->mat->m_albedo / Pi +
+                m_specularColor * Phong_BRDF( wi, ray->dir, intersection->normal, phongExponent );
             float J   = 1. * dot( Np, -wi ) / d_light2;
             float pdf = dot( axePO, dirA ) /
                         ( Pi * sphereL->geom.sphere.radius * sphereL->geom.sphere.radius );
@@ -425,7 +425,7 @@ color3 Blinn::reflectionColor( Scene* scene,
     Intersection temp_intersection;
     auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection );
 
-    //if ( !temp_intersection.hit ) {
+    // if ( !temp_intersection.hit ) {
     //    if ( scene->m_skyTexture != nullptr ) {
     //        vec3 dir = r;
     //        float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
@@ -438,10 +438,8 @@ color3 Blinn::reflectionColor( Scene* scene,
     //        color += m_reflection * env;
     //    }
     //}
-    //else if ( intersection->isOutside ) {
-    if(intersection->isOutside){
-        color += ( reflColor * m_reflection );
-    }
+    // else if ( intersection->isOutside ) {
+    if ( intersection->isOutside ) { color += ( reflColor * m_reflection ); }
     return reflColor;
 }
 
@@ -543,7 +541,7 @@ color3 Blinn::refractionColor( Scene* scene,
             refractionShade += refractionColor;
         }
         else {
-            //if ( scene->m_skyTexture != nullptr ) {
+            // if ( scene->m_skyTexture != nullptr ) {
             //    vec3 dir = refractDir;
             //    float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
             //    float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );

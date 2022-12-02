@@ -2,7 +2,9 @@
 #include "Light.h"
 #include "bsdf.hpp"
 
-inline float saturate(float x) { return clamp(x, 0.0f, 1.0f); }
+inline float saturate( float x ) {
+    return clamp( x, 0.0f, 1.0f );
+}
 
 bool computeBrdfData( BrdfData& data,
                       const vec3& v,
@@ -25,21 +27,21 @@ bool computeBrdfData( BrdfData& data,
     data.LdotN = min( max( 0.00001f, LdotN ), 1.0f );
     data.VdotN = min( max( 0.00001f, VdotN ), 1.0f );
 
-    data.LdotH = saturate(dot( wi, h ));
-    data.NdotH = saturate(dot( n, h ));
-    data.VdotH = saturate(dot( v, h ));
+    data.LdotH = saturate( dot( wi, h ) );
+    data.NdotH = saturate( dot( n, h ) );
+    data.VdotH = saturate( dot( v, h ) );
     data.uv    = uv;
 
     data.specularF0         = baseColorToSpecularF0( baseColor, metalness );
     data.diffuseReflectance = baseColorToDiffuseReflectance( baseColor, metalness );
 
     data.roughness = roughness;
-    data.alpha = roughness * roughness;
-    data.alphaSq = data.alpha * data.alpha;
+    data.alpha     = roughness * roughness;
+    data.alphaSq   = data.alpha * data.alpha;
 
     // Pre-calculate some more BRDF terms
-    //data.F = color3(RDM_Fresnel( data.LdotH, 1.f, 2.0 ));
-    data.F = evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), data.LdotH );
+    // data.F = color3(RDM_Fresnel( data.LdotH, 1.f, 2.0 ));
+    data.F         = evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), data.LdotH );
     data.metalness = metalness;
 
     return true;
@@ -93,7 +95,7 @@ color3 specularReflect( Ray* ray,
 
         color3 Li = color3( 0 );
 
-        //if ( !temp_intersection.hit ) {
+        // if ( !temp_intersection.hit ) {
         //    if ( scene->m_skyTexture != nullptr ) {
         //        vec3 dir = wi;
         //        float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
@@ -106,8 +108,8 @@ color3 specularReflect( Ray* ray,
         //        Li         = env;
         //    }
         //}
-        //else {
-            Li = reflColor;
+        // else {
+        Li = reflColor;
         //}
 
         return f * Li;
@@ -185,7 +187,7 @@ color3 specularTransmission( Ray* ray,
             Li = refrColor;
         }
         else {
-            //if ( scene->m_skyTexture != nullptr ) {
+            // if ( scene->m_skyTexture != nullptr ) {
             //    vec3 dir = wi;
             //    float z  = asin( -dir.z ) / float( M_PI ) + 0.5;
             //    float x  = dir.x / ( abs( dir.x ) + abs( dir.y ) + 0.00001 );

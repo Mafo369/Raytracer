@@ -12,8 +12,8 @@ using namespace Walnut;
 CameraI::CameraI( float verticalFOV, float nearClip, float farClip ) :
     m_VerticalFOV( verticalFOV ), m_NearClip( nearClip ), m_FarClip( farClip ) {
 
-    auto from    = glm::vec3( 0, 1, 5 );
-    auto at      = glm::vec3( 0, 0, 0 );
+    auto from          = glm::vec3( 0, 1, 5 );
+    auto at            = glm::vec3( 0, 0, 0 );
     m_ForwardDirection = normalize( at - from );
     m_Position         = from;
 
@@ -35,8 +35,8 @@ bool CameraI::OnUpdate( float ts ) {
 
     bool moved = false;
 
-    constexpr glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
-    //constexpr glm::vec3 upDirection( 0.0f, 0.0f, 1.0f );
+    constexpr glm::vec3 upDirection( 0.0f, 1.0f, 0.0f );
+    // constexpr glm::vec3 upDirection( 0.0f, 0.0f, 1.0f );
     glm::vec3 rightDirection = glm::cross( m_ForwardDirection, upDirection );
 
     float speed = 5.0f;

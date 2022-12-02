@@ -193,7 +193,7 @@ Intersection Sphere::sample( const point2& u ) const {
     return it;
 }
 
-Intersection Sphere::sample( const Intersection& inter, const point2& u ) const {
+Intersection Sphere::sample( const Intersection& inter, const point2& u, float* pdf ) const {
     point3 pCenter = geom.sphere.center;
     vec3 wc        = normalize( pCenter - inter.position );
     vec3 wcX, wcY;
@@ -224,6 +224,7 @@ Intersection Sphere::sample( const Intersection& inter, const point2& u ) const 
 
     it.position = transform.transformFrom( pObj );
     it.normal   = transform.getTransform() * nObj;
+    *pdf        = 1 / ( 2 * Pi * ( 1 - cosThetaMax ) );
     return it;
 }
 

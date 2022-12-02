@@ -67,10 +67,10 @@ void Renderer::Render( const CameraI& camera ) {
             // vec3 diry = camera.GetRayDirections()[x + (y+1) * m_FinalImage->GetWidth()];
             rayInit( &ray, camera.GetPosition(), normalize( dir ), vec2( x, y ) );
             ray.hasDifferentials = true;
-            //ray.dox              = vec3( 0 );
-            //ray.doy              = vec3( 0 );
-            //ray.ddx              = vec3( 0 );
-            //ray.ddy              = vec3( 0 );
+            // ray.dox              = vec3( 0 );
+            // ray.doy              = vec3( 0 );
+            // ray.ddx              = vec3( 0 );
+            // ray.ddy              = vec3( 0 );
 
             // ray.dox = camera.GetPosition();
             // ray.doy = camera.GetPosition();

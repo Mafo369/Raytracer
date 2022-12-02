@@ -1,9 +1,9 @@
 #include "bsdf.hpp"
 
 #include "Object.h"
+#include "defines.h"
 #include <cmath>
 #include <glm/glm.hpp>
-#include "defines.h"
 
 /* ---------------------------------------------------------------------------
  */
@@ -20,7 +20,7 @@ float RDM_chiplus( float c ) {
     return ( c > 0.f ) ? 1.f : 0.f;
 }
 
-//float RDM_Beckmann( float NdotH, float alpha ) {
+// float RDM_Beckmann( float NdotH, float alpha ) {
 //
 //    //! \todo compute Beckmann normal distribution
 //
@@ -143,20 +143,19 @@ float RDM_G1( float DdotH, float DdotN, float alpha ) {
     //! \todo compute G1 term of the Smith fonction
 
     float tanx = sqrt( 1.f - min( 0.99999f, DdotN * DdotN ) );
-    float b    = DdotN / ( max(0.0001f,alpha) * tanx );
+    float b    = DdotN / ( max( 0.0001f, alpha ) * tanx );
 
     if ( b < 1.6f ) {
-        return (( 3.535f + 2.181f * b ) * b) / ( 1.f + (2.276f + 2.577f * b) * b );
+        return ( ( 3.535f + 2.181f * b ) * b ) / ( 1.f + ( 2.276f + 2.577f * b ) * b );
     }
-    else
-    {
+    else {
         return 1.f;
     }
 }
 
 // DdotH : Dir . Half
 // HdotN : Half . Norm
-//float RDM_G1( float DdotH, float DdotN, float alpha ) {
+// float RDM_G1( float DdotH, float DdotN, float alpha ) {
 //
 //    //! \todo compute G1 term of the Smith fonction
 //
@@ -239,7 +238,7 @@ color3 RDM_bsdf_d( color3 diffuseColor ) {
 color3 RDM_bsdf( BrdfData& data, texture* texture, int face ) {
 
     //! \todo compute bsdf diffuse and specular term
-    //if ( texture != nullptr ) {
+    // if ( texture != nullptr ) {
     //    color3 texColor;
     //    if ( face == -1 )
     //        texColor = ( texture->value( data.uv.x, data.uv.y ) );
@@ -250,7 +249,7 @@ color3 RDM_bsdf( BrdfData& data, texture* texture, int face ) {
     //    //data.F = evalFresnel( data.specularF0, shadowedF90( data.specularF0 ), data.LdotH );
     //    return color3( ( texColor / float( M_PI ) ) + RDM_bsdf_s( data ) );
     //}
-    color3 diffuse = RDM_bsdf_d( data.diffuseReflectance );
+    color3 diffuse  = RDM_bsdf_d( data.diffuseReflectance );
     color3 specular = RDM_bsdf_s( data );
 #if COMBINE_BRDFS_WITH_FRESNEL
     return ( vec3( 1 ) - data.F ) * diffuse + specular;

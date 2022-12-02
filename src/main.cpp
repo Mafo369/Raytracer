@@ -38,23 +38,23 @@ int main( int argc, char* argv[] ) {
     auto lightSize = 4.f;
 
     int i = 97;
-    //for ( ; posLight < 5; posLight += 0.3 ) {
-        //Transform modemMatrixE;
-        //modemMatrixE.scale( lightSize, lightSize, lightSize );
-        //modemMatrixE.translate( vec3( 0, 5, 0 ) );
-        //auto light                = scene->objects[scene->objects.size() - 1];
-        //light->geom.sphere.center = modemMatrixE.transformFrom( vec3( 0 ) );
-        //light->geom.sphere.radius = lightSize;
-        //light->transform          = modemMatrixE;
-        //basename[4]               = char( i );
-        printf( "save image to %s\n", basename );
-        renderImage( img, scene );
+    // for ( ; posLight < 5; posLight += 0.3 ) {
+    // Transform modemMatrixE;
+    // modemMatrixE.scale( lightSize, lightSize, lightSize );
+    // modemMatrixE.translate( vec3( 0, 5, 0 ) );
+    // auto light                = scene->objects[scene->objects.size() - 1];
+    // light->geom.sphere.center = modemMatrixE.transformFrom( vec3( 0 ) );
+    // light->geom.sphere.radius = lightSize;
+    // light->transform          = modemMatrixE;
+    // basename[4]               = char( i );
+    printf( "save image to %s\n", basename );
+    renderImage( img, scene );
 
-        saveImage( img, basename );
-        freeImage( img );
-        img = initImage( WIDTH, HEIGHT );
+    saveImage( img, basename );
+    freeImage( img );
+    img = initImage( WIDTH, HEIGHT );
 
-        i++;
+    i++;
     //}
     freeImage( img );
     img = NULL;
