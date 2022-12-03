@@ -2,6 +2,7 @@
 #include "ray.h"
 #include "raytracer.h"
 #include "scene.h"
+#include "sampling/sampling.h"
 
 bool Light::is_shadowed( vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree ) {
     Intersection temp_inter;
@@ -275,4 +276,55 @@ color3 ShapeLight::sample_Li( Scene* scene,
 
 float ShapeLight::pdf_Li( const Intersection& it, const vec3& wi ) const {
     return m_shape->pdf( it, wi );
+}
+
+color3 IBL::sample_Li(Scene* scene, KdTree* tree, const Intersection& inter, const point2& u, vec3* wi, float* pdf, bool* visibility) const {
+    float mapPdf;
+    point2 uv = m_distribution->SampleContinuous(u, &mapPdf);
+    if(mapPdf == 0) return color3(0);
+
+    float theta = uv[1] * Pi, phi = uv[0] * 2 * Pi;
+    float cosTheta = cos(theta), sinTheta = sin(theta);
+    float sinPhi = sin(phi), cosPhi = cos(phi);
+    *wi = m_transform.getTransform() * vec3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
+    *pdf = mapPdf / (2 * Pi * Pi * sinTheta);
+    if(sinTheta == 0) *pdf = 0;
+
+    float worldRadius = 50;
+    Ray rayS;
+    vec3 origin           = inter.position + *wi * (2 * worldRadius);
+    rayS.hasDifferentials = false;
+    rayS.shadow           = true;
+    rayInit( &rayS,
+             origin,
+             *wi,
+             vec2( 0, 0 ),
+             0.f,
+             100000 );
+    Intersection temp_inter;
+    *visibility = intersectKdTree( scene, tree, &rayS, &temp_inter );
+
+    vec3 dir = m_transform.getInvTransform() * rayS.dir;
+    theta = std::acos(dir.y);
+    phi = std::atan2(dir.z, dir.x);
+    if(phi<0)phi += 2*M_PI;
+
+    int i = phi/(2*M_PI) * m_width;
+    int j = theta/M_PI * m_height;
+
+    int index = 3*i + 3*m_width*j;
+
+    return vec3(m_pixels[index], m_pixels[index+1], m_pixels[index+2]);
+}
+
+float IBL::pdf_Li(const Intersection& it, const vec3& wi) const {
+    vec3 dir = m_transform.getInvTransform() * wi;
+    float theta = std::acos(dir.y);
+    float phi = std::atan2(dir.z, dir.x);
+    if(phi<0)phi += 2*M_PI;
+
+    float sinTheta = sin(theta);
+    if(sinTheta == 0) return 0;
+    return m_distribution->Pdf(vec2(phi * Inv2Pi, theta * InvPi)) / 
+           (2 * Pi * Pi * sinTheta);
 }

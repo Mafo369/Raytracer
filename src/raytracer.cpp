@@ -82,13 +82,13 @@ color3 trace_ray( Scene* scene,
             }
 
             for ( auto& light : scene->lights ) {
-                // Scatter
-                ret += throughput * directIllumination( scene, tree, ray, intersection, light );
+                vec2 uLight = sampler->Get2D();
+                vec2 uScattering = sampler->Get2D();
+                ret += throughput * directIllumination( scene, tree, ray, intersection, light, uScattering, uLight );
             }
-            // ret += intersection->mat->scatterColor( scene, tree, ray, intersection );
             float pdf;
             vec3 wi;
-            color3 bsdf = intersection->mat->sample( ray, intersection, &wi, &pdf );
+            color3 bsdf = intersection->mat->sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
             wi          = normalize( wi );
             if ( isBlack( bsdf ) || pdf == 0.f ) break;
 
@@ -97,11 +97,12 @@ color3 trace_ray( Scene* scene,
             rayInit( ray, intersection->position + acne_eps * wi, wi, vec2( 0 ), 0, 10000, 0 );
         }
         else {
-            ret += scene->sky->getRadiance( *ray );
+            for(auto& env : scene->envLights)
+              ret += throughput * env->Le(ray);
             break;
         }
 
-        if ( depth >= 4 ) break;
+        if ( depth >= 5 ) break;
 
         // if ( ray->tmax < 0 || !intersection->hit || ray->dir.z == 0 ) return ret;
 
@@ -188,8 +189,11 @@ void renderImage( RenderImage* img, Scene* scene ) {
 
     auto startTime = std::chrono::system_clock::now();
 
-    auto sampler = new StratifiedSampler( 44, 44, true, 4 );
+    auto sampler = new StratifiedSampler( 8, 8, true, 8 );
     std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
+
+    auto tracer = new Pathtracer(5, sampler);
+    tracer->preprocess(scene, sampler);
 
     for ( size_t j = 0; j < img->height; j++ ) {
         if ( j != 0 ) printf( "\033[A\r" );
@@ -224,7 +228,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
                     if ( rx.hasDifferentials )
                         scaleDifferentials( &rx, 1.f / sqrt( tileSampler->samplesPerPixel ) );
                     Intersection intersection;
-                    pixel_color += trace_ray( scene, &rx, tree, &intersection, sampler );
+                    pixel_color += tracer->trace_ray( scene, &rx, tree, &intersection, tileSampler.get() );
                 } while ( tileSampler->StartNextSample() );
 
                 color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;

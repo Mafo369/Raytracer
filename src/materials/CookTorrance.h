@@ -16,7 +16,7 @@ class CookTorrance : public Material {
     color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) override;
 
     color3 eval(Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf) override;
-    color3 sample(Ray* ray, Intersection* intersection, vec3* wi, float* scatteringPdf) override;
+    color3 sample(Ray* ray, Intersection* intersection, const vec2& uScattering, vec3* wi, float* scatteringPdf) override;
 
     float m_roughness; //! 0.001 - 0.01 : very smooth finish with slight imperfections. 0.1 : relatively rough. 0.3-0.7 extremely rough 
     float m_metalness;

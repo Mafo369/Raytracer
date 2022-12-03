@@ -88,7 +88,7 @@ class Material {
     virtual color3 ambientColor(Ray* ray, Intersection* intersection, color3 lightColor) = 0;
     virtual color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) = 0;
     virtual color3 eval(Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf) = 0;
-    virtual color3 sample(Ray* ray, Intersection* intersection, vec3* wi, float* scatteringPdf) = 0;
+    virtual color3 sample(Ray* ray, Intersection* intersection, const vec2& uScattering, vec3* wi, float* scatteringPdf) = 0;
     texture* m_texture = nullptr;
     color3 m_emission = color3(0,0,0);
     color3 m_albedo = color3(0,0,0);

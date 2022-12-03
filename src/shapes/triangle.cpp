@@ -89,7 +89,13 @@ Intersection Triangle::sample( const Intersection& inter, const point2& u, float
     it.position = b[0] * p0 + b[1] * p1 + ( 1.f - b[0] - b[1] ) * p2;
     it.normal   = normalize( geom.triangle.n2 * b[0] + geom.triangle.n3 * b[1] +
                            geom.triangle.n1 * ( 1.f - b[0] - b[1] ) );
-    float area  = 0.5 * length( cross( p1 - p0, p2 - p0 ) );
-    *pdf        = 1 / area;
+    *pdf        = 1 / Area();
     return it;
+}
+
+float Triangle::Area() const {
+    const point3& p0 = geom.triangle.p1;
+    const point3& p1 = geom.triangle.p2;
+    const point3& p2 = geom.triangle.p3;
+    return 0.5 * length( cross( p1 - p0, p2 - p0 ) );
 }

@@ -27,6 +27,8 @@ set(mrt_SRCS
   src/Material.cpp
   src/mediums/Fog.cpp
   libs/tinyexr/miniz.c
+  src/integrator.cpp
+  src/LightDistribution.cpp
   )
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")

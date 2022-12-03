@@ -1778,26 +1778,27 @@ Scene* initScene18() {
                      glm::length( at - from ) );
 
     auto sky   = new IBL( "/home/mafo/dev/Raytracer/assets/rainforest_trail_4k.hdr" );
-    scene->sky = sky;
 
-    auto left  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/left.png" );
-    auto right = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/right.png" );
-    auto front = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/front.png" );
-    auto back  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/back.png" );
-    auto up    = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/top.png" );
-    auto down  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/bottom.png" );
+    addLight(scene, sky);
+    scene->envLights.push_back(sky);
+    
+    //auto matLight            = std::make_shared<CookTorrance>();
+    //auto lightIntensity1 = 100;
+    //matLight->m_albedo       = color3( 1.f );
+    //matLight->m_emission     = color3( lightIntensity1 );
+    //Transform tLight;
+    //tLight.scale( 0.2, 0.2, 0.2 );
+    //tLight.translate( vec3( -1.25, 1.5, 0 ) );
+    //addObject( scene, initSphere( matLight, tLight ) );
 
-    auto matSky       = std::make_shared<CookTorrance>();
-    matSky->m_texture = new CubeMapTexture( left, right, front, back, up, down );
-    matSky->m_albedo  = color3( 0, 0, 0 );
-    Transform skyboxT;
-    skyboxT.scale( 50, 50, 50 );
-    // addObject(scene, initCube(matSky, skyboxT));
+    //auto obj0   = initSphere( matLight, tLight );
+    //auto lightLight = new ShapeLight( point3( 0, 0, 0 ), color3( lightIntensity1 ), obj0 );
+    //addLight( scene, lightLight );
 
     auto mat         = std::make_shared<CookTorrance>();
     mat->m_albedo    = color3( 0.6 );
-    mat->m_metalness = 0.0;
-    mat->m_roughness = 0.8;
+    mat->m_metalness = 0.1;
+    mat->m_roughness = 0.4;
 
     Transform modelMatrix;
     modelMatrix.scale( 5, 1.3, 1 );
@@ -1822,10 +1823,10 @@ Scene* initScene18() {
     Transform t1;
     t1.scale( 0.5, 0.5, 0.5 );
     t1.translate( vec3( -1.2, 0.5, 0 ) );
-    addObject( scene, initSphere( mat2, t1 ) );
+    //addObject( scene, initSphere( mat2, t1 ) );
 
     auto mat3         = std::make_shared<CookTorrance>( SPECULAR );
-    mat3->m_roughness = 0.0001;
+    mat3->m_roughness = 0.01;
     mat3->m_metalness = 0.0000;
     mat3->m_albedo    = color3( 0.f, 1.f, 0.95f );
     // mat3->m_albedo = color3(0.5);
@@ -1975,11 +1976,11 @@ Scene* initScene20() {
                      glm::length( at - from ) );
 
     // auto sky = new IBL("/home/mafo/dev/Raytracer/assets/rainforest_trail_4k.hdr");
-    auto sky = new IBL( "/home/mafo/dev/Raytracer/assets/spaichingen_hill_4k.hdr" );
-    Transform skyT;
-    // skyT.rotate(vec3(0,1,0), 80);
-    sky->m_transform = skyT;
-    scene->sky       = sky;
+    //auto sky = new IBL( "/home/mafo/dev/Raytracer/assets/spaichingen_hill_4k.hdr" );
+    //Transform skyT;
+    //// skyT.rotate(vec3(0,1,0), 80);
+    //sky->m_transform = skyT;
+    //scene->sky       = sky;
 
     auto mat         = std::make_shared<CookTorrance>();
     mat->m_albedo    = color3( 0.6 );

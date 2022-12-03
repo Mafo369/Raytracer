@@ -13,3 +13,14 @@ Ray Object::transformRay( Ray* ray ) const {
     rayInit( &transformedRay, origin, direction, ray->pixel, ray->tmin, ray->tmax, ray->depth );
     return transformedRay;
 }
+
+float Object::pdf(const Intersection& inter, const vec3& wi) const {
+  Ray ray;
+  rayInit(&ray, inter.position + wi * acne_eps, wi, vec2(0), 0, 10000, 0);
+  Intersection isectLight;
+  if(!intersect(&ray, &isectLight)) return 0;
+
+  float pdf = glm::length_sq(isectLight.position - inter.position) / (abs(dot(isectLight.normal, -wi) * Area()));
+  if(std::isinf(pdf)) pdf = 0.f;
+  return pdf;
+}

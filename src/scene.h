@@ -18,6 +18,7 @@ typedef std::vector<Light*> Lights;
 
 typedef struct scene_s {
   Lights lights; //! the scene have several lights
+  Lights envLights; //! the scene have several lights
   Objects objects; //! the scene have several objects
   Camera* cam; //! the scene have one camera
   //color3 skyColor; //! the sky color, could be extended to a sky function ;)

@@ -654,7 +654,7 @@ CookTorrance::eval( Ray* ray, Intersection* intersection, const vec3& wi, float*
 }
 
 color3
-CookTorrance::sample( Ray* ray, Intersection* intersection, vec3* wi, float* scatteringPdf ) {
+CookTorrance::sample( Ray* ray, Intersection* intersection, const vec2& uScattering, vec3* wi, float* scatteringPdf ) {
     vec3 V = -ray->dir;
     vec2 u( uniform01( engine ), uniform01( engine ) );
     color3 bsdf( 0 );
