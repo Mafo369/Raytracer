@@ -626,6 +626,7 @@ float CookTorrance::pdf( const vec3& wo, const vec3& wi, const vec3& n ) {
 
 color3
 CookTorrance::eval( Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf ) {
+    if(m_type == TRANSPARENT) return color3(0);
     BrdfData data;
     color3 bsdf( 0 );
     color3 albedo( 0 );
@@ -655,6 +656,30 @@ CookTorrance::eval( Ray* ray, Intersection* intersection, const vec3& wi, float*
 
 color3
 CookTorrance::sample( Ray* ray, Intersection* intersection, const vec2& uScattering, vec3* wi, float* scatteringPdf ) {
+    if(m_type == TRANSPARENT){
+        // REFRACTION + REFLECTION
+        vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
+
+        float LdotH = dot( -ray->dir, normal );
+        float f     = intersection->isOutside ? RDM_Fresnel( LdotH, 1.f, m_IOR )
+                                              : RDM_Fresnel( LdotH, m_IOR, 1.f );
+
+        Ray new_ray;
+        if ( f < 1.0f ) {
+            if ( uniform01( engine ) < f ) { // reflect
+                *wi = reflect( ray->dir, normal );
+            }
+            else { // refract
+                float refractionRatio = intersection->isOutside ? ( 1.f / m_IOR ) : m_IOR;
+                *wi                   = refract( ray->dir, normal, refractionRatio );
+            }
+        }
+        else {
+            *wi = reflect( ray->dir, normal );
+        }
+        *scatteringPdf = 1.f;
+        return color3(1);
+    }
     vec3 V = -ray->dir;
     vec2 u( uniform01( engine ), uniform01( engine ) );
     color3 bsdf( 0 );
@@ -666,7 +691,7 @@ CookTorrance::sample( Ray* ray, Intersection* intersection, const vec2& uScatter
     vec4 qRotationToZ = getRotationToZAxis( intersection->normal );
     vec3 Vlocal       = rotatePoint( qRotationToZ, V );
 
-    float alpha = m_roughness * m_roughness;
+    float alpha = m_roughness;
 
     // Sample a microfacet normal (H) in local space
     vec3 Hlocal;

@@ -480,7 +480,7 @@ void addObjectsFromFile( const char* filename,
                      materials[matIndex].specular[2] == 1 ) {
                     mat->m_type      = SPECULAR;
                     mat->m_metalness = 1.0;
-                    mat->m_roughness = 0.05;
+                    mat->m_roughness = 0.002;
                     // mat->m_specularColor.r = materials[matIndex].diffuse[0];
                     // mat->m_specularColor.g = materials[matIndex].diffuse[1];
                     // mat->m_specularColor.b = materials[matIndex].diffuse[2];
@@ -1796,9 +1796,9 @@ Scene* initScene18() {
     //addLight( scene, lightLight );
 
     auto mat         = std::make_shared<CookTorrance>();
-    mat->m_albedo    = color3( 0.6 );
+    mat->m_albedo    = color3( 0.3 );
     mat->m_metalness = 0.1;
-    mat->m_roughness = 0.4;
+    mat->m_roughness = 0.64;
 
     Transform modelMatrix;
     modelMatrix.scale( 5, 1.3, 1 );
@@ -1808,9 +1808,9 @@ Scene* initScene18() {
     addObject( scene, ret );
 
     auto mat1         = std::make_shared<CookTorrance>( SPECULAR );
-    mat1->m_roughness = 0.01;
+    mat1->m_roughness = 0.004;
     mat1->m_metalness = 1.0;
-    mat1->m_albedo    = color3( 1.f );
+    mat1->m_albedo    = color3( 0.8 );
     Transform t0;
     t0.scale( 0.5, 0.5, 0.5 );
     t0.translate( vec3( 0, 0.5, 0 ) );
@@ -1823,10 +1823,10 @@ Scene* initScene18() {
     Transform t1;
     t1.scale( 0.5, 0.5, 0.5 );
     t1.translate( vec3( -1.2, 0.5, 0 ) );
-    //addObject( scene, initSphere( mat2, t1 ) );
+    addObject( scene, initSphere( mat2, t1 ) );
 
     auto mat3         = std::make_shared<CookTorrance>( SPECULAR );
-    mat3->m_roughness = 0.01;
+    mat3->m_roughness = 0.004;
     mat3->m_metalness = 0.0000;
     mat3->m_albedo    = color3( 0.f, 1.f, 0.95f );
     // mat3->m_albedo = color3(0.5);

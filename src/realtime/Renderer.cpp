@@ -2,6 +2,8 @@
 
 #include "Walnut/Random.h"
 
+#include "../integrator.h"
+
 namespace Utils {
 
 static uint32_t ConvertToRGBA( const glm::vec4& color ) {
@@ -77,7 +79,7 @@ void Renderer::Render( const CameraI& camera ) {
             // ray.ddx = normalize(dirx);
             // ray.ddy = normalize(diry);
             Intersection intersection;
-            auto colorr = trace_ray( scene, &ray, tree, &intersection );
+            auto colorr = m_integrator->trace_ray( scene, &ray, tree, &intersection, sampler );
             auto color  = vec4( colorr.r, colorr.g, colorr.b, 1 );
 
             m_accumulationData[x + y * m_FinalImage->GetWidth()] += color;

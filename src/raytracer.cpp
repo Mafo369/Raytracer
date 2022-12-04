@@ -218,7 +218,7 @@ void renderImage( RenderImage* img, Scene* scene ) {
                 do {
                     CameraSample cameraSample = tileSampler->GetCameraSample( pixel );
                     Ray rx;
-                    rx.hasDifferentials = false;
+                    rx.hasDifferentials = true;
                     scene->cam->get_ray( cameraSample.xy.x,
                                          cameraSample.xy.y,
                                          cameraSample.uv.x,

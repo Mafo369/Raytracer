@@ -16,6 +16,9 @@
 #include "../materials/Blinn.h"
 #include "../Light.h"
 
+#include "../sampling/stratified.h"
+#include "../integrator.h"
+
 using namespace Walnut;
 
 class ExampleLayer : public Walnut::Layer
@@ -24,6 +27,12 @@ public:
 	ExampleLayer(Scene* scene)
 		: m_Camera(45.0f, 0.1f, 100.0f) {
       m_Renderer.setScene(scene);
+      auto sampler = new StratifiedSampler( 1, 1, true, 8 );
+      m_Renderer.setSampler(sampler);
+      std::cout << "Spp: " << sampler->samplesPerPixel << std::endl;
+      auto integrator = new Pathtracer(5, sampler);
+      integrator->preprocess(scene, sampler);
+      m_Renderer.setIntegrator(integrator);
     }
 
 	virtual void OnUpdate(float ts) override

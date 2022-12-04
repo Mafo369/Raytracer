@@ -279,20 +279,24 @@ float ShapeLight::pdf_Li( const Intersection& it, const vec3& wi ) const {
 }
 
 color3 IBL::sample_Li(Scene* scene, KdTree* tree, const Intersection& inter, const point2& u, vec3* wi, float* pdf, bool* visibility) const {
-    float mapPdf;
-    point2 uv = m_distribution->SampleContinuous(u, &mapPdf);
-    if(mapPdf == 0) return color3(0);
+    //float mapPdf;
+    //point2 uv = m_distribution->SampleContinuous(u, &mapPdf);
+    //if(mapPdf == 0) return color3(0);
 
-    float theta = uv[1] * Pi, phi = uv[0] * 2 * Pi;
-    float cosTheta = cos(theta), sinTheta = sin(theta);
-    float sinPhi = sin(phi), cosPhi = cos(phi);
-    *wi = m_transform.getTransform() * vec3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta);
-    *pdf = mapPdf / (2 * Pi * Pi * sinTheta);
-    if(sinTheta == 0) *pdf = 0;
+    //float theta = uv[1] * Pi, phi = uv[0] * 2 * Pi;
+    //float cosTheta = cos(theta), sinTheta = sin(theta);
+    //float sinPhi = sin(phi), cosPhi = cos(phi);
+    //*wi = normalize(m_transform.getTransform() * vec3(sinTheta * cosPhi, sinTheta * sinPhi, cosTheta));
+    //*pdf = mapPdf / (2 * Pi * Pi * sinTheta);
+    //if(sinTheta == 0) *pdf = 0;
+    //
 
-    float worldRadius = 50;
+    vec3 normal = inter.isOutside ? inter.normal : -inter.normal;
+    *wi = normalize(random_dir(normal));
+    *pdf = max(dot(normal, *wi), 0.f) / Pi;
+
     Ray rayS;
-    vec3 origin           = inter.position + *wi * (2 * worldRadius);
+    vec3 origin           = inter.position + *wi * acne_eps;
     rayS.hasDifferentials = false;
     rayS.shadow           = true;
     rayInit( &rayS,
@@ -300,13 +304,13 @@ color3 IBL::sample_Li(Scene* scene, KdTree* tree, const Intersection& inter, con
              *wi,
              vec2( 0, 0 ),
              0.f,
-             100000 );
+             10000 );
     Intersection temp_inter;
     *visibility = intersectKdTree( scene, tree, &rayS, &temp_inter );
 
     vec3 dir = m_transform.getInvTransform() * rayS.dir;
-    theta = std::acos(dir.y);
-    phi = std::atan2(dir.z, dir.x);
+    auto theta = std::acos(dir.y);
+    auto phi = std::atan2(dir.z, dir.x);
     if(phi<0)phi += 2*M_PI;
 
     int i = phi/(2*M_PI) * m_width;
@@ -318,6 +322,7 @@ color3 IBL::sample_Li(Scene* scene, KdTree* tree, const Intersection& inter, con
 }
 
 float IBL::pdf_Li(const Intersection& it, const vec3& wi) const {
+    //return max(dot(it.normal, wi), 0.f) / Pi;
     vec3 dir = m_transform.getInvTransform() * wi;
     float theta = std::acos(dir.y);
     float phi = std::atan2(dir.z, dir.x);

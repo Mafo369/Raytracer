@@ -134,7 +134,7 @@ class IBL : public Light {
       }
       std::cout << "Channels HDR: " << n << std::endl;
       std::cout << "Resolution: " << m_width << "x" << m_height << std::endl;
-      m_distribution.reset(new Distribution2D(img.get(), m_width, m_height));
+      m_distribution.reset(new Distribution2D(m_pixels, m_width, m_height));
     }
 
     float intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) override { return 0; }

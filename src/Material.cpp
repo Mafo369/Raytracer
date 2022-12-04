@@ -24,8 +24,8 @@ bool computeBrdfData( BrdfData& data,
     // Backfacing
     if ( LdotN <= 0.0f || VdotN <= 0.0f ) return false;
 
-    data.LdotN = min( max( 0.00001f, LdotN ), 1.0f );
-    data.VdotN = min( max( 0.00001f, VdotN ), 1.0f );
+    data.LdotN = min( max( 0.0001f, LdotN ), 1.0f );
+    data.VdotN = min( max( 0.0001f, VdotN ), 1.0f );
 
     data.LdotH = saturate( dot( wi, h ) );
     data.NdotH = saturate( dot( n, h ) );
@@ -36,7 +36,7 @@ bool computeBrdfData( BrdfData& data,
     data.diffuseReflectance = baseColorToDiffuseReflectance( baseColor, metalness );
 
     data.roughness = roughness;
-    data.alpha     = roughness * roughness;
+    data.alpha     = data.roughness;
     data.alphaSq   = data.alpha * data.alpha;
 
     // Pre-calculate some more BRDF terms

@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+class Integrator;
 
 class Renderer
 {
@@ -35,6 +36,8 @@ public:
 
   void setScene(Scene* renderScene){ scene = renderScene; 
                                       tree = initKdTree(scene);}
+  void setIntegrator(Integrator* integrator) { m_integrator = integrator; }
+  void setSampler(Sampler* s) { sampler = s; }
 
   Scene* scene; 
 
@@ -53,4 +56,7 @@ private:
   RenderImage* img;
   glm::vec4* m_accumulationData = nullptr;
   uint32_t m_frameIndex = 1;
+
+  Sampler* sampler;
+  Integrator* m_integrator;
 };
