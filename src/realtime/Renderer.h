@@ -38,6 +38,7 @@ public:
                                       tree = initKdTree(scene);}
   void setIntegrator(Integrator* integrator) { m_integrator = integrator; }
   void setSampler(Sampler* s) { sampler = s; }
+  Integrator* getIntegrator() { return m_integrator; }
 
   Scene* scene; 
 

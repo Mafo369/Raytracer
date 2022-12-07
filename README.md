@@ -8,6 +8,7 @@
 
 ![alt text](results/sample_bunny.png)
 ![alt text](results/sample_forest.png)
+![alt text](results/sample_forest_texture.png)
 ![alt text](results/sample_indoor.png)
 ![alt text](results/sample_cornellbox.png)
 ![alt text](results/sample_mis.png)

@@ -61,26 +61,27 @@ void Renderer::Render( const CameraI& camera ) {
                 m_FinalImage->GetHeight() * m_FinalImage->GetWidth() * sizeof( glm::vec4 ) );
 
     for ( uint32_t y = 0; y < m_FinalImage->GetHeight(); y++ ) {
-#pragma omp parallel for
+#pragma omp parallel
+        {
+        std::unique_ptr<Sampler> tileSampler = sampler->Clone( time( NULL ) );
+#pragma omp for schedule( dynamic )
         for ( uint32_t x = 0; x < m_FinalImage->GetWidth(); x++ ) {
-            Ray ray;
-            vec3 dir = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-            // vec3 dirx = camera.GetRayDirections()[(x+1) + y * m_FinalImage->GetWidth()];
-            // vec3 diry = camera.GetRayDirections()[x + (y+1) * m_FinalImage->GetWidth()];
-            rayInit( &ray, camera.GetPosition(), normalize( dir ), vec2( x, y ) );
-            ray.hasDifferentials = true;
-            // ray.dox              = vec3( 0 );
-            // ray.doy              = vec3( 0 );
-            // ray.ddx              = vec3( 0 );
-            // ray.ddy              = vec3( 0 );
+            auto pixel  = vec2( x, y );
 
-            // ray.dox = camera.GetPosition();
-            // ray.doy = camera.GetPosition();
-            // ray.ddx = normalize(dirx);
-            // ray.ddy = normalize(diry);
-            Intersection intersection;
-            auto colorr = m_integrator->trace_ray( scene, &ray, tree, &intersection, sampler );
-            auto color  = vec4( colorr.r, colorr.g, colorr.b, 1 );
+            vec4 color(0);
+            tileSampler->StartPixel( pixel );
+            do {
+                Ray ray;
+                vec3 dir = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
+                ray.hasDifferentials = true;
+                rayInit( &ray, camera.GetPosition(), normalize( dir ), vec2( x, y ) );
+
+                Intersection intersection;
+                auto colorr = m_integrator->trace_ray( scene, &ray, tree, &intersection, tileSampler.get() );
+                color += vec4( colorr.r, colorr.g, colorr.b, 1 );
+            } while ( tileSampler->StartNextSample() );
+
+            color = color / (float)tileSampler->samplesPerPixel;
 
             m_accumulationData[x + y * m_FinalImage->GetWidth()] += color;
 
@@ -95,6 +96,8 @@ void Renderer::Render( const CameraI& camera ) {
             accumulatedColor = glm::clamp( accumulatedColor, glm::vec4( 0.0f ), glm::vec4( 1.0f ) );
             m_ImageData[x + y * m_FinalImage->GetWidth()] =
                 Utils::ConvertToRGBA( accumulatedColor );
+
+        }
         }
     }
 

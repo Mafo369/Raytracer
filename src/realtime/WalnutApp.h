@@ -52,7 +52,7 @@ public:
 
     ImGui::Checkbox("Accumulate", &m_Renderer.getSettings().accumulate);
 
-    ImGui::InputInt("Depth", &m_Renderer.scene->depth);
+    ImGui::InputInt("Depth", &m_Renderer.getIntegrator()->maxDepth);
 
     if(ImGui::Button("Reset"))
       m_Renderer.ResetFrameIndex();

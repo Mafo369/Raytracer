@@ -10,13 +10,14 @@ color3 directIllumination(Scene* scene, KdTree* tree, Ray* ray, Intersection* in
 
 class Integrator {
   public:
-    Integrator(Sampler* sampler) : m_sampler(sampler) {}
+    Integrator(Sampler* sampler, int depth) : maxDepth(depth), m_sampler(sampler) {}
     virtual void preprocess(Scene* scene, Sampler* sampler) {}
     virtual color3 trace_ray( Scene* scene,
                               Ray* ray,
                               KdTree* tree,
                               Intersection* intersection,
                               Sampler* sampler ) = 0;
+  int maxDepth;
 
   Sampler* m_sampler;
 };
@@ -31,6 +32,5 @@ class Pathtracer : public Integrator {
                       Intersection* intersection,
                       Sampler* sampler ) override;
 
-    const int maxDepth;
     std::unique_ptr<LightDistribution> m_lightDistrib;
 };

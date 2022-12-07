@@ -23,38 +23,38 @@ color3 directIllumination(Scene* scene, KdTree* tree, Ray* ray, Intersection* in
         }
     }
 
-    //color3 bsdf = intersection->mat->sample(ray, intersection, uScattering, &wi, &scatteringPdf) * max(dot(intersection->normal, wi), 0.f);
-    //if(!isBlack(bsdf) && scatteringPdf > 0){
-    //    float weight = 1;
-    //    lightPdf = light->pdf_Li(*intersection, wi);
-    //    if(lightPdf == 0) return ret;
-    //    weight = PowerHeuristic(1, scatteringPdf, 1, lightPdf);
-    //    Ray ray_ref;
-    //    ray_ref.hasDifferentials = false;
-    //    rayInit( &ray_ref,
-    //             intersection->position + ( wi * acne_eps ),
-    //             normalize( wi ),
-    //             ray->pixel,
-    //             0,
-    //             10000,
-    //             ray->depth + 1 );
+    color3 bsdf = intersection->mat->sample(ray, intersection, uScattering, &wi, &scatteringPdf) * max(dot(intersection->normal, wi), 0.f);
+    if(!isBlack(bsdf) && scatteringPdf > 0){
+        float weight = 1;
+        lightPdf = light->pdf_Li(*intersection, wi);
+        if(lightPdf == 0) return ret;
+        weight = PowerHeuristic(1, scatteringPdf, 1, lightPdf);
+        Ray ray_ref;
+        ray_ref.hasDifferentials = false;
+        rayInit( &ray_ref,
+                 intersection->position + ( wi * acne_eps ),
+                 normalize( wi ),
+                 ray->pixel,
+                 0,
+                 10000,
+                 ray->depth + 1 );
 
-    //    Intersection temp_intersection;
-    //    auto foundIntersection = intersectKdTree(scene, tree, &ray_ref, &temp_intersection);
-    //    color3 Li(0.f);
-    //    if(foundIntersection){
-    //      if(!isBlack(temp_intersection.mat->m_emission))
-    //        Li = static_cast<ShapeLight*>(light)->L(temp_intersection, -wi);
-    //    }
-    //    else
-    //      //Li = color3(0);
-    //      Li = light->Le(&ray_ref);
-    //    if(!isBlack(Li)) ret += bsdf * Li * weight / scatteringPdf;
-    //}
+        Intersection temp_intersection;
+        auto foundIntersection = intersectKdTree(scene, tree, &ray_ref, &temp_intersection);
+        color3 Li(0.f);
+        if(foundIntersection){
+          if(!isBlack(temp_intersection.mat->m_emission))
+            Li = static_cast<ShapeLight*>(light)->L(temp_intersection, -wi);
+        }
+        else
+          //Li = color3(0);
+          Li = light->Le(&ray_ref);
+        if(!isBlack(Li)) ret += bsdf * Li * weight / scatteringPdf;
+    }
     return ret;
 }
 
-Pathtracer::Pathtracer(int maxDepth, Sampler* sampler) : Integrator(sampler), maxDepth(maxDepth){
+Pathtracer::Pathtracer(int maxDepth, Sampler* sampler) : Integrator(sampler, maxDepth){
 
 }
 
@@ -112,9 +112,12 @@ color3 Pathtracer::trace_ray( Scene* scene,
             color3 bsdf = intersection->mat->sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
             wi          = normalize( wi );
             if ( isBlack( bsdf ) || pdf == 0.f ) break;
-            //vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
             if(static_cast<CookTorrance*>(intersection->mat.get())->m_type != TRANSPARENT)
               throughput *= bsdf * abs( dot( wi, intersection->normal ) ) / pdf;
+            else
+            {
+              //std::cout << dot( wi, intersection->normal ) << std::endl;
+            }
 
             rayInit( ray, intersection->position + acne_eps * wi, wi, vec2( 0 ), 0, 10000, 0 );
         }

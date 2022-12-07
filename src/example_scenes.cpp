@@ -815,6 +815,13 @@ Scene* initScene9() {
 
     addObjectsFromFile( "../assets/cornell-box.obj", scene, mat, t );
 
+    Transform tMonkey;
+    tMonkey.scale(0.58, 0.58, 0.58);
+    tMonkey.rotate(vec3(-1,0,0), 35);
+    tMonkey.rotate(vec3(0,1,0), 20);
+    tMonkey.translate(vec3(-1.1,3.7,-3.5));
+    addObjectsFromFile( "../assets/Suzanne.obj", scene, mat, tMonkey );
+
     // auto mat4 = std::make_shared<CookTorrance>();
     // auto lightIntensity4 =
     //    1.23457 * 4.f * M_PI / ( 4. * M_PI * sqr(0.9) * M_PI );
@@ -2138,28 +2145,28 @@ Scene* initScene21() {
     addLight( scene, light4 );
 
     auto mat5         = std::make_shared<CookTorrance>( DIFFUSE );
-    mat5->m_roughness = 0.15;
+    mat5->m_roughness = 0.005;
     mat5->m_metalness = 0.0;
     mat5->m_albedo    = color3( 0.07, 0.09, 0.13 );
     Transform t4;
     addObjectsFromFile( "../assets/veach_mi/plate1.obj", scene, mat5, t4 );
 
     auto mat6         = std::make_shared<CookTorrance>( DIFFUSE );
-    mat6->m_roughness = 0.20;
+    mat6->m_roughness = 0.02;
     mat6->m_metalness = 0.0;
     mat6->m_albedo    = color3( 0.07, 0.09, 0.13 );
     Transform t5;
     addObjectsFromFile( "../assets/veach_mi/plate2.obj", scene, mat6, t5 );
 
     auto mat7         = std::make_shared<CookTorrance>( DIFFUSE );
-    mat7->m_roughness = 0.3;
+    mat7->m_roughness = 0.05;
     mat7->m_metalness = 0.0;
     mat7->m_albedo    = color3( 0.07, 0.09, 0.13 );
     Transform t6;
     addObjectsFromFile( "../assets/veach_mi/plate3.obj", scene, mat7, t6 );
 
     auto mat8         = std::make_shared<CookTorrance>( DIFFUSE );
-    mat8->m_roughness = 0.4;
+    mat8->m_roughness = 0.1;
     mat8->m_metalness = 0.0;
     mat8->m_albedo    = color3( 0.07, 0.09, 0.13 );
     Transform t7;
