@@ -804,13 +804,16 @@ Scene* initScene9() {
                      float( HEIGHT ),
                      0.001,
                      glm::distance( from, at ) );
-    setSkyColor( scene, color3( 0., 0., 0. ) );
-    scene->sky = new UniformSky( vec3( 0 ) );
+    //setSkyColor( scene, color3( 1.f ) );
+    //auto sky   = new IBL( "/home/mafo/dev/Raytracer/assets/brown_photostudio_06_4k.hdr" );
+
+    //addLight(scene, sky);
+    //scene->envLights.push_back(sky);
 
     auto mat         = std::make_shared<CookTorrance>();
-    mat->m_albedo    = color3( 0, 1, 0 );
-    mat->m_metalness = 0.0;
-    mat->m_roughness = 1.0;
+    mat->m_roughness = 0.004;
+    mat->m_metalness = 0.0000;
+    mat->m_albedo    = color3( 0.f, 1.f, 0.95f );
     Transform t;
 
     addObjectsFromFile( "../assets/cornell-box.obj", scene, mat, t );
@@ -819,8 +822,23 @@ Scene* initScene9() {
     tMonkey.scale(0.58, 0.58, 0.58);
     tMonkey.rotate(vec3(-1,0,0), 35);
     tMonkey.rotate(vec3(0,1,0), 20);
-    tMonkey.translate(vec3(-1.1,3.7,-3.5));
+    tMonkey.translate(vec3(-1.1,3.43,-3.6));
     addObjectsFromFile( "../assets/Suzanne.obj", scene, mat, tMonkey );
+
+    Transform tPot;
+    tPot.scale(0.05, 0.05, 0.05);
+    tPot.rotate(vec3(-1,0,0), 90);
+    tPot.translate(vec3(-1.1,-0.15,-1));
+    //addObjectsFromFile( "../assets/teapot.obj", scene, mat, tPot );
+
+    auto mat2         = std::make_shared<CookTorrance>( TRANSPARENT );
+    mat2->m_IOR       = 1.5;
+    mat2->m_roughness = 0.01;
+    mat2->m_albedo    = color3( 1.f );
+    Transform t1;
+    t1.scale( 0.7, 0.7, 0.7 );
+    t1.translate( vec3( 0.6, 2, -1.8 ) );
+    addObject( scene, initSphere( mat2, t1 ) );
 
     // auto mat4 = std::make_shared<CookTorrance>();
     // auto lightIntensity4 =
@@ -1892,21 +1910,25 @@ Scene* initScene19() {
                      0.04,
                      glm::length( at - from ) );
 
-    setSkyColor( scene, color3( 0.f ) );
+    setSkyColor( scene, color3( 1.f ) );
+    auto sky   = new IBL( "/home/mafo/dev/Raytracer/assets/brown_photostudio_06_4k.hdr" );
 
-    auto left  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/left.png" );
-    auto right = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/right.png" );
-    auto front = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/front.png" );
-    auto back  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/back.png" );
-    auto up    = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/top.png" );
-    auto down  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/bottom.png" );
+    addLight(scene, sky);
+    scene->envLights.push_back(sky);
 
-    auto matSky       = std::make_shared<CookTorrance>();
-    matSky->m_texture = new CubeMapTexture( left, right, front, back, up, down );
-    matSky->m_albedo  = color3( 0, 0, 0 );
-    Transform skyboxT;
-    skyboxT.scale( 50, 50, 50 );
-    addObject( scene, initCube( matSky, skyboxT ) );
+    //auto left  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/left.png" );
+    //auto right = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/right.png" );
+    //auto front = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/front.png" );
+    //auto back  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/back.png" );
+    //auto up    = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/top.png" );
+    //auto down  = new image_texture( "../assets/Standard-Cube-Map1/StandardCubeMap/bottom.png" );
+
+    //auto matSky       = std::make_shared<CookTorrance>();
+    //matSky->m_texture = new CubeMapTexture( left, right, front, back, up, down );
+    //matSky->m_albedo  = color3( 0, 0, 0 );
+    //Transform skyboxT;
+    //skyboxT.scale( 50, 50, 50 );
+    //addObject( scene, initCube( matSky, skyboxT ) );
 
     float metalness = 0.01;
     float y         = -6.4;
@@ -1963,7 +1985,7 @@ Scene* initScene19() {
     Transform modemMatrixE;
     modemMatrixE.scale( lightSize, lightSize, lightSize );
     modemMatrixE.translate( vec3( -8, -1.5, 15 ) );
-    addObject( scene, initSphere( matE, modemMatrixE ) );
+    //addObject( scene, initSphere( matE, modemMatrixE ) );
 
     return scene;
 }

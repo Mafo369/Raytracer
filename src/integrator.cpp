@@ -47,7 +47,6 @@ color3 directIllumination(Scene* scene, KdTree* tree, Ray* ray, Intersection* in
             Li = static_cast<ShapeLight*>(light)->L(temp_intersection, -wi);
         }
         else
-          //Li = color3(0);
           Li = light->Le(&ray_ref);
         if(!isBlack(Li)) ret += bsdf * Li * weight / scatteringPdf;
     }
