@@ -1,6 +1,0 @@
-[submodule "libs/Walnut"]
-	path = libs/Walnut
-	url = git@github.com:Mafo369/Walnut.git
-[submodule "libs/oiio"]
-	path = libs/oiio
-	url = git@github.com:OpenImageIO/oiio.git
