@@ -1,6 +1,6 @@
-#include "realtime/WalnutApp.h"
-
-bool g_ApplicationRunning = true;
+#include "example_scenes.h"
+#include "raytracer.h"
+#include <string.h>
 
 int main( int argc, char* argv[] ) {
     if ( argc < 2 || argc > 4 ) {
@@ -17,14 +17,6 @@ int main( int argc, char* argv[] ) {
     std::cout << "######### DEBUG MODE #########" << std::endl;
 #endif
 
-    if ( strcmp( argv[1], "-rt" ) == 0 ) {
-        while ( g_ApplicationRunning ) {
-            Walnut::Application* app = Walnut::CreateApplication( argc, argv );
-            app->Run();
-            delete app;
-        }
-        return 0;
-    }
     char basename[256];
     strncpy( basename, argv[1], 255 );
 
@@ -34,19 +26,6 @@ int main( int argc, char* argv[] ) {
     Scene* scene = parseScene( scene_id );
 
     printf( "render scene %d\n", scene_id );
-    float posLight = -5;
-    auto lightSize = 4.f;
-
-    int i = 97;
-    // for ( ; posLight < 5; posLight += 0.3 ) {
-    // Transform modemMatrixE;
-    // modemMatrixE.scale( lightSize, lightSize, lightSize );
-    // modemMatrixE.translate( vec3( 0, 5, 0 ) );
-    // auto light                = scene->objects[scene->objects.size() - 1];
-    // light->geom.sphere.center = modemMatrixE.transformFrom( vec3( 0 ) );
-    // light->geom.sphere.radius = lightSize;
-    // light->transform          = modemMatrixE;
-    // basename[4]               = char( i );
     printf( "save image to %s\n", basename );
     renderImage( img, scene );
 
@@ -54,8 +33,6 @@ int main( int argc, char* argv[] ) {
     freeImage( img );
     img = initImage( WIDTH, HEIGHT );
 
-    i++;
-    //}
     freeImage( img );
     img = NULL;
     freeScene( scene );

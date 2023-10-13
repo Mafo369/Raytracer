@@ -3,6 +3,8 @@
 #include "raytracer.h"
 #include "scene.h"
 #include "sampling/sampling.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
 bool Light::is_shadowed( vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree ) {
     Intersection temp_inter;
@@ -278,6 +280,47 @@ float ShapeLight::pdf_Li( const Intersection& it, const vec3& wi ) const {
     return m_shape->pdf( it, wi );
 }
 
+IBL::IBL(const std::string& filename){
+  int n;
+  m_pixels = stbi_loadf(filename.c_str(), &m_width, &m_height, &n, 0);
+  float filter = (float)1 / std::max(m_width, m_height);
+  std::unique_ptr<float[]> img(new float[m_width * m_height]);
+  for (int v = 0; v < m_height-3; v+=3) {
+      float vp = (float)v / (float)m_height;
+      float sinTheta = std::sin(Pi * float(v + .5f) / float(m_height));
+      for (int u = 0; u < m_width-3; u+=3) {
+          float up = (float)u / (float)m_width;
+          img[u + v * m_width] = luminance(color3(m_pixels[u + v * m_width], m_pixels[u + v * m_width + 1], m_pixels[u + v * m_width + 2]));
+          img[u + v * m_width] *= sinTheta;
+      }
+  }
+  std::cout << "Channels HDR: " << n << std::endl;
+  std::cout << "Resolution: " << m_width << "x" << m_height << std::endl;
+  m_distribution.reset(new Distribution2D(m_pixels, m_width, m_height));
+}
+
+float IBL::intensityAt(vec3 point, Scene* scene, KdTree* tree, vec3 view, Intersection* intersection) { return 0; }
+vec3 IBL::getDirection(point3 p) { return vec3(0); };
+vec3 IBL::getLightPoint(point3 p, int c, float r) {return vec3(0);}
+
+IBL::~IBL() {
+  stbi_image_free(m_pixels);
+}
+
+vec3 IBL::Le(Ray* ray) const {
+      vec3 dir = m_transform.getInvTransform() * ray->dir;
+      double theta = std::acos(dir.y);
+      double phi = std::atan2(dir.z, dir.x);
+      if(phi<0)phi += 2*M_PI;
+
+      int i = phi/(2*M_PI) * m_width;
+      int j = theta/M_PI * m_height;
+
+      int index = 3*i + 3*m_width*j;
+
+      return vec3(m_pixels[index], m_pixels[index+1], m_pixels[index+2]);
+};
+
 color3 IBL::sample_Li(Scene* scene, KdTree* tree, const Intersection& inter, const point2& u, vec3* wi, float* pdf, bool* visibility) const {
     //float mapPdf;
     //point2 uv = m_distribution->SampleContinuous(u, &mapPdf);
@@ -333,3 +376,4 @@ float IBL::pdf_Li(const Intersection& it, const vec3& wi) const {
     return m_distribution->Pdf(vec2(phi * Inv2Pi, theta * InvPi)) / 
            (2 * Pi * Pi * sinTheta);
 }
+

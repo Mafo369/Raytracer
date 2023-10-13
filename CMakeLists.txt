@@ -10,8 +10,6 @@ set(mrt_SRCS
   src/raytracer.cpp
   src/scene.cpp
   src/bsdf.cpp
-  src/realtime/Camera.cpp
-  src/realtime/Renderer.cpp
   src/example_scenes.cpp
   src/Light.cpp
   src/Object.cpp
@@ -31,14 +29,14 @@ set(mrt_SRCS
   src/LightDistribution.cpp
   )
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
-add_subdirectory(libs/Walnut/)
+#list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
+#add_subdirectory(libs/Walnut/)
 
 add_executable (mrt ${mrt_SRCS})
-target_link_libraries(mrt PUBLIC walnut)
+#target_link_libraries(mrt PUBLIC walnut)
 
-find_package (OpenImageIO REQUIRED)
-target_link_libraries(mrt PRIVATE OpenImageIO::OpenImageIO)
+#find_package (OpenImageIO REQUIRED)
+#target_link_libraries(mrt PRIVATE OpenImageIO::OpenImageIO)
 
 
 
@@ -53,8 +51,6 @@ set(unit_test_SRCS
   src/scene.cpp
   src/intersection.cpp
   src/bsdf.cpp
-  src/realtime/Camera.cpp
-  src/realtime/Renderer.cpp
   src/example_scenes.cpp
   src/Light.cpp
   src/unit-test.cpp
