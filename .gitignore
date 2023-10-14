@@ -94,3 +94,5 @@ tests/external/Catch2
 
 compile_commands.json
 launch.json
+
+*.html

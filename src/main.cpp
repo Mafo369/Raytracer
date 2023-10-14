@@ -1,5 +1,6 @@
 #include "example_scenes.h"
 #include "raytracer.h"
+#include "application.h"
 #include <string.h>
 
 int main( int argc, char* argv[] ) {
@@ -16,6 +17,18 @@ int main( int argc, char* argv[] ) {
 #else
     std::cout << "######### DEBUG MODE #########" << std::endl;
 #endif
+    if ( strcmp( argv[1], "-rt" ) == 0 ) {
+        Application app;
+
+        try {
+            app.run(800, 600);
+        } catch (const std::exception& e) {
+            std::cerr << e.what() << std::endl;
+            return EXIT_FAILURE;
+        }
+
+        return EXIT_SUCCESS;
+    }
 
     char basename[256];
     strncpy( basename, argv[1], 255 );
