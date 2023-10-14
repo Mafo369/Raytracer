@@ -1,4 +1,5 @@
 #pragma once
+
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.h>
@@ -8,10 +9,17 @@
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
+    std::optional<uint32_t> presentFamily;
 
     bool isComplete(){
-        return graphicsFamily.has_value();
+        return graphicsFamily.has_value() && presentFamily.has_value();
     }
+};
+
+struct SwapChainSupportDetails {
+    VkSurfaceCapabilitiesKHR capabilities;
+    std::vector<VkSurfaceFormatKHR> formats;
+    std::vector<VkPresentModeKHR> presentModes;
 };
 
 class Application {
@@ -22,6 +30,7 @@ private:
     void initWindow();
 
     void checkAvailableExtensions();
+    bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     bool checkValidationLayerSupport();
     std::vector<const char*> getRequiredExtensions();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -33,9 +42,22 @@ private:
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
+    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+    VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+
+    void createSwapChain();
+
+    void createImageViews();
+
     void createLogicalDevice();
 
     void createInstance();
+
+    void createSurface();
+
     void initVulkan();
 
     void mainLoop();
@@ -60,13 +82,26 @@ private:
     VkPhysicalDeviceFeatures m_deviceFeatures{};
     VkDevice m_device = VK_NULL_HANDLE;
     VkQueue m_graphicsQueue;
+    VkQueue m_presentQueue;
+    VkSwapchainKHR m_swapChain;
+
+    std::vector<VkImage> m_swapChainImages;
+    std::vector<VkImageView> m_swapChainImageViews;
+    VkFormat m_swapChainImageFormat;
+    VkExtent2D m_swapChainExtent;
 
     VkDebugUtilsMessengerEXT m_debugMessenger;
+
+    VkSurfaceKHR m_surface;
 
     int m_width, m_height;
 
     const std::vector<const char*> validationLayers = {
         "VK_LAYER_KHRONOS_validation"
+    };
+
+    const std::vector<const char*> deviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME
     };
 
 #ifdef NDEBUG
