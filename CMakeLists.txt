@@ -35,15 +35,15 @@ set(mrt_SRCS
 find_package(Vulkan REQUIRED FATAL_ERROR) # error
 find_package(glfw3 REQUIRED FATAL_ERROR)
 
+add_subdirectory(libs/imgui)
+
 add_executable (mrt ${mrt_SRCS})
-target_link_libraries(mrt PUBLIC vulkan glfw)
+target_link_libraries(mrt PUBLIC vulkan glfw imgui)
 
 #find_package (OpenImageIO REQUIRED)
 #target_link_libraries(mrt PRIVATE OpenImageIO::OpenImageIO)
 
-
-
-target_include_directories (mrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libs/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/lodepng-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/tinyexr/ ${VULKAN_INCLUDE_DIRS})
+target_include_directories (mrt PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/libs/glm-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/lodepng-master/ ${CMAKE_CURRENT_SOURCE_DIR}/libs/tinyexr/ ${VULKAN_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/libs/imgui/)
 
 
 set(unit_test_SRCS
@@ -81,3 +81,43 @@ set(make_test_SRCS
 
 #add_executable (make-test ${make_test_SRCS})
 #target_include_directories (make-test PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/glm-master/glm ${CMAKE_CURRENT_SOURCE_DIR}/lodepng-master/ )
+
+#--------------------------------------------------------------------------------------------------
+# Shaders in project
+#
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/utilities.cmake)
+
+set(SHD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shaders)
+
+# Local shaders
+file(GLOB SHD_SRC # Shader sources
+    ${SHD_DIR}/*.vert 
+    ${SHD_DIR}/*.frag 
+    ${SHD_DIR}/*.rgen 
+    ${SHD_DIR}/*.rchit 
+    ${SHD_DIR}/*.rahit 
+    ${SHD_DIR}/*.rmiss 
+    ${SHD_DIR}/*.comp
+    )
+    
+file(GLOB SHD_HDR  # Shader headers
+    ${SHD_DIR}/*.glsl 
+    ${SHD_DIR}/*.h
+    )
+
+
+
+# Compiling shaders to Spir-V header
+compile_glsl(
+    SOURCE_FILES ${SHD_SRC}
+    HEADER_FILES ${SHD_HDR}
+    DST "${CMAKE_CURRENT_SOURCE_DIR}/_autogen" 
+    VULKAN_TARGET "vulkan1.3"
+    HEADER ON
+    DEPENDENCY ${VULKAN_BUILD_DEPENDENCIES}
+    FLAGS -I${SHD_DIR} -g
+    )
+
+target_sources(mrt PRIVATE ${GLSL_SOURCES} ${GLSL_HEADERS})
+source_group("Shaders/src"   FILES ${GLSL_SOURCES} )
+source_group("Shaders/hdr"   FILES ${GLSL_HEADERS} )

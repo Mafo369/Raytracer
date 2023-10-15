@@ -58,7 +58,30 @@ private:
 
     void createSurface();
 
+    VkShaderModule createShaderModule(const std::vector<uint32_t>& code);
+
+    void createRenderPass();
+
+    void createFramebuffers();
+
+    void createGraphicsPipeline();
+
+    void createCommandPool();
+
+    void createCommandBuffer();
+
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+
+    void createSyncObjects();
+
+    void cleanupSwapChain();
+    void recreateSwapChain();
+
     void initVulkan();
+
+    void initImgui();
+
+    void drawFrame();
 
     void mainLoop();
 
@@ -90,11 +113,28 @@ private:
     VkFormat m_swapChainImageFormat;
     VkExtent2D m_swapChainExtent;
 
+    VkRenderPass m_renderPass;
+    VkPipelineLayout m_pipelineLayout;
+    VkPipeline m_graphicsPipeline;
+
+    std::vector<VkFramebuffer> m_swapChainFramebuffers;
+
+    VkCommandPool m_commandPool;
+
+    std::vector<VkCommandBuffer> m_commandBuffers;
+
+    std::vector<VkSemaphore> m_imageAvailableSemaphores;
+    std::vector<VkSemaphore> m_renderFinishedSemaphores;
+    std::vector<VkFence> m_inFlightFences;
+
     VkDebugUtilsMessengerEXT m_debugMessenger;
 
     VkSurfaceKHR m_surface;
 
     int m_width, m_height;
+    bool m_framebufferResized = false;
+
+    uint32_t m_currentFrame = 0;
 
     const std::vector<const char*> validationLayers = {
         "VK_LAYER_KHRONOS_validation"
@@ -109,5 +149,12 @@ private:
 #else
     const bool enableValidationLayers = true;
 #endif
+
+    const int MAX_FRAMES_IN_FLIGHT = 2;
+
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+        auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
+        app->m_framebufferResized = true;
+    }
 
 };
