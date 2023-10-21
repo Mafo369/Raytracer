@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../Material.h"
+#include "../intersection.h"
 
 class CookTorrance : public Material {
   public:

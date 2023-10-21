@@ -1,8 +1,12 @@
 #pragma once
 
 #include "defines.h"
-// RAY
-typedef struct ray_s {
+
+class Ray {
+public:
+    Ray();
+    Ray(point3 o, vec3 d, vec2 pixel_, float tmin_=0, float tmax_=100000, int depth_=0);
+    ~Ray();
 
     point3 orig; //! start point of the ray
     vec3 dir; //! ray direction, normalized
@@ -23,22 +27,5 @@ typedef struct ray_s {
     vec3 ddy;
 
     bool hasDifferentials = true;
-} Ray;
-
-inline void rayInit(Ray *r, point3 o, vec3 d, vec2 pixel, float tmin=0, float tmax=100000, int depth=0) {
-    r->orig = o;
-    r->dir = d;
-    r->tmin = tmin;
-    r->tmax = tmax;
-    r->depth = depth;
-    r->sign[0] = r->dir.x>=0?0:1;
-    r->sign[1] = r->dir.y>=0?0:1;
-    r->sign[2] = r->dir.z>=0?0:1;
-    r->invdir = 1.f/d;
-    r->pixel = pixel;
-}
-
-inline point3 rayAt(const Ray r, float t) {
-    return r.orig + t*r.dir;
-}
-
+private:
+};

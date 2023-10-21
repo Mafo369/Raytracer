@@ -1,16 +1,12 @@
 #include "Light.h"
 #include "ray.h"
-#include "raytracer.h"
 #include "scene.h"
 #include "sampling/sampling.h"
 
 bool Light::is_shadowed( vec3 lightPosition, vec3 normal, vec3 point, Scene* scene, KdTree* tree ) {
     Intersection temp_inter;
-    Ray ray;
     vec3 dir = normalize( lightPosition - point );
-    // rayInit(&ray, point + (acne_eps * normal), dir, vec2(0,0),0.f, 100);
-    rayInit( &ray,
-             point + ( acne_eps * normal ),
+    auto ray = Ray( point + ( acne_eps * normal ),
              dir,
              vec2( 0, 0 ),
              0.f,
@@ -249,6 +245,10 @@ vec3 DirectLight::getDirection( point3 p ) {
     return m_position;
 }
 
+color3 ShapeLight::L(const Intersection& inter, const vec3& w) const {
+  return dot(inter.normal, w) > 0.f ? m_color : color3(0);
+}
+
 color3 ShapeLight::sample_Li( Scene* scene,
                               KdTree* tree,
                               const Intersection& inter,
@@ -259,16 +259,14 @@ color3 ShapeLight::sample_Li( Scene* scene,
     Intersection pShape = m_shape->sample( inter, u, pdf );
     *wi                 = normalize( pShape.position - inter.position );
 
-    Ray rayS;
     vec3 origin           = inter.position + ( acne_eps * inter.normal );
-    rayS.hasDifferentials = false;
-    rayS.shadow           = true;
-    rayInit( &rayS,
-             origin,
+    auto rayS = Ray( origin,
              *wi,
              vec2( 0, 0 ),
              0.f,
              distance( pShape.position, inter.position ) * 0.99f );
+    rayS.hasDifferentials = false;
+    rayS.shadow           = true;
     Intersection temp_inter;
     *visibility = intersectKdTree( scene, tree, &rayS, &temp_inter );
     return L( pShape, -*wi );
@@ -295,16 +293,14 @@ color3 IBL::sample_Li(Scene* scene, KdTree* tree, const Intersection& inter, con
     *wi = normalize(random_dir(normal));
     *pdf = max(dot(normal, *wi), 0.f) / Pi;
 
-    Ray rayS;
     vec3 origin           = inter.position + *wi * acne_eps;
-    rayS.hasDifferentials = false;
-    rayS.shadow           = true;
-    rayInit( &rayS,
-             origin,
+    auto rayS = Ray( origin,
              *wi,
              vec2( 0, 0 ),
              0.f,
              10000 );
+    rayS.hasDifferentials = false;
+    rayS.shadow           = true;
     Intersection temp_inter;
     *visibility = intersectKdTree( scene, tree, &rayS, &temp_inter );
 
@@ -332,4 +328,18 @@ float IBL::pdf_Li(const Intersection& it, const vec3& wi) const {
     if(sinTheta == 0) return 0;
     return m_distribution->Pdf(vec2(phi * Inv2Pi, theta * InvPi)) / 
            (2 * Pi * Pi * sinTheta);
+}
+
+vec3 IBL::Le(Ray* ray) const {
+      vec3 dir = m_transform.getInvTransform() * ray->dir;
+      double theta = std::acos(dir.y);
+      double phi = std::atan2(dir.z, dir.x);
+      if(phi<0)phi += 2*M_PI;
+
+      int i = phi/(2*M_PI) * m_width;
+      int j = theta/M_PI * m_height;
+
+      int index = 3*i + 3*m_width*j;
+
+      return vec3(m_pixels[index], m_pixels[index+1], m_pixels[index+2]);
 }

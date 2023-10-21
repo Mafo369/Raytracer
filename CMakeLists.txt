@@ -7,7 +7,6 @@ set(mrt_SRCS
   src/kdtree.cpp
   libs/lodepng-master/lodepng.cpp
   src/main.cpp
-  src/raytracer.cpp
   src/scene.cpp
   src/bsdf.cpp
   src/realtime/Camera.cpp
@@ -29,6 +28,10 @@ set(mrt_SRCS
   libs/tinyexr/miniz.c
   src/integrator.cpp
   src/LightDistribution.cpp
+  src/rendering/CPURenderer.cpp
+  src/ray.cpp
+  src/intersection.cpp
+  src/Camera.cpp
   )
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
@@ -49,7 +52,6 @@ set(unit_test_SRCS
   src/image.cpp
   src/kdtree.cpp
   libs/lodepng-master/lodepng.cpp
-  src/raytracer.cpp
   src/scene.cpp
   src/intersection.cpp
   src/bsdf.cpp
@@ -75,7 +77,6 @@ set(make_test_SRCS
   src/kdtree.cpp
   libs/lodepng-master/lodepng.cpp
   src/make-test.cpp
-  src/raytracer.cpp
   src/scene.cpp
   src/example_scenes.cpp
   )

@@ -2,6 +2,7 @@
 #include "../Light.h"
 #include "../Object.h"
 #include "../bsdf.hpp"
+#include "../integrator.h"
 
 #include "../sampling/sampling.h"
 #define SCATTER_SAMPLES 1
@@ -212,14 +213,12 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         new_ray.doy = vec3( 0 );
         new_ray.ddx = vec3( 0 );
         new_ray.ddy = vec3( 0 );
-        rayInit( &new_ray,
-                 intersection->position + ( acne_eps * normal ),
+        new_ray = Ray(intersection->position + ( acne_eps * normal ),
                  normalize( dirR ),
                  ray->pixel,
                  0,
                  100000,
                  ray->depth + 1 );
-
         Intersection temp_inter;
         ret = trace_ray( scene, &new_ray, tree, &temp_inter );
     }
@@ -264,8 +263,7 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                     ( 1.0 - r0 ) * ( 1 - c2 ) * ( 1 - c2 ) * ( 1 - c2 ) * ( 1 - c2 ) * ( 1 - c2 );
 
             if ( uniform01( engine ) < r ) {
-                rayInit( &new_ray,
-                         intersection->position + ( 0.01f * reflDir ),
+                new_ray = Ray( intersection->position + ( 0.01f * reflDir ),
                          normalize( reflDir ),
                          ray->pixel,
                          0,
@@ -273,8 +271,7 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                          ray->depth + 1 );
             }
             else {
-                rayInit( &new_ray,
-                         intersection->position - ( 0.001f * normal ),
+                new_ray = Ray( intersection->position - ( 0.001f * normal ),
                          normalize( refractDir ),
                          ray->pixel,
                          0,
@@ -283,8 +280,7 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
             }
         }
         else {
-            rayInit( &new_ray,
-                     intersection->position + ( 0.001f * normal ),
+            new_ray = Ray( intersection->position + ( 0.001f * normal ),
                      normalize( reflDir ),
                      ray->pixel,
                      0,
@@ -309,9 +305,8 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         vec3 Np = dirA;
 
         Intersection temp_inter;
-        Ray rayS;
         vec3 origin = intersection->position + ( acne_eps * wi );
-        rayInit( &rayS, origin, wi, vec2( 0, 0 ), 0.f, sqrt( d_light2 ) );
+        Ray rayS = Ray(origin, wi, vec2( 0, 0 ), 0.f, sqrt( d_light2 ));
         rayS.shadow = true;
         rayS.dox    = vec3( 0.f );
         rayS.doy    = vec3( 0.f );
@@ -350,9 +345,7 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         if ( dot( dirA, intersection->normal ) < 0 ) return ret;
         if ( dot( dirA, R ) < 0 ) return ret;
 
-        Ray ray_ref;
-        rayInit( &ray_ref,
-                 intersection->position + ( acne_eps * dirA ),
+        Ray ray_ref = Ray( intersection->position + ( acne_eps * dirA ),
                  normalize( dirA ),
                  ray->pixel,
                  0,
@@ -393,9 +386,7 @@ color3 Blinn::reflectionColor( Scene* scene,
                                color3& color,
                                vec3 normal ) {
     vec3 r = normalize( reflect( ray->dir, normal ) );
-    Ray ray_ref;
-    rayInit( &ray_ref,
-             intersection->position + ( acne_eps * r ),
+    Ray ray_ref = Ray( intersection->position + ( acne_eps * r ),
              r,
              ray->pixel,
              0,
@@ -473,9 +464,7 @@ color3 Blinn::refractionColor( Scene* scene,
     vec3 refractDir = normalize( pt + nt );
 
     if ( s2 * s2 <= 1.0 ) {
-        Ray ray_refr;
-        rayInit( &ray_refr,
-                 intersection->position + ( acne_eps * refractDir ),
+        Ray ray_refr = Ray( intersection->position + ( acne_eps * refractDir ),
                  refractDir,
                  ray->pixel,
                  0,

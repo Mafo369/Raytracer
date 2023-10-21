@@ -1,10 +1,13 @@
 #pragma once
 
 #include "defines.h"
+#include "scene.h"
+#include "kdtree.h"
 #include <vector>
-#include "raytracer.h"
-//#include "Light.h"
 #include "sampling/sampler.h"
+
+class Intersection;
+class Ray;
 
 enum MatType {
   DIFFUSE=0,
@@ -80,6 +83,7 @@ class Material {
   public:
     Material() = default;
     virtual ~Material() = default;
+
     virtual color3 f(const vec3& wo, const vec3& wi, const vec3& n) = 0;
     virtual color3 sample_f(vec3 wo, vec3* wi, vec3 normal, const point2& u, float* pdf, int type) = 0;
     virtual float pdf(const vec3& wo, const vec3& wi, const vec3& n) = 0;
@@ -89,6 +93,7 @@ class Material {
     virtual color3 scatterColor(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection) = 0;
     virtual color3 eval(Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf) = 0;
     virtual color3 sample(Ray* ray, Intersection* intersection, const vec2& uScattering, vec3* wi, float* scatteringPdf) = 0;
+
     texture* m_texture = nullptr;
     color3 m_emission = color3(0,0,0);
     color3 m_albedo = color3(0,0,0);

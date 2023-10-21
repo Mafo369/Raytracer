@@ -13,6 +13,7 @@
 #include <iostream>
 
 #include "Object.h"
+#include "ray.h"
 
 #define COST_TRAVERSE 1.0
 #define COST_INTERSECT 1.5
@@ -181,7 +182,7 @@ KdTree* initKdTree( Scene* scene ) {
 
 // from
 // http://www.scratchapixel.com/lessons/3d-basic-lessons/lesson-7-intersecting-simple-shapes/ray-box-intersection/
-static bool intersectAabb( Ray* theRay, vec3 min, vec3 max ) {
+bool intersectAabb( Ray* theRay, vec3 min, vec3 max ) {
     float tmin, tmax, tymin, tymax, tzmin, tzmax;
     vec3 bounds[2] = { min, max };
     tmin           = ( bounds[theRay->sign[0]].x - theRay->orig.x ) * theRay->invdir.x;
@@ -586,8 +587,8 @@ bool intersectKdTree( Scene* scene, KdTree* tree, Ray* ray, Intersection* inters
 
     float dist;
 
-    Ray ray_backup; // Ray backup -> we'll use it to find plane intersections
-    rayInit( &ray_backup, ray->orig, ray->dir, ray->pixel, ray->tmin, ray->tmax, ray->depth );
+    // Ray backup -> we'll use it to find plane intersections
+    auto ray_backup = Ray( ray->orig, ray->dir, ray->pixel, ray->tmin, ray->tmax, ray->depth );
     ray_backup.dox = ray->dox;
     ray_backup.doy = ray->doy;
     ray_backup.ddx = ray->ddx;

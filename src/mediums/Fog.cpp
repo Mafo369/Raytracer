@@ -1,6 +1,6 @@
 #include "Fog.h"
-#include "../raytracer.h"
 #include "../sampling/sampling.h"
+#include "../integrator.h"
 
 float Fog::int_exponential( float y0, float ysol, float beta, float s, float uy ) const {
     float result =
@@ -77,9 +77,8 @@ color3 Fog::sample( const Ray& ray, Scene* scene, KdTree* tree, float yFloor ) c
         break;
     }
 
-    Ray L_Ray;
+    Ray L_Ray = Ray( randP, randDir, ray.pixel, 0, 100000, ray.depth + 1 );
     L_Ray.hasDifferentials = false;
-    rayInit( &L_Ray, randP, randDir, ray.pixel, 0, 100000, ray.depth + 1 );
     Intersection interL;
     color3 L = trace_ray( scene, &L_Ray, tree, &interL );
 

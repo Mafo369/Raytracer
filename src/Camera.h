@@ -2,7 +2,6 @@
 
 #include "defines.h"
 #include "ray.h"
-#include "raytracer.h"
 #include "sampling/sampling.h"
 
 #include <random>
@@ -17,7 +16,7 @@ class Camera {
     Camera() = default;
     virtual ~Camera() = default;
 
-    virtual void get_ray(float s, float t, float uLens, float vLens, Ray* r, vec2 pixel) const = 0;
+    virtual Ray get_ray(float s, float t, float uLens, float vLens, vec2 pixel, bool hasDifferentials = true) const = 0;
     float imgWidth;
     float imgHeight;
 };
@@ -25,78 +24,11 @@ class Camera {
 class SimpleCamera : public Camera {
   public:
     SimpleCamera(point3 lookfrom, point3 lookat, vec3 vup, float vfov, float aspect_ratio, 
-                 int width, int height, float lensRadius, float focalDistance) : Camera() {
-        pos = lookfrom;
-        fov = vfov;
-        aspect = aspect_ratio;
-        m_lensRadius = lensRadius;
-        m_focalDistance = focalDistance;
+                 int width, int height, float lensRadius, float focalDistance);
 
-        imgWidth = width;
-        imgHeight = height;
+    ~SimpleCamera() override;
 
-        dir = lookat;
-        dir -= pos;
-
-        dir = normalize(dir);
-        xDir = cross(dir, vup);
-        up = normalize(cross(xDir, dir));
-
-        left =  normalize(cross(up, dir));
-        float radfov = fov * (float)M_PI / 180.0;
-        l = m_focalDistance;
-        h = tan(radfov * .5f) * (2.0f * l);
-        w = h * imgWidth / (float)imgHeight;
-
-        point3 B = pos + (l * dir) + (h / 2.0f * up);
-        nearPlaneTopLeft = B + w / 2.0f * (left);
-        dXPixel = -left * (w / (float)imgWidth);
-        dYPixel = -up * (w / (float)imgWidth);
-    }
-
-    ~SimpleCamera() {}
-
-    void get_ray(float s, float t, float uLens, float vLens, Ray *r, vec2 pixel) const override {
-      if(m_lensRadius > 0) {
-        point2 pLens = m_lensRadius * ConcentricSampleDisk(vec2(uLens, vLens));
-        vec3 offset = xDir * pLens.x + up * pLens.y;
-        vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos - offset;
-        vec3 dnorm = normalize(d);
-        rayInit(r, pos + offset, dnorm, pixel);
-
-        if(r->hasDifferentials){
-          r->dox = pos + offset;
-          r->doy = pos + offset;
-          r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos - offset;
-          r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos - offset;
-        }
-        else
-        {
-          r->dox = vec3(0);
-          r->doy = vec3(0);
-          r->ddx = vec3(0);
-          r->ddy = vec3(0);
-        }
-      }
-      else{
-        vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos;
-        vec3 dnorm = normalize(d);
-        rayInit(r, pos, dnorm, pixel);
-        if(r->hasDifferentials){
-          r->dox = pos;
-          r->doy = pos;
-          r->ddx = (nearPlaneTopLeft + (s+1.f) * dXPixel + t * dYPixel) - pos;
-          r->ddy = (nearPlaneTopLeft + s * dXPixel + (t+1.f) * dYPixel) - pos;
-        }
-        else
-        {
-          r->dox = vec3(0);
-          r->doy = vec3(0);
-          r->ddx = vec3(0);
-          r->ddy = vec3(0);
-        }
-      }
-    }
+    Ray get_ray(float s, float t, float uLens, float vLens, vec2 pixel, bool hasDifferentials = true) const override;
 
     vec3 pos = vec3(0,0,0);
     vec3 dir = vec3(0,0,-1);
@@ -118,43 +50,13 @@ class SimpleCamera : public Camera {
 class CameraFOV : public Camera {
     public:
         CameraFOV(point3 lookfrom, point3 lookat, vec3 vup, float vfov, float width, float height,
-               float aperture, float focus_dist ) : Camera() {
-            float aspect_ratio = width / height;
-            auto theta = degrees_to_radians(vfov);
-            auto h = std::tan(theta/2.f);
-            auto viewport_height = 2.0f * h;
-            auto viewport_width = aspect_ratio * viewport_height;
-            lens_radius = aperture / 2.0f;
-            imgWidth = width;
-            imgHeight = height;
+               float aperture, float focus_dist );
 
-            w = glm::normalize(lookfrom - lookat);
-            u = glm::normalize(glm::cross(vup, w));
-            v = glm::cross(w, u);
+        ~CameraFOV() override;
 
-            origin = lookfrom;
-            horizontal = focus_dist * viewport_width * u;
-            vertical = focus_dist * viewport_height * v;
-            lower_left_corner = origin - horizontal/2.0f - vertical/2.0f - focus_dist*w;
-        }
+        vec3 mDiskRand() const;
 
-        ~CameraFOV() {};
-
-        vec3 mDiskRand() const {
-          while(true){
-            auto p = vec3(m_unifDistributionRand(engine), m_unifDistributionRand(engine), 0);
-            if (glm::length_sq(p) >= 1) continue;
-            return p;
-          }
-        }
-
-        void get_ray(float s, float t, float uLens, float vLens, Ray *r, vec2 pixel) const override {
-            glm::vec2 rd = lens_radius * mDiskRand();
-            vec3 offset = u * rd.x + v * rd.y;
-
-            vec3 dir = lower_left_corner + s*horizontal + t*vertical - origin - offset;
-            rayInit(r, origin + offset, normalize(dir), pixel);
-        }
+        Ray get_ray(float s, float t, float uLens, float vLens, vec2 pixel, bool hasDifferentials = true) const override;
 
     private:
         point3 origin;

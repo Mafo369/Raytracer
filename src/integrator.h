@@ -1,9 +1,12 @@
+#pragma once
+
 #include "defines.h"
-#include "raytracer.h"
 #include "Light.h"
 #include "sampling/sampling.h"
 #include "Sky.h"
 #include "LightDistribution.h"
+
+color3 trace_ray(Scene *scene, Ray *ray, KdTree *tree, Intersection* intersection, bool show_lights=true, Sampler* sampler=nullptr);
 
 // from PBR
 color3 directIllumination(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, Light* light, const vec2& uScattering, const vec2& uLight);

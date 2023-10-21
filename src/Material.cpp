@@ -1,6 +1,7 @@
 #include "Material.h"
 #include "Light.h"
 #include "bsdf.hpp"
+#include "integrator.h"
 
 inline float saturate( float x ) {
     return clamp( x, 0.0f, 1.0f );
@@ -62,9 +63,7 @@ color3 specularReflect( Ray* ray,
 
     if ( pdf > 0 && !isBlack( f ) ) {
         vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-        Ray ray_ref;
-        rayInit( &ray_ref,
-                 intersection->position + ( acne_eps * wi ),
+        Ray ray_ref = Ray( intersection->position + ( acne_eps * wi ),
                  wi,
                  ray->pixel,
                  0,
@@ -133,9 +132,7 @@ color3 specularTransmission( Ray* ray,
 
     if ( pdf > 0 && !isBlack( f ) ) {
         vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-        Ray ray_refr;
-        rayInit( &ray_refr,
-                 intersection->position + ( acne_eps * wi ),
+        Ray ray_refr = Ray( intersection->position + ( acne_eps * wi ),
                  wi,
                  ray->pixel,
                  0,

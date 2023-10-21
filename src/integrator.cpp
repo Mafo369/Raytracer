@@ -2,6 +2,65 @@
 #include "Medium.h"
 #include "LightDistribution.h"
 
+// pathtracer
+color3 trace_ray( Scene* scene,
+                  Ray* ray,
+                  KdTree* tree,
+                  Intersection* intersection,
+                  bool show_lights,
+                  Sampler* sampler ) {
+    color3 ret = color3( 0, 0, 0 );
+    color3 throughput( 1.f );
+
+    // if ( ray->depth > scene->depth ) return color3( 0.f );
+
+    int depth;
+
+    for ( depth = 0;; depth++ ) {
+
+        if ( intersectKdTree( scene, tree, ray, intersection ) ) {
+            intersection->hit = true;
+            // Compute necessary differential information for texture filtering
+            if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
+
+            if ( !isBlack( intersection->mat->m_emission ) && depth == 0 ) {
+                ret += throughput *
+                       static_cast<ShapeLight*>( scene->lights[0] )->L( *intersection, -ray->dir );
+            }
+
+            for ( auto& light : scene->lights ) {
+                vec2 uLight = sampler->Get2D();
+                vec2 uScattering = sampler->Get2D();
+                ret += throughput * directIllumination( scene, tree, ray, intersection, light, uScattering, uLight );
+            }
+            float pdf;
+            vec3 wi;
+            color3 bsdf = intersection->mat->sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
+            wi          = normalize( wi );
+            if ( isBlack( bsdf ) || pdf == 0.f ) break;
+
+            throughput *= bsdf * abs( dot( wi, intersection->normal ) ) / pdf;
+
+            ray = new Ray(intersection->position + acne_eps * wi, wi, vec2( 0 ), 0, 10000, 0 );
+        }
+        else {
+            for(auto& env : scene->envLights)
+              ret += throughput * env->Le(ray);
+            break;
+        }
+
+        if ( depth >= 5 ) break;
+
+        // if ( ray->tmax < 0 || !intersection->hit || ray->dir.z == 0 ) return ret;
+
+        if ( scene->medium != nullptr )
+            ret = ret * scene->medium->tr( *ray, scene->ysol ) +
+                  scene->medium->sample( *ray, scene, tree, scene->ysol );
+    }
+
+    return ret;
+}
+
 color3 directIllumination(Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection, Light* light, const vec2& uScattering, const vec2& uLight) {
     color3 ret(0);
 
@@ -29,15 +88,13 @@ color3 directIllumination(Scene* scene, KdTree* tree, Ray* ray, Intersection* in
         lightPdf = light->pdf_Li(*intersection, wi);
         if(lightPdf == 0) return ret;
         weight = PowerHeuristic(1, scatteringPdf, 1, lightPdf);
-        Ray ray_ref;
-        ray_ref.hasDifferentials = false;
-        rayInit( &ray_ref,
-                 intersection->position + ( wi * acne_eps ),
+        auto ray_ref = Ray( intersection->position + ( wi * acne_eps ),
                  normalize( wi ),
                  ray->pixel,
                  0,
                  10000,
                  ray->depth + 1 );
+        ray_ref.hasDifferentials = false;
 
         Intersection temp_intersection;
         auto foundIntersection = intersectKdTree(scene, tree, &ray_ref, &temp_intersection);
@@ -118,7 +175,7 @@ color3 Pathtracer::trace_ray( Scene* scene,
               //std::cout << dot( wi, intersection->normal ) << std::endl;
             }
 
-            rayInit( ray, intersection->position + acne_eps * wi, wi, vec2( 0 ), 0, 10000, 0 );
+            ray = new Ray( intersection->position + acne_eps * wi, wi, vec2( 0 ), 0, 10000, 0 );
         }
         else {
             for(auto& env : scene->envLights)

@@ -4,7 +4,6 @@
 #include "defines.h"
 #include "image.h"
 #include "ray.h"
-#include "raytracer.h"
 #include "scene.h"
 #include <stdio.h>
 #include <stdlib.h>

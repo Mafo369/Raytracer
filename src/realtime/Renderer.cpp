@@ -71,10 +71,9 @@ void Renderer::Render( const CameraI& camera ) {
             vec4 color(0);
             tileSampler->StartPixel( pixel );
             do {
-                Ray ray;
                 vec3 dir = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
+                Ray ray = Ray( camera.GetPosition(), normalize( dir ), vec2( x, y ) );
                 ray.hasDifferentials = true;
-                rayInit( &ray, camera.GetPosition(), normalize( dir ), vec2( x, y ) );
 
                 Intersection intersection;
                 auto colorr = m_integrator->trace_ray( scene, &ray, tree, &intersection, tileSampler.get() );

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Material.h"
-#include "scene.h"
 
 color3 RDM_bsdf( BrdfData& data, texture* texture, int face );
 

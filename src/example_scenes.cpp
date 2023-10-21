@@ -8,7 +8,6 @@
 #include "image.h"
 #include "materials/Blinn.h"
 #include "ray.h"
-#include "raytracer.h"
 #include "scene.h"
 #include "shapes/plane.h"
 #include "textures.hpp"

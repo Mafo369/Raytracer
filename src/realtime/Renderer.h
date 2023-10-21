@@ -10,10 +10,10 @@
 
 #include "../defines.h"
 #include "../image.h"
-#include "../raytracer.h"
 #include "../scene.h"
 #include "../textures.hpp"
 #include "../kdtree.h"
+#include "../sampling/sampler.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

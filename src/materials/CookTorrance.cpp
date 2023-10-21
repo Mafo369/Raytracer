@@ -3,6 +3,7 @@
 #include "../Sky.h"
 #include "../bsdf.hpp"
 #include "../sampling/sampling.h"
+#include "../integrator.h"
 
 #define GI 1
 
@@ -314,9 +315,8 @@ color3 CookTorrance::scratchAPixelScatter( Ray* ray,
     color3 directL = color3( 0 );
 
     Intersection temp_inter;
-    Ray rayS;
     vec3 origin = intersection->position + ( acne_eps * wi );
-    rayInit( &rayS, origin, wi, vec2( 0, 0 ), 0.f, 10000 );
+    Ray rayS = Ray(origin, wi, vec2( 0, 0 ), 0.f, 10000 );
     rayS.shadow = true;
     rayS.dox    = vec3( 0.f );
     rayS.doy    = vec3( 0.f );
@@ -339,15 +339,13 @@ color3 CookTorrance::scratchAPixelScatter( Ray* ray,
               sampleI.x * Nb.y + sampleI.y * intersection->normal.y + sampleI.z * Nt.y,
               sampleI.x * Nb.z + sampleI.y * intersection->normal.z + sampleI.z * Nt.z );
 
-    Ray ray_ref;
-    ray_ref.hasDifferentials = true;
-    rayInit( &ray_ref,
-             intersection->position + ( wiI * acne_eps ),
+    Ray ray_ref = Ray( intersection->position + ( wiI * acne_eps ),
              normalize( wiI ),
              ray->pixel,
              0,
              10000,
              ray->depth + 1 );
+    ray_ref.hasDifferentials = true;
 
     Intersection temp_intersection;
     auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection );
@@ -471,16 +469,13 @@ color3 CookTorrance::myScatter( Ray* ray, Scene* scene, KdTree* tree, Intersecti
     // Prevent tracing direction "under" the hemisphere (behind the triangle)
     if ( dot( intersection->normal, rayDirection ) <= 0.0f ) return ret;
 
-    Ray ray_ref;
-    ray_ref.hasDifferentials = true;
-    rayInit( &ray_ref,
-             intersection->position + ( rayDirection * acne_eps ),
+    Ray ray_ref = Ray( intersection->position + ( rayDirection * acne_eps ),
              normalize( rayDirection ),
              ray->pixel,
              0,
              10000,
              ray->depth + 1 );
-
+    ray_ref.hasDifferentials = true;
     Intersection temp_intersection;
     auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection, true );
     ret += reflColor * sampleWeight;
@@ -502,8 +497,7 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         if ( f < 1.0f ) {
             if ( uniform01( engine ) < f ) { // reflect
                 vec3 r = reflect( ray->dir, normal );
-                rayInit( &new_ray,
-                         intersection->position + ( acne_eps * r ),
+                new_ray = Ray( intersection->position + ( acne_eps * r ),
                          r,
                          ray->pixel,
                          0,
@@ -513,8 +507,7 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
             else { // refract
                 float refractionRatio = intersection->isOutside ? ( 1.f / m_IOR ) : m_IOR;
                 vec3 refr             = refract( ray->dir, normal, refractionRatio );
-                rayInit( &new_ray,
-                         intersection->position + ( acne_eps * refr ),
+                new_ray = Ray( intersection->position + ( acne_eps * refr ),
                          refr,
                          ray->pixel,
                          0,
@@ -524,8 +517,7 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         }
         else {
             vec3 r = reflect( ray->dir, normal );
-            rayInit( &new_ray,
-                     intersection->position + ( acne_eps * r ),
+            new_ray = Ray( intersection->position + ( acne_eps * r ),
                      r,
                      ray->pixel,
                      0,
