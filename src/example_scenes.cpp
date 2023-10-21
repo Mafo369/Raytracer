@@ -7,6 +7,7 @@
 #include "defines.h"
 #include "image.h"
 #include "materials/Blinn.h"
+#include "materials/CookTorrance.h"
 #include "ray.h"
 #include "scene.h"
 #include "shapes/plane.h"

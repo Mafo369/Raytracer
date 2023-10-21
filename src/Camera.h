@@ -2,7 +2,6 @@
 
 #include "defines.h"
 #include "ray.h"
-#include "sampling/sampling.h"
 
 #include <random>
 #include <iostream>

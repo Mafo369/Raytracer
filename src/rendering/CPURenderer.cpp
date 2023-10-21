@@ -49,8 +49,7 @@ void CPURenderer::run(){
                 tileSampler->StartPixel( pixel );
                 do {
                     CameraSample cameraSample = tileSampler->GetCameraSample( pixel );
-                    Ray rx;
-                    rx = m_scene->cam->get_ray( cameraSample.xy.x,
+                    Ray rx = m_scene->cam->get_ray( cameraSample.xy.x,
                                          cameraSample.xy.y,
                                          cameraSample.uv.x,
                                          cameraSample.uv.y,

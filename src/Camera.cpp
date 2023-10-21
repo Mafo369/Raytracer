@@ -1,5 +1,6 @@
 #include "Camera.h"
 #include "ray.h"
+#include "sampling/sampling.h"
 
 SimpleCamera::SimpleCamera(point3 lookfrom, point3 lookat, vec3 vup, float vfov, float aspect_ratio, 
              int width, int height, float lensRadius, float focalDistance) {
