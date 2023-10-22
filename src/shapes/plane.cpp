@@ -4,19 +4,21 @@
 #include <glm/gtx/string_cast.hpp>
 
 bool Plane::intersect( Ray* ray, Intersection* intersection ) const {
-    Ray transformedRay = transformRay( ray );
+    vec3 origin = ray->orig;
+    vec3 dir = ray->dir;
+    transformRay( origin, dir );
 
     // in obj space
-    float rayPz = transformedRay.orig.z;
-    float rayDz = transformedRay.dir.z;
+    float rayPz = origin.z;
+    float rayDz = dir.z;
 
     float t = -rayPz / rayDz;
-    // std::cout << t <<"   " << - glm::dot(transformedRay.orig, glm::vec3(0,0,1.f)) /
-    // (glm::dot(transformedRay.dir, glm::vec3(0,0,1.f)))<< std::endl;
+    // std::cout << t <<"   " << - glm::dot(origin, glm::vec3(0,0,1.f)) /
+    // (glm::dot(dir, glm::vec3(0,0,1.f)))<< std::endl;
     // hit the opposite face, or not the closest one
     if ( t < 0 || t > ray->tmax ) return false;
     // x is the hit point in the unit plane's plane
-    vec3 x = transformedRay.orig + t * transformedRay.dir;
+    vec3 x = origin + t * dir;
     if ( x.x < -1 || x.x > 1 || x.y < -1 || x.y > 1 ) { return false; }
 
     // Set hit info

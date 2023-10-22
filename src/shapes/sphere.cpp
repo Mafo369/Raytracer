@@ -50,11 +50,13 @@ void computeDifferentials( vec3 objectPoint,
 }
 
 bool Sphere::intersect( Ray* ray, Intersection* intersection ) const {
-    Ray transformedRay = transformRay( ray );
+    vec3 origin = ray->orig;
+    vec3 dir = ray->dir;
+    transformRay( origin, dir );
 
-    vec3 oc = transformedRay.orig - point3( 0.f, 0.f, 0.f );
-    float a = dot( transformedRay.dir, transformedRay.dir );
-    float b = 2.f * dot( transformedRay.dir, oc );
+    vec3 oc = origin - point3( 0.f, 0.f, 0.f );
+    float a = dot( dir, dir );
+    float b = 2.f * dot( dir, oc );
     float c = dot( oc, oc ) - 1.f;
 
     float delta = b * b - 4.f * a * c;
@@ -70,7 +72,7 @@ bool Sphere::intersect( Ray* ray, Intersection* intersection ) const {
             vec3 objectPoint        = transform.transformTo( intersection->position );
             vec3 objectNormal       = objectPoint - vec3( 0.f, 0.f, 0.f );
             vec3 normal             = transform.vectorTransformFrom( objectNormal );
-            intersection->isOutside = dot( transformedRay.dir, objectNormal ) < 0;
+            intersection->isOutside = dot( dir, objectNormal ) < 0;
             intersection->normal    = normalize( normal );
 
             float pi    = M_PI;
@@ -119,14 +121,14 @@ bool Sphere::intersect( Ray* ray, Intersection* intersection ) const {
         float t1 = ( -b + sqrtf( delta ) ) / ( 2.f * a );
         float t2 = ( -b - sqrtf( delta ) ) / ( 2.f * a );
         float t;
-        if ( t1 >= transformedRay.tmin && t1 < transformedRay.tmax && t2 >= transformedRay.tmin &&
-             t2 < transformedRay.tmax ) {
+        if ( t1 >= ray->tmin && t1 < ray->tmax && t2 >= ray->tmin &&
+             t2 < ray->tmax ) {
             t = std::min( t1, t2 );
         }
-        else if ( t1 >= transformedRay.tmin && t1 < transformedRay.tmax ) {
+        else if ( t1 >= ray->tmin && t1 < ray->tmax ) {
             t = t1;
         }
-        else if ( t2 >= transformedRay.tmin && t2 < transformedRay.tmax ) {
+        else if ( t2 >= ray->tmin && t2 < ray->tmax ) {
             t = t2;
         }
         else {
@@ -137,10 +139,10 @@ bool Sphere::intersect( Ray* ray, Intersection* intersection ) const {
         intersection->mat      = mat;
         if ( ray->shadow ) return true;
 
-        vec3 objectPoint        = transformedRay.orig + ( t * transformedRay.dir );
+        vec3 objectPoint        = origin + ( t * dir );
         vec3 objectNormal       = normalize( objectPoint - vec3( 0, 0, 0 ) );
         vec3 normal             = transform.vectorTransformFrom( objectNormal );
-        intersection->isOutside = dot( transformedRay.dir, objectNormal ) < 0;
+        intersection->isOutside = dot( dir, objectNormal ) < 0;
         intersection->normal    = normalize( normal );
 
         float pi    = M_PI;

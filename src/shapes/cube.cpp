@@ -63,14 +63,16 @@ vec2 Cube::cube_uv_down( point3 point ) const {
 }
 
 bool Cube::intersect( Ray* ray, Intersection* intersection ) const {
-    Ray transformedRay = transformRay( ray );
+    vec3 origin = ray->orig;
+    vec3 dir = ray->dir;
+    transformRay( origin, dir );
 
     float xtmin, xtmax;
-    check_axis( transformedRay.orig.x, transformedRay.dir.x, xtmin, xtmax );
+    check_axis( origin.x, dir.x, xtmin, xtmax );
     float ytmin, ytmax;
-    check_axis( transformedRay.orig.y, transformedRay.dir.y, ytmin, ytmax );
+    check_axis( origin.y, dir.y, ytmin, ytmax );
     float ztmin, ztmax;
-    check_axis( transformedRay.orig.z, transformedRay.dir.z, ztmin, ztmax );
+    check_axis( origin.z, dir.z, ztmin, ztmax );
 
     float tmin = std::max( std::max( xtmin, ytmin ), ztmin );
     float tmax = std::min( std::min( xtmax, ytmax ), ztmax );
@@ -86,7 +88,7 @@ bool Cube::intersect( Ray* ray, Intersection* intersection ) const {
     vec3 objectNormal       = computeCubeNormal( objectPoint );
     glm::mat4 normalMatrix  = glm::transpose( transform.getInvTransform() );
     vec3 normal             = normalMatrix * vec4( objectNormal, 1 );
-    intersection->isOutside = dot( transformedRay.dir, objectNormal ) < 0;
+    intersection->isOutside = dot( dir, objectNormal ) < 0;
     intersection->normal    = normalize( normal );
 
     vec2 uv;

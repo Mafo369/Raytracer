@@ -17,7 +17,7 @@ class Object {
     virtual float pdf(const Intersection& inter, const vec3& wi) const;
     virtual float Area() const { return 1; }
 
-    Ray transformRay(Ray* ray) const;
+    void transformRay(vec3& origin, vec3& direction) const;
 
     Transform transform;
     Geometry geom;

@@ -5,7 +5,7 @@
 class Ray {
 public:
     Ray();
-    Ray(point3 o, vec3 d, vec2 pixel_, float tmin_=0, float tmax_=100000, int depth_=0);
+    Ray(const point3& o, const vec3& d, const vec2& pixel_, float tmin_=0, float tmax_=100000, int depth_=0);
     ~Ray();
 
     point3 orig; //! start point of the ray

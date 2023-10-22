@@ -2,11 +2,14 @@
 #include "../sampling/sampling.h"
 
 bool Triangle::intersect( Ray* ray, Intersection* intersection ) const {
-    Ray transformedRay = transformRay( ray );
+    vec3 origin = ray->orig;
+    vec3 dir = ray->dir;
+    transformRay( origin, dir );
+
     vec3 v1v2          = geom.triangle.p2 - geom.triangle.p1;
     vec3 v1v3          = geom.triangle.p3 - geom.triangle.p1;
 
-    vec3 cross_rayDir_v1v3 = cross( transformedRay.dir, v1v3 );
+    vec3 cross_rayDir_v1v3 = cross( dir, v1v3 );
 
     float det = dot( v1v2, cross_rayDir_v1v3 );
 
@@ -14,7 +17,7 @@ bool Triangle::intersect( Ray* ray, Intersection* intersection ) const {
 
     float inv_det = 1.f / det;
 
-    vec3 o_minus_p1 = transformedRay.orig - geom.triangle.p1;
+    vec3 o_minus_p1 = origin - geom.triangle.p1;
 
     float u = dot( o_minus_p1, cross_rayDir_v1v3 ) * inv_det;
 
@@ -22,13 +25,13 @@ bool Triangle::intersect( Ray* ray, Intersection* intersection ) const {
 
     vec3 cross_oMinusp1_v1v2 = cross( o_minus_p1, v1v2 );
 
-    float v = dot( transformedRay.dir, cross_oMinusp1_v1v2 ) * inv_det;
+    float v = dot( dir, cross_oMinusp1_v1v2 ) * inv_det;
 
     if ( v < 0.f || u + v > 1.f ) return false;
 
     float t = dot( v1v3, cross_oMinusp1_v1v2 ) * inv_det;
 
-    if ( t >= transformedRay.tmin && t <= transformedRay.tmax ) {
+    if ( t >= ray->tmin && t <= ray->tmax ) {
         ray->tmax               = t;
         intersection->position  = ray->orig + ( t * ray->dir );
         intersection->mat       = mat;
