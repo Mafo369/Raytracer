@@ -316,7 +316,7 @@ color3 CookTorrance::scratchAPixelScatter( Ray* ray,
 
     Intersection temp_inter;
     vec3 origin = intersection->position + ( acne_eps * wi );
-    Ray rayS = Ray(origin, wi, vec2( 0, 0 ), 0.f, 10000 );
+    Ray rayS = Ray(origin, wi, 0.f, 10000 );
     rayS.shadow = true;
     rayS.dox    = vec3( 0.f );
     rayS.doy    = vec3( 0.f );
@@ -341,7 +341,6 @@ color3 CookTorrance::scratchAPixelScatter( Ray* ray,
 
     Ray ray_ref = Ray( intersection->position + ( wiI * acne_eps ),
              normalize( wiI ),
-             ray->pixel,
              0,
              10000,
              ray->depth + 1 );
@@ -471,7 +470,6 @@ color3 CookTorrance::myScatter( Ray* ray, Scene* scene, KdTree* tree, Intersecti
 
     Ray ray_ref = Ray( intersection->position + ( rayDirection * acne_eps ),
              normalize( rayDirection ),
-             ray->pixel,
              0,
              10000,
              ray->depth + 1 );
@@ -499,7 +497,6 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                 vec3 r = reflect( ray->dir, normal );
                 new_ray = Ray( intersection->position + ( acne_eps * r ),
                          r,
-                         ray->pixel,
                          0,
                          100000,
                          ray->depth + 1 );
@@ -509,7 +506,6 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
                 vec3 refr             = refract( ray->dir, normal, refractionRatio );
                 new_ray = Ray( intersection->position + ( acne_eps * refr ),
                          refr,
-                         ray->pixel,
                          0,
                          100000,
                          ray->depth + 1 );
@@ -519,7 +515,6 @@ CookTorrance::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
             vec3 r = reflect( ray->dir, normal );
             new_ray = Ray( intersection->position + ( acne_eps * r ),
                      r,
-                     ray->pixel,
                      0,
                      100000,
                      ray->depth + 1 );

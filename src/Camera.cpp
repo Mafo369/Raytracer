@@ -41,7 +41,7 @@ Ray SimpleCamera::get_ray(float s, float t, float uLens, float vLens, vec2 pixel
     vec3 offset = xDir * pLens.x + up * pLens.y;
     vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos - offset;
     vec3 dnorm = normalize(d);
-    r = Ray(pos + offset, dnorm, pixel);
+    r = Ray(pos + offset, dnorm);
 
     if(hasDifferentials){
       r.dox = pos + offset;
@@ -53,7 +53,7 @@ Ray SimpleCamera::get_ray(float s, float t, float uLens, float vLens, vec2 pixel
   else{
     vec3 d = (nearPlaneTopLeft + s * dXPixel + t  * dYPixel) - pos;
     vec3 dnorm = normalize(d);
-    r = Ray(pos, dnorm, pixel);
+    r = Ray(pos, dnorm);
     if(hasDifferentials){
       r.dox = pos;
       r.doy = pos;
@@ -102,5 +102,5 @@ Ray CameraFOV::get_ray(float s, float t, float uLens, float vLens, vec2 pixel, b
     vec3 offset = u * rd.x + v * rd.y;
     vec3 dir = lower_left_corner + s*horizontal + t*vertical - origin - offset;
 
-    return Ray(origin + offset, normalize(dir), pixel);
+    return Ray(origin + offset, normalize(dir));
 }

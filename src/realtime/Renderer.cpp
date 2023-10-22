@@ -72,7 +72,7 @@ void Renderer::Render( const CameraI& camera ) {
             tileSampler->StartPixel( pixel );
             do {
                 vec3 dir = camera.GetRayDirections()[x + y * m_FinalImage->GetWidth()];
-                Ray ray = Ray( camera.GetPosition(), normalize( dir ), vec2( x, y ) );
+                Ray ray = Ray( camera.GetPosition(), normalize( dir ));
                 ray.hasDifferentials = true;
 
                 Intersection intersection;

@@ -8,7 +8,6 @@ bool Light::is_shadowed( vec3 lightPosition, vec3 normal, vec3 point, Scene* sce
     vec3 dir = normalize( lightPosition - point );
     auto ray = Ray( point + ( acne_eps * normal ),
              dir,
-             vec2( 0, 0 ),
              0.f,
              distance( point + ( acne_eps * normal ), lightPosition ) );
     ray.shadow = true;
@@ -262,7 +261,6 @@ color3 ShapeLight::sample_Li( Scene* scene,
     vec3 origin           = inter.position + ( acne_eps * inter.normal );
     auto rayS = Ray( origin,
              *wi,
-             vec2( 0, 0 ),
              0.f,
              distance( pShape.position, inter.position ) * 0.99f );
     rayS.hasDifferentials = false;
@@ -296,7 +294,6 @@ color3 IBL::sample_Li(Scene* scene, KdTree* tree, const Intersection& inter, con
     vec3 origin           = inter.position + *wi * acne_eps;
     auto rayS = Ray( origin,
              *wi,
-             vec2( 0, 0 ),
              0.f,
              10000 );
     rayS.hasDifferentials = false;

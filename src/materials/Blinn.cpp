@@ -215,7 +215,6 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         new_ray.ddy = vec3( 0 );
         new_ray = Ray(intersection->position + ( acne_eps * normal ),
                  normalize( dirR ),
-                 ray->pixel,
                  0,
                  100000,
                  ray->depth + 1 );
@@ -265,7 +264,6 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
             if ( uniform01( engine ) < r ) {
                 new_ray = Ray( intersection->position + ( 0.01f * reflDir ),
                          normalize( reflDir ),
-                         ray->pixel,
                          0,
                          1000000,
                          ray->depth + 1 );
@@ -273,7 +271,6 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
             else {
                 new_ray = Ray( intersection->position - ( 0.001f * normal ),
                          normalize( refractDir ),
-                         ray->pixel,
                          0,
                          100000,
                          ray->depth + 1 );
@@ -282,7 +279,6 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
         else {
             new_ray = Ray( intersection->position + ( 0.001f * normal ),
                      normalize( reflDir ),
-                     ray->pixel,
                      0,
                      100000,
                      ray->depth + 1 );
@@ -306,7 +302,7 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
 
         Intersection temp_inter;
         vec3 origin = intersection->position + ( acne_eps * wi );
-        Ray rayS = Ray(origin, wi, vec2( 0, 0 ), 0.f, sqrt( d_light2 ));
+        Ray rayS = Ray(origin, wi, 0.f, sqrt( d_light2 ));
         rayS.shadow = true;
         rayS.dox    = vec3( 0.f );
         rayS.doy    = vec3( 0.f );
@@ -347,7 +343,6 @@ color3 Blinn::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* 
 
         Ray ray_ref = Ray( intersection->position + ( acne_eps * dirA ),
                  normalize( dirA ),
-                 ray->pixel,
                  0,
                  100000,
                  ray->depth + 1 );
@@ -388,7 +383,6 @@ color3 Blinn::reflectionColor( Scene* scene,
     vec3 r = normalize( reflect( ray->dir, normal ) );
     Ray ray_ref = Ray( intersection->position + ( acne_eps * r ),
              r,
-             ray->pixel,
              0,
              100000,
              ray->depth + 1 );
@@ -466,7 +460,6 @@ color3 Blinn::refractionColor( Scene* scene,
     if ( s2 * s2 <= 1.0 ) {
         Ray ray_refr = Ray( intersection->position + ( acne_eps * refractDir ),
                  refractDir,
-                 ray->pixel,
                  0,
                  100000,
                  ray->depth + 1 );

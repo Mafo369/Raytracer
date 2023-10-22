@@ -77,7 +77,7 @@ color3 Fog::sample( const Ray& ray, Scene* scene, KdTree* tree, float yFloor ) c
         break;
     }
 
-    Ray L_Ray = Ray( randP, randDir, ray.pixel, 0, 100000, ray.depth + 1 );
+    Ray L_Ray = Ray( randP, randDir, 0, 100000, ray.depth + 1 );
     L_Ray.hasDifferentials = false;
     Intersection interL;
     color3 L = trace_ray( scene, &L_Ray, tree, &interL );

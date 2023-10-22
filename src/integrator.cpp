@@ -41,7 +41,7 @@ color3 trace_ray( Scene* scene,
 
             throughput *= bsdf * abs( dot( wi, intersection->normal ) ) / pdf;
 
-            ray = new Ray(intersection->position + acne_eps * wi, wi, vec2( 0 ), 0, 10000, 0 );
+            ray = new Ray(intersection->position + acne_eps * wi, wi, 0, 10000, 0 );
         }
         else {
             for(auto& env : scene->envLights)
@@ -90,7 +90,6 @@ color3 directIllumination(Scene* scene, KdTree* tree, Ray* ray, Intersection* in
         weight = PowerHeuristic(1, scatteringPdf, 1, lightPdf);
         auto ray_ref = Ray( intersection->position + ( wi * acne_eps ),
                  normalize( wi ),
-                 ray->pixel,
                  0,
                  10000,
                  ray->depth + 1 );
@@ -175,7 +174,7 @@ color3 Pathtracer::trace_ray( Scene* scene,
               //std::cout << dot( wi, intersection->normal ) << std::endl;
             }
 
-            ray = new Ray( intersection->position + acne_eps * wi, wi, vec2( 0 ), 0, 10000, 0 );
+            ray = new Ray( intersection->position + acne_eps * wi, wi, 0, 10000, 0 );
         }
         else {
             for(auto& env : scene->envLights)

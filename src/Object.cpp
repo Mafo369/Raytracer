@@ -11,7 +11,7 @@ void Object::transformRay( vec3& origin, vec3& direction ) const {
 }
 
 float Object::pdf(const Intersection& inter, const vec3& wi) const {
-  auto ray = Ray(inter.position + wi * acne_eps, wi, vec2(0), 0, 10000, 0);
+  auto ray = Ray(inter.position + wi * acne_eps, wi, 0, 10000, 0);
   Intersection isectLight;
   if(!intersect(&ray, &isectLight)) return 0;
 

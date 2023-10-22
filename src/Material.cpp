@@ -65,7 +65,6 @@ color3 specularReflect( Ray* ray,
         vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
         Ray ray_ref = Ray( intersection->position + ( acne_eps * wi ),
                  wi,
-                 ray->pixel,
                  0,
                  100000,
                  ray->depth + 1 );
@@ -134,7 +133,6 @@ color3 specularTransmission( Ray* ray,
         vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
         Ray ray_refr = Ray( intersection->position + ( acne_eps * wi ),
                  wi,
-                 ray->pixel,
                  0,
                  100000,
                  ray->depth + 1 );

@@ -596,7 +596,7 @@ bool intersectKdTree( Scene* scene, KdTree* tree, Ray* ray, Intersection* inters
     // Ray backup -> we'll use it to find plane intersections
     Ray ray_backup;
     if(tree->outOfTree.size() > 0){
-        ray_backup = Ray( ray->orig, ray->dir, ray->pixel, ray->tmin, ray->tmax, ray->depth );
+        ray_backup = Ray( ray->orig, ray->dir, ray->tmin, ray->tmax, ray->depth );
         ray_backup.dox = ray->dox;
         ray_backup.doy = ray->doy;
         ray_backup.ddx = ray->ddx;
