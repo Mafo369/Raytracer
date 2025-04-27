@@ -2,7 +2,6 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
@@ -39,21 +38,6 @@
 \.*
 !.gitignore
 !.gitmodules
-
-# Binary asset files
-*.obj
-*.mtl
-*.fbx
-*.dae
-
-# Texture asset files
-*.tga
-*.jpeg
-*.jpg
-*.png
-*.gif
-*.tif
-!Assets/**
 
 # Compressed asset files
 *.zip
