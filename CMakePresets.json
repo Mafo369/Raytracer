@@ -1,0 +1,52 @@
+{
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 21,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "x64-Debug",
+      "displayName": "x64-Debug",
+      "description": "Use Ninja generator, Debug configuration",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "CMAKE_TOOLCHAIN_FILE": "C:/Users/marco/Documents/GitRepos/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      },
+      "environment": {
+        "VSCMD_ARG_TGT_ARCH": "x64",
+        "VSCMD_ARG_HOST_ARCH": "x64"
+      }
+    },
+    {
+      "name": "x64-Release",
+      "displayName": "x64-Release",
+      "description": "Use Ninja generator, Release configuration",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "installDir": "${sourceDir}/out/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "C:/Users/marco/Documents/GitRepos/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      },
+      "environment": {
+        "VSCMD_ARG_TGT_ARCH": "x64",
+        "VSCMD_ARG_HOST_ARCH": "x64"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "build-x64-Debug",
+      "configurePreset": "x64-Debug"
+    },
+    {
+      "name": "build-x64-Release",
+      "configurePreset": "x64-Release"
+    }
+  ]
+}
