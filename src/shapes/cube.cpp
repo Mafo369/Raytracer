@@ -20,9 +20,7 @@ vec3 Cube::computeCubeNormal( vec3 position ) const {
     auto absPoint = glm::abs( position );
     auto maxc     = std::max( std::max( absPoint.x, absPoint.y ), absPoint.z );
     if ( maxc == absPoint.x ) { return normalize( vec3( position.x, 0, 0 ) ); }
-    else if ( maxc == absPoint.y ) {
-        return normalize( vec3( 0, position.y, 0 ) );
-    }
+    else if ( maxc == absPoint.y ) { return normalize( vec3( 0, position.y, 0 ) ); }
     return normalize( vec3( 0, 0, position.z ) );
 }
 
@@ -64,7 +62,7 @@ vec2 Cube::cube_uv_down( point3 point ) const {
 
 bool Cube::intersect( Ray* ray, Intersection* intersection ) const {
     vec3 origin = ray->orig;
-    vec3 dir = ray->dir;
+    vec3 dir    = ray->dir;
     transformRay( origin, dir );
 
     float xtmin, xtmax;
@@ -81,8 +79,8 @@ bool Cube::intersect( Ray* ray, Intersection* intersection ) const {
 
     if ( tmin > tmax || tmin < ray->tmin || tmin > ray->tmax ) return false;
 
-    intersection->position = ray->orig + ( tmin * ray->dir );
-    intersection->mat      = mat;
+    intersection->position      = ray->orig + ( tmin * ray->dir );
+    intersection->materialIndex = m_MaterialIndex;
 
     vec3 objectPoint        = transform.transformTo( intersection->position );
     vec3 objectNormal       = computeCubeNormal( objectPoint );

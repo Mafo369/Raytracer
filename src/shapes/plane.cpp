@@ -5,7 +5,7 @@
 
 bool Plane::intersect( Ray* ray, Intersection* intersection ) const {
     vec3 origin = ray->orig;
-    vec3 dir = ray->dir;
+    vec3 dir    = ray->dir;
     transformRay( origin, dir );
 
     // in obj space
@@ -22,9 +22,9 @@ bool Plane::intersect( Ray* ray, Intersection* intersection ) const {
     if ( x.x < -1 || x.x > 1 || x.y < -1 || x.y > 1 ) { return false; }
 
     // Set hit info
-    ray->tmax              = t;
-    intersection->position = ray->orig + t * ray->dir;
-    intersection->mat      = mat;
+    ray->tmax                   = t;
+    intersection->position      = ray->orig + t * ray->dir;
+    intersection->materialIndex = m_MaterialIndex;
 
     if ( ray->shadow ) return true;
 

@@ -238,7 +238,8 @@ float sampleBeckmannWalterReflectionPdf( float alpha,
     return Beckmann_D( max( 0.00001f, alphaSquared ), NdotH ) * NdotH / ( 4.0f * LdotH );
 }
 
-Material::Material( MaterialModel matModel, MatType matType ) : m_MatModel( matModel ) {
+Material::Material( size_t UID, MaterialModel matModel, MatType matType ) :
+    m_MatModel( matModel ), m_UID( UID ) {
     if ( matModel == MaterialModel::COOK_TORRANCE ) {
         m_IOR       = 1.0;
         m_roughness = 0.1;
@@ -913,14 +914,15 @@ color3 Material::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersectio
                 ret += color3( 0 );
             }
             else {
-                color3 brdf = intersection->mat->m_albedo / Pi +
+                color3 brdf = scene->GetMaterial( intersection->materialIndex ).m_albedo / Pi +
                               m_specularColor *
                                   Phong_BRDF( wi, ray->dir, intersection->normal, phongExponent );
                 float J   = 1. * dot( Np, -wi ) / d_light2;
                 float pdf = dot( axePO, dirA ) /
                             ( Pi * sphereL->geom.sphere.radius * sphereL->geom.sphere.radius );
                 if ( pdf > 0 )
-                    ret += sphereL->mat->m_emission / sqr( sphereL->geom.sphere.radius ) *
+                    ret += scene->GetMaterial( sphereL->m_MaterialIndex ).m_emission /
+                           sqr( sphereL->geom.sphere.radius ) *
                            max( 0.f, dot( intersection->normal, wi ) ) * J * brdf / pdf;
             }
 
@@ -961,7 +963,7 @@ color3 Material::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersectio
             auto reflColor = trace_ray( scene, &ray_ref, tree, &temp_intersection, false );
 
             if ( sample_diffuse )
-                iColor += reflColor * intersection->mat->m_albedo *
+                iColor += reflColor * scene->GetMaterial( intersection->materialIndex ).m_albedo *
                           ( dot( intersection->normal, dirA ) / ( Pi ) / pdf );
             else
                 iColor +=
@@ -1323,8 +1325,13 @@ color3 specularReflect( Ray* ray,
     int type = 0;
 
     // BRDF
-    color3 f = intersection->mat->sample_f(
-        ray->dir, &wi, intersection->normal, point2( 0, 0 ) /*sampler->Get2D()*/, &pdf, type );
+    color3 f = scene->GetMaterial( intersection->materialIndex )
+                   .sample_f( ray->dir,
+                              &wi,
+                              intersection->normal,
+                              point2( 0, 0 ) /*sampler->Get2D()*/,
+                              &pdf,
+                              type );
 
     if ( pdf > 0 && !isBlack( f ) ) {
         vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
@@ -1388,8 +1395,13 @@ color3 specularTransmission( Ray* ray,
     int type = 1;
 
     // BTDF
-    color3 f = intersection->mat->sample_f(
-        -ray->dir, &wi, intersection->normal, point2( 0, 0 ) /*sampler->Get2D()*/, &pdf, type );
+    color3 f = scene->GetMaterial( intersection->materialIndex )
+                   .sample_f( -ray->dir,
+                              &wi,
+                              intersection->normal,
+                              point2( 0, 0 ) /*sampler->Get2D()*/,
+                              &pdf,
+                              type );
 
     if ( pdf > 0 && !isBlack( f ) ) {
         vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
@@ -1400,9 +1412,9 @@ color3 specularTransmission( Ray* ray,
                 intersection->dn[0] * intersection->dudx + intersection->dn[1] * intersection->dvdx;
             vec3 dndy =
                 intersection->dn[0] * intersection->dudy + intersection->dn[1] * intersection->dvdy;
-            float eta = 1.f / intersection->mat->m_IOR;
+            float eta = 1.f / scene->GetMaterial( intersection->materialIndex ).m_IOR;
             if ( !intersection->isOutside ) {
-                eta  = 1.f / intersection->mat->m_IOR;
+                eta  = 1.f / scene->GetMaterial( intersection->materialIndex ).m_IOR;
                 dndx = -dndx;
                 dndy = -dndy;
             }

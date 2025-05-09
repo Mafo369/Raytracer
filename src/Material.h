@@ -1,13 +1,15 @@
 #pragma once
 
 #include "defines.h"
-#include "kdtree.h"
 #include "sampling/sampler.h"
-#include "scene.h"
+#include "textures.hpp"
 #include <vector>
 
 class Intersection;
 class Ray;
+class Light;
+class Scene;
+class KdTree;
 
 enum MatType { DIFFUSE = 0, SPECULAR = 1, TRANSPARENT = 2 };
 
@@ -87,8 +89,8 @@ enum class MaterialModel { COOK_TORRANCE = 0, BLINN = 1 };
 class Material
 {
   public:
-    Material( MaterialModel matModel, MatType matType = DIFFUSE );
-    ~Material() = default;
+    Material( size_t UID, MaterialModel matModel, MatType matType );
+    ~Material() {}
 
     color3 f( const vec3& wo, const vec3& wi, const vec3& n );
     color3 sample_f( vec3 wo, vec3* wi, vec3 normal, const point2& u, float* pdf, int type );
@@ -136,6 +138,7 @@ class Material
     vec3 m_absorption;
     float m_reflectionGloss;
     float m_refractionGloss;
+    size_t m_UID;
 
   private:
     color3 scratchAPixelScatter( Ray* ray, Scene* scene, KdTree* tree, Intersection* intersection );

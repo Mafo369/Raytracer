@@ -26,20 +26,6 @@
 #define LEFT 4
 #define RIGHT 5
 
-typedef struct s_kdtreeNode KdTreeNode;
-
-struct s_kdtreeNode {
-    bool leaf;                //! is this node a leaf ?
-    int axis;                 //! axis index of the split, if not leaf
-    float split;              //! position of the split
-    int depth;                //! depth in the tree
-    std::vector<int> objects; //! index of objects, if leaf
-    KdTreeNode* left;         //! ptr to left child
-    KdTreeNode* right;        //! ptr to right child
-    vec3 min;                 //! min pos of node bounding box
-    vec3 max;                 //! max pos of node bounding box
-};
-
 KdTreeNode* initNode( bool l, int a, int d ) {
     KdTreeNode* ret = new KdTreeNode();
     ret->leaf       = l;
@@ -55,15 +41,6 @@ typedef struct s_stackNode {
     float tmax;
     KdTreeNode* node;
 } StackNode;
-
-struct s_kdtree {
-    int depthLimit;
-    size_t objLimit;
-    KdTreeNode* root;
-
-    std::vector<int> outOfTree;
-    std::vector<int> inTree;
-};
 
 typedef struct event_t {
     int s;
@@ -85,15 +62,9 @@ KdTree* initKdTree( Scene* scene ) {
     for ( size_t i = 0; i < scene->objects.size(); i++ ) {
         auto& shape = scene->objects[i]->geom;
         if ( shape.type == PLANE ) { tree->outOfTree.push_back( i ); }
-        else if ( shape.type == SPHERE ) {
-            tree->inTree.push_back( i );
-        }
-        else if ( shape.type == TRIANGLE ) {
-            tree->inTree.push_back( i );
-        }
-        else if ( shape.type == CUBE ) {
-            tree->inTree.push_back( i );
-        }
+        else if ( shape.type == SPHERE ) { tree->inTree.push_back( i ); }
+        else if ( shape.type == TRIANGLE ) { tree->inTree.push_back( i ); }
+        else if ( shape.type == CUBE ) { tree->inTree.push_back( i ); }
     }
 
     std::cout << "-- In tree objects: " << tree->inTree.size() << std::endl;
@@ -291,9 +262,7 @@ void sah( vec3 min, vec3 max, float p, int nl, int nr, int np, int k, float& c )
     cpl = cost( nl + np, nr, pl, pr );
     cpr = cost( nl, nr + np, pl, pr );
     if ( cpl < cpr ) { c = cpl; }
-    else {
-        c = cpr;
-    }
+    else { c = cpr; }
 }
 
 void clipSphereToBox( Scene* scene, int sphere, vec3 min, vec3 max, vec3& minb, vec3& maxb ) {
@@ -359,9 +328,7 @@ void findPlane( Scene* scene, KdTreeNode* node, float& p_, float& k_, float& c_ 
                 minb = scene->objects[node->objects[i]]->geom.cube.min;
                 maxb = scene->objects[node->objects[i]]->geom.cube.max;
             }
-            else {
-                clipTriangleToBox( scene, node->objects[i], node->min, node->max, minb, maxb );
-            }
+            else { clipTriangleToBox( scene, node->objects[i], node->min, node->max, minb, maxb ); }
             if ( isPlanar( minb, maxb ) ) {
                 Event e;
                 e.s    = node->objects[i];
@@ -563,8 +530,8 @@ bool traverse( Scene* scene,
                 }
                 else {
                     if ( ray->shadow ) {
-                        if ( temp.mat->m_emission.r == 0.f && temp.mat->m_emission.g == 0.f &&
-                             temp.mat->m_emission.b == 0.f ) {
+                        color3 emission = scene->GetMaterial( temp.materialIndex ).m_emission;
+                        if ( emission.r == 0.f && emission.g == 0.f && emission.b == 0.f ) {
                             ray->tmax = temp_dist;
                             return true;
                         }
@@ -595,8 +562,8 @@ bool intersectKdTree( Scene* scene, KdTree* tree, Ray* ray, Intersection* inters
 
     // Ray backup -> we'll use it to find plane intersections
     Ray ray_backup;
-    if(tree->outOfTree.size() > 0){
-        ray_backup = Ray( ray->orig, ray->dir, ray->tmin, ray->tmax, ray->depth );
+    if ( tree->outOfTree.size() > 0 ) {
+        ray_backup     = Ray( ray->orig, ray->dir, ray->tmin, ray->tmax, ray->depth );
         ray_backup.dox = ray->dox;
         ray_backup.doy = ray->doy;
         ray_backup.ddx = ray->ddx;
@@ -615,14 +582,14 @@ bool intersectKdTree( Scene* scene, KdTree* tree, Ray* ray, Intersection* inters
     }
 
     // If object intersection in kdtree, use tmax as distance reference
-    if ( hasIntersection ) { 
+    if ( hasIntersection ) {
         if ( ray->shadow ) { return true; }
         ray_backup.tmax = ray->tmax;
         dist            = ray->tmax;
     }
 
     // Iterate through plane objects to find intersection
-    for ( size_t i = 0; i < tree->outOfTree.size(); i++ ) { 
+    for ( size_t i = 0; i < tree->outOfTree.size(); i++ ) {
         Intersection temp;
         if ( scene->objects[tree->outOfTree[i]]->intersect( &ray_backup, &temp ) ) {
             float temp_dist = ray_backup.tmax;

@@ -51,7 +51,7 @@ void computeDifferentials( vec3 objectPoint,
 
 bool Sphere::intersect( Ray* ray, Intersection* intersection ) const {
     vec3 origin = ray->orig;
-    vec3 dir = ray->dir;
+    vec3 dir    = ray->dir;
     transformRay( origin, dir );
 
     vec3 oc = origin - point3( 0.f, 0.f, 0.f );
@@ -65,9 +65,9 @@ bool Sphere::intersect( Ray* ray, Intersection* intersection ) const {
         // Une solution
         float t = -b / ( 2.f * a );
         if ( t >= ray->tmin && t <= ray->tmax ) {
-            ray->tmax              = t;
-            intersection->position = ray->orig + ( t * ray->dir );
-            intersection->mat      = mat;
+            ray->tmax                   = t;
+            intersection->position      = ray->orig + ( t * ray->dir );
+            intersection->materialIndex = m_MaterialIndex;
             if ( ray->shadow ) return true;
             vec3 objectPoint        = transform.transformTo( intersection->position );
             vec3 objectNormal       = objectPoint - vec3( 0.f, 0.f, 0.f );
@@ -121,22 +121,15 @@ bool Sphere::intersect( Ray* ray, Intersection* intersection ) const {
         float t1 = ( -b + sqrtf( delta ) ) / ( 2.f * a );
         float t2 = ( -b - sqrtf( delta ) ) / ( 2.f * a );
         float t;
-        if ( t1 >= ray->tmin && t1 < ray->tmax && t2 >= ray->tmin &&
-             t2 < ray->tmax ) {
+        if ( t1 >= ray->tmin && t1 < ray->tmax && t2 >= ray->tmin && t2 < ray->tmax ) {
             t = std::min( t1, t2 );
         }
-        else if ( t1 >= ray->tmin && t1 < ray->tmax ) {
-            t = t1;
-        }
-        else if ( t2 >= ray->tmin && t2 < ray->tmax ) {
-            t = t2;
-        }
-        else {
-            return false;
-        }
-        ray->tmax              = t;
-        intersection->position = ray->orig + ( t * ray->dir );
-        intersection->mat      = mat;
+        else if ( t1 >= ray->tmin && t1 < ray->tmax ) { t = t1; }
+        else if ( t2 >= ray->tmin && t2 < ray->tmax ) { t = t2; }
+        else { return false; }
+        ray->tmax                   = t;
+        intersection->position      = ray->orig + ( t * ray->dir );
+        intersection->materialIndex = m_MaterialIndex;
         if ( ray->shadow ) return true;
 
         vec3 objectPoint        = origin + ( t * dir );

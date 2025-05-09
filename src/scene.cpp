@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <string.h>
 
-//#include <glm/gtx/norm.hpp>
+// #include <glm/gtx/norm.hpp>
 
 #include "Camera.h"
 #include "Light.h"
@@ -30,8 +30,8 @@ glm::vec3 extractScale( const glm::mat4& m ) {
                       glm::length2( glm::vec3( m[2] ) ) );
 }
 
-Object* initSphere( std::shared_ptr<Material> mat, Transform transform ) {
-    auto ret                = new Sphere( mat, transform );
+Object* initSphere( int materialIndex, Transform transform ) {
+    auto ret                = new Sphere( materialIndex, transform );
     ret->geom.type          = SPHERE;
     ret->geom.sphere.center = transform.transformFrom( vec3( 0 ) );
     glm::vec3 scalesSq      = extractScale( transform.getTransform() );
@@ -43,7 +43,7 @@ Object* initSphere( std::shared_ptr<Material> mat, Transform transform ) {
     return ret;
 }
 
-Object* initPlane( vec3 normal, float d, std::shared_ptr<Material> mat ) {
+Object* initPlane( vec3 normal, float d, int materialIndex ) {
     // auto ret = new Plane(mat, Transform(1.f));
     // ret->geom.type = PLANE;
     // ret->geom.plane.normal = normalize(normal);
@@ -52,8 +52,8 @@ Object* initPlane( vec3 normal, float d, std::shared_ptr<Material> mat ) {
     return nullptr;
 }
 
-Object* initCube( std::shared_ptr<Material> mat, Transform transform ) {
-    auto ret           = new Cube( mat, transform );
+Object* initCube( int materialIndex, Transform transform ) {
+    auto ret           = new Cube( materialIndex, transform );
     ret->geom.type     = CUBE;
     ret->transform     = transform;
     ret->geom.cube.min = transform.transformFrom( vec3( -1 ) );
@@ -67,8 +67,8 @@ Object* initTriangle( vec3 p1,
                       vec3 n,
                       vec2 t[3],
                       Transform transform,
-                      std::shared_ptr<Material> mat ) {
-    auto ret                  = new Triangle( mat, transform );
+                      int materialIndex ) {
+    auto ret                  = new Triangle( materialIndex, transform );
     ret->geom.type            = TRIANGLE;
     ret->geom.triangle.p1     = p1;
     ret->geom.triangle.p2     = p2;
@@ -89,8 +89,8 @@ Object* initSmoothTriangle( vec3 p1,
                             vec3 n2,
                             vec3 n3,
                             Transform transform,
-                            std::shared_ptr<Material> mat ) {
-    auto ret                  = new Triangle( mat, transform );
+                            int materialIndex ) {
+    auto ret                  = new Triangle( materialIndex, transform );
     ret->geom.type            = TRIANGLE;
     ret->geom.triangle.p1     = p1;
     ret->geom.triangle.p2     = p2;

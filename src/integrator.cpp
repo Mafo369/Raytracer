@@ -23,7 +23,8 @@ color3 trace_ray( Scene* scene,
             // Compute necessary differential information for texture filtering
             if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
 
-            if ( !isBlack( intersection->mat->m_emission ) && depth == 0 ) {
+            if ( !isBlack( scene->GetMaterial( intersection->materialIndex ).m_emission ) &&
+                 depth == 0 ) {
                 ret += throughput *
                        static_cast<ShapeLight*>( scene->lights[0] )->L( *intersection, -ray->dir );
             }
@@ -37,8 +38,8 @@ color3 trace_ray( Scene* scene,
             }
             float pdf;
             vec3 wi;
-            color3 bsdf =
-                intersection->mat->sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
+            color3 bsdf = scene->GetMaterial( intersection->materialIndex )
+                              .sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
             wi = normalize( wi );
             if ( isBlack( bsdf ) || pdf == 0.f ) break;
 
@@ -79,7 +80,8 @@ color3 directIllumination( Scene* scene,
     auto Li = light->sample_Li( scene, tree, *intersection, uLight, &wi, &lightPdf, &vis );
     if ( lightPdf > 0 && !isBlack( Li ) ) {
         vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-        color3 bsdf = intersection->mat->eval( ray, intersection, wi, &scatteringPdf ) *
+        color3 bsdf = scene->GetMaterial( intersection->materialIndex )
+                          .eval( ray, intersection, wi, &scatteringPdf ) *
                       max( dot( normal, wi ), 0.f );
         if ( !isBlack( bsdf ) ) {
             if ( vis ) { Li = color3( 0 ); }
@@ -90,7 +92,8 @@ color3 directIllumination( Scene* scene,
         }
     }
 
-    color3 bsdf = intersection->mat->sample( ray, intersection, uScattering, &wi, &scatteringPdf ) *
+    color3 bsdf = scene->GetMaterial( intersection->materialIndex )
+                      .sample( ray, intersection, uScattering, &wi, &scatteringPdf ) *
                   max( dot( intersection->normal, wi ), 0.f );
     if ( !isBlack( bsdf ) && scatteringPdf > 0 ) {
         float weight = 1;
@@ -105,7 +108,7 @@ color3 directIllumination( Scene* scene,
         auto foundIntersection = intersectKdTree( scene, tree, &ray_ref, &temp_intersection );
         color3 Li( 0.f );
         if ( foundIntersection ) {
-            if ( !isBlack( temp_intersection.mat->m_emission ) )
+            if ( !isBlack( scene->GetMaterial( temp_intersection.materialIndex ).m_emission ) )
                 Li = static_cast<ShapeLight*>( light )->L( temp_intersection, -wi );
         }
         else
@@ -140,7 +143,8 @@ color3 Pathtracer::trace_ray( Scene* scene,
             // Compute necessary differential information for texture filtering
             if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
 
-            if ( !isBlack( intersection->mat->m_emission ) && depth == 0 ) {
+            if ( !isBlack( scene->GetMaterial( intersection->materialIndex ).m_emission ) &&
+                 depth == 0 ) {
                 ret += throughput *
                        static_cast<ShapeLight*>( scene->lights[0] )->L( *intersection, -ray->dir );
             }
@@ -176,11 +180,11 @@ color3 Pathtracer::trace_ray( Scene* scene,
 
             float pdf;
             vec3 wi;
-            color3 bsdf =
-                intersection->mat->sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
+            color3 bsdf = scene->GetMaterial( intersection->materialIndex )
+                              .sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
             wi = normalize( wi );
             if ( isBlack( bsdf ) || pdf == 0.f ) break;
-            if ( intersection->mat.get()->m_MatType != TRANSPARENT )
+            if ( scene->GetMaterial( intersection->materialIndex ).m_MatType != TRANSPARENT )
                 throughput *= bsdf * abs( dot( wi, intersection->normal ) ) / pdf;
             else {
                 // std::cout << dot( wi, intersection->normal ) << std::endl;

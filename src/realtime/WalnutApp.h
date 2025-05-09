@@ -72,29 +72,25 @@ class ExampleLayer : public Walnut::Layer
         for ( size_t i = 0; i < m_Renderer.scene->objects.size(); i++ ) {
             ImGui::PushID( i );
 
-            auto objMat = m_Renderer.scene->objects[i]->mat;
-            if ( objMat != nullptr ) {
-                ImGui::InputInt( "type", reinterpret_cast<int*>( &objMat->m_MatType ), 1, 0, 2 );
-                ImGui::DragFloat( "ior", &objMat->m_IOR, 0.1, 0.0, 6.0 );
-                ImGui::DragFloat( "metalness", &objMat->m_metalness, 0.001, 0.0, 1.0 );
-                ImGui::DragFloat( "roughness", &objMat->m_roughness, 0.001, 0.0, 1.0 );
-                ImGui::ColorEdit3( "albedo", glm::value_ptr( objMat->m_albedo ) );
+            Material& objMat =
+                m_Renderer.scene->GetMaterial( m_Renderer.scene->objects[i]->m_MaterialIndex );
+            ImGui::InputInt( "type", reinterpret_cast<int*>( &objMat.m_MatType ), 1, 0, 2 );
+            ImGui::DragFloat( "ior", &objMat.m_IOR, 0.1, 0.0, 6.0 );
+            ImGui::DragFloat( "metalness", &objMat.m_metalness, 0.001, 0.0, 1.0 );
+            ImGui::DragFloat( "roughness", &objMat.m_roughness, 0.001, 0.0, 1.0 );
+            ImGui::ColorEdit3( "albedo", glm::value_ptr( objMat.m_albedo ) );
 
-                ImGui::Separator();
+            ImGui::Separator();
 
-                ImGui::DragFloat( "ior", &objMat->m_IOR, 0.1, 1.0, 6.0 );
-                ImGui::DragFloat( "shininess", &objMat->m_shininess, 1, 0.0, 200 );
-                ImGui::ColorEdit3( "dif", glm::value_ptr( objMat->m_albedo ) );
-                ImGui::ColorEdit3( "spec", glm::value_ptr( objMat->m_specularColor ) );
-                ImGui::DragFloat3(
-                    "reflection", glm::value_ptr( objMat->m_reflection ), 0.1, 0, 1 );
-                ImGui::DragFloat3(
-                    "refraction", glm::value_ptr( objMat->m_refraction ), 0.1, 0, 1 );
-                ImGui::DragFloat3(
-                    "absorption", glm::value_ptr( objMat->m_absorption ), 0.1, 0, 1 );
+            ImGui::DragFloat( "ior", &objMat.m_IOR, 0.1, 1.0, 6.0 );
+            ImGui::DragFloat( "shininess", &objMat.m_shininess, 1, 0.0, 200 );
+            ImGui::ColorEdit3( "dif", glm::value_ptr( objMat.m_albedo ) );
+            ImGui::ColorEdit3( "spec", glm::value_ptr( objMat.m_specularColor ) );
+            ImGui::DragFloat3( "reflection", glm::value_ptr( objMat.m_reflection ), 0.1, 0, 1 );
+            ImGui::DragFloat3( "refraction", glm::value_ptr( objMat.m_refraction ), 0.1, 0, 1 );
+            ImGui::DragFloat3( "absorption", glm::value_ptr( objMat.m_absorption ), 0.1, 0, 1 );
 
-                ImGui::Separator();
-            }
+            ImGui::Separator();
 
             ImGui::PopID();
         }

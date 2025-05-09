@@ -1,6 +1,6 @@
 #include "Fog.h"
-#include "../sampling/sampling.h"
 #include "../integrator.h"
+#include "../sampling/sampling.h"
 
 float Fog::int_exponential( float y0, float ysol, float beta, float s, float uy ) const {
     float result =
@@ -11,9 +11,7 @@ float Fog::int_exponential( float y0, float ysol, float beta, float s, float uy 
 float Fog::tr( const Ray& ray, float yFloor ) const {
     float int_ext;
     if ( m_isUniform ) { int_ext = m_beta * ray.tmax; }
-    else {
-        int_ext = int_exponential( ray.orig.z, yFloor, m_beta, ray.tmax, ray.dir.z );
-    }
+    else { int_ext = int_exponential( ray.orig.z, yFloor, m_beta, ray.tmax, ray.dir.z ); }
     return exp( -int_ext );
 }
 
@@ -37,9 +35,7 @@ color3 Fog::sample( const Ray& ray, Scene* scene, KdTree* tree, float yFloor ) c
 
     float int_ext_partiel;
     if ( m_isUniform ) { int_ext_partiel = m_beta * randt; }
-    else {
-        int_ext_partiel = int_exponential( ray.orig.z, yFloor, m_beta, randt, ray.dir.z );
-    }
+    else { int_ext_partiel = int_exponential( ray.orig.z, yFloor, m_beta, randt, ray.dir.z ); }
     vec3 randP = ray.orig + randt * ray.dir;
 
     vec3 randDir;
@@ -77,7 +73,7 @@ color3 Fog::sample( const Ray& ray, Scene* scene, KdTree* tree, float yFloor ) c
         break;
     }
 
-    Ray L_Ray = Ray( randP, randDir, 0, 100000, ray.depth + 1 );
+    Ray L_Ray              = Ray( randP, randDir, 0, 100000, ray.depth + 1 );
     L_Ray.hasDifferentials = false;
     Intersection interL;
     color3 L = trace_ray( scene, &L_Ray, tree, &interL );
@@ -87,9 +83,7 @@ color3 Fog::sample( const Ray& ray, Scene* scene, KdTree* tree, float yFloor ) c
     else {
         float d_light2 = length_sq( ptA - randP );
         if ( interL.hit && L_Ray.tmax * L_Ray.tmax < d_light2 * 0.9 ) { V = 0; }
-        else {
-            V = 1;
-        }
+        else { V = 1; }
     }
 
     if ( V == 0 ) { Lv = vec3( 0 ); }
@@ -99,18 +93,17 @@ color3 Fog::sample( const Ray& ray, Scene* scene, KdTree* tree, float yFloor ) c
 
         float pdf_uniform = 1.f / ( 4.f * Pi );
         float J           = dot( interN, -randDir ) / glm::length_sq( interP - randt );
-        float pdf_light   = ( interL.hit && !isBlack( interL.mat->m_emission ) )
-                              ? ( dot( normalize( interP - sphereL->geom.sphere.center ), axePO ) /
-                                  ( Pi * sqr( sphereL->geom.sphere.radius ) ) / J )
-                              : 0.f;
+        float pdf_light =
+            ( interL.hit && !isBlack( scene->GetMaterial( interL.materialIndex ).m_emission ) )
+                ? ( dot( normalize( interP - sphereL->geom.sphere.center ), axePO ) /
+                    ( Pi * sqr( sphereL->geom.sphere.radius ) ) / J )
+                : 0.f;
 
         probaDir = m_pUniform * pdf_uniform + ( 1.f - m_pUniform ) * pdf_light;
 
         float ext;
         if ( m_isUniform ) { ext = m_beta; }
-        else {
-            ext = 0.1 * exp( -m_beta * ( randP.z - yFloor ) );
-        }
+        else { ext = 0.1 * exp( -m_beta * ( randP.z - yFloor ) ); }
 
         Lv = L * phase_f * ext * exp( -int_ext_partiel ) / ( probat * probaDir );
     }

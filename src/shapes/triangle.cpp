@@ -3,11 +3,11 @@
 
 bool Triangle::intersect( Ray* ray, Intersection* intersection ) const {
     vec3 origin = ray->orig;
-    vec3 dir = ray->dir;
+    vec3 dir    = ray->dir;
     transformRay( origin, dir );
 
-    vec3 v1v2          = geom.triangle.p2 - geom.triangle.p1;
-    vec3 v1v3          = geom.triangle.p3 - geom.triangle.p1;
+    vec3 v1v2 = geom.triangle.p2 - geom.triangle.p1;
+    vec3 v1v3 = geom.triangle.p3 - geom.triangle.p1;
 
     vec3 cross_rayDir_v1v3 = cross( dir, v1v3 );
 
@@ -32,10 +32,10 @@ bool Triangle::intersect( Ray* ray, Intersection* intersection ) const {
     float t = dot( v1v3, cross_oMinusp1_v1v2 ) * inv_det;
 
     if ( t >= ray->tmin && t <= ray->tmax ) {
-        ray->tmax               = t;
-        intersection->position  = ray->orig + ( t * ray->dir );
-        intersection->mat       = mat;
-        intersection->isOutside = !( det < 0.f );
+        ray->tmax                   = t;
+        intersection->position      = ray->orig + ( t * ray->dir );
+        intersection->materialIndex = m_MaterialIndex;
+        intersection->isOutside     = !( det < 0.f );
         if ( ray->shadow ) return true;
 
         vec3 objectNormal    = normalize( geom.triangle.n2 * u + geom.triangle.n3 * v +

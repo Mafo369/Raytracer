@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Material.h"
 #include "defines.h"
 #include "tiny_obj_loader.h"
 
@@ -9,18 +10,19 @@
 class Camera;
 class Light;
 class Object;
-class Material;
 class Medium;
 class Sky;
 
 typedef std::vector<Object*> Objects;
 typedef std::vector<Light*> Lights;
 
-typedef struct scene_s {
+class Scene
+{
+  public:
     Lights lights;    //! the scene have several lights
     Lights envLights; //! the scene have several lights
     Objects objects;  //! the scene have several objects
-    std::vector<Material> mMaterials;
+    std::vector<Material> m_Materials;
     Camera* cam; //! the scene have one camera
     // color3 skyColor; //! the sky color, could be extended to a sky function ;)
     // texture* m_skyTexture = nullptr;
@@ -28,19 +30,26 @@ typedef struct scene_s {
     int depth      = 8;
     Medium* medium = nullptr;
     float ysol     = -12.f;
-} Scene;
+
+    Material& CreateMaterial( MaterialModel materialModel, MatType materialType = DIFFUSE ) {
+        size_t id = m_Materials.size();
+        return m_Materials.emplace_back( id, materialModel, materialType );
+    }
+
+    Material& GetMaterial( int index ) { return m_Materials[index]; }
+};
 
 //! create a new sphere structure
-Object* initSphere( std::shared_ptr<Material> mat, Transform transform );
-Object* initCube( std::shared_ptr<Material> mat, Transform transform );
-Object* initPlane( vec3 normal, float d, std::shared_ptr<Material> mat );
+Object* initSphere( int materialIndex, Transform transform );
+Object* initCube( int materialIndex, Transform transform );
+Object* initPlane( vec3 normal, float d, int materialIndex );
 Object* initTriangle( vec3 p1,
                       vec3 p2,
                       vec3 p3,
                       vec3 n,
                       vec2 t[3],
                       Transform transform,
-                      std::shared_ptr<Material> mat );
+                      int materialIndex );
 Object* initSmoothTriangle( vec3 p1,
                             vec3 p2,
                             vec3 p3,
@@ -50,7 +59,7 @@ Object* initSmoothTriangle( vec3 p1,
                             vec3 n2,
                             vec3 n3,
                             Transform transform,
-                            std::shared_ptr<Material> mat );
+                            int materialIndex );
 
 //! release memory for the object obj
 void freeObject( Object* obj );
