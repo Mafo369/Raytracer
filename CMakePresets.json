@@ -37,6 +37,21 @@
         "VSCMD_ARG_TGT_ARCH": "x64",
         "VSCMD_ARG_HOST_ARCH": "x64"
       }
+    },
+    {
+      "name": "x64-RelWithDebInfo",
+      "displayName": "x64 RelWithDebInfo",
+      "description": "Use Ninja generator and vcpkg toolchain for RelWithDebInfo",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "CMAKE_TOOLCHAIN_FILE": "C:/Users/marco/Documents/GitRepos/vcpkg/scripts/buildsystems/vcpkg.cmake"
+      },
+      "environment": {
+        "VSCMD_ARG_TGT_ARCH": "x64",
+        "VSCMD_ARG_HOST_ARCH": "x64"
+      }
     }
   ],
   "buildPresets": [
@@ -47,6 +62,10 @@
     {
       "name": "build-x64-Release",
       "configurePreset": "x64-Release"
-    }
+    },
+    {
+      "name": "build-x64-RelWithDebInfo",
+      "configurePreset": "x64-RelWithDebInfo"
+    },
   ]
 }

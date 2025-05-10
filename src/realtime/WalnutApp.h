@@ -140,9 +140,9 @@ Walnut::Application* Walnut::CreateApplication( int argc, char** argv ) {
     Walnut::Application* app = new Walnut::Application( spec );
 
     int scene_id = 0;
-    if ( argc == 3 ) { scene_id = atoi( argv[2] ); }
-    else if ( argc == 4 ) { scene_id = atoi( argv[3] ); }
-    Scene* scene = parseScene( scene_id );
+    // if ( argc == 3 ) { scene_id = atoi( argv[2] ); }
+    // else if ( argc == 4 ) { scene_id = atoi( argv[3] ); }
+    Scene* scene = parseScene( 18 );
     auto layer   = std::make_shared<ExampleLayer>( scene );
     app->PushLayer( layer );
     app->SetMenubarCallback( [app]() {

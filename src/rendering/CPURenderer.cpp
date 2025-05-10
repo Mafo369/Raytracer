@@ -1,30 +1,30 @@
 #include "CPURenderer.h"
-#include "../sampling/stratified.h"
-#include <chrono>
 #include "../Camera.h"
 #include "../image.h"
+#include "../sampling/stratified.h"
+#include <chrono>
 
-void CPURenderer::init(std::string& imageName, glm::vec2 resolution, Scene* scene){
-    m_imageName = imageName;
-    m_scene = scene;
+void CPURenderer::init( std::string& imageName, glm::vec2 resolution, Scene* scene ) {
+    m_imageName   = imageName;
+    m_scene       = scene;
     m_renderImage = initImage( resolution.x, resolution.y );
 
     std::cout << "Output resolution: " << resolution.x << "x" << resolution.y << std::endl;
 
-    m_kdTree = initKdTree( m_scene );
-    m_sampler = new StratifiedSampler( 8, 8, true, 8 );
+    m_kdTree  = initKdTree( m_scene );
+    m_sampler = new StratifiedSampler( 32, 32, true, 8 );
     std::cout << "Spp: " << m_sampler->samplesPerPixel << std::endl;
 
-    m_tracer = new Pathtracer(5, m_sampler);
-    m_tracer->preprocess(scene, m_sampler);
+    m_tracer = new Pathtracer( 5, m_sampler );
+    m_tracer->preprocess( scene, m_sampler );
 }
 
-void CPURenderer::destroy(){
-    freeImage(m_renderImage);
+void CPURenderer::destroy() {
+    freeImage( m_renderImage );
     m_renderImage = NULL;
 }
 
-void CPURenderer::run(){
+void CPURenderer::run() {
     auto startTime = std::chrono::system_clock::now();
 
     for ( size_t j = 0; j < m_renderImage->height; j++ ) {
@@ -49,15 +49,16 @@ void CPURenderer::run(){
                 tileSampler->StartPixel( pixel );
                 do {
                     CameraSample cameraSample = tileSampler->GetCameraSample( pixel );
-                    Ray rx = m_scene->cam->get_ray( cameraSample.xy.x,
-                                         cameraSample.xy.y,
-                                         cameraSample.uv.x,
-                                         cameraSample.uv.y,
-                                         vec2( int( i ), int( j ) ) );
+                    Ray rx                    = m_scene->cam->get_ray( cameraSample.xy.x,
+                                                    cameraSample.xy.y,
+                                                    cameraSample.uv.x,
+                                                    cameraSample.uv.y,
+                                                    vec2( int( i ), int( j ) ) );
                     if ( rx.hasDifferentials )
                         scaleDifferentials( &rx, 1.f / sqrt( tileSampler->samplesPerPixel ) );
                     Intersection intersection;
-                    pixel_color += m_tracer->trace_ray( m_scene, &rx, m_kdTree, &intersection, tileSampler.get() );
+                    pixel_color += m_tracer->trace_ray(
+                        m_scene, rx, m_kdTree, &intersection, tileSampler.get() );
                 } while ( tileSampler->StartNextSample() );
 
                 color3 avgColor = pixel_color / (float)tileSampler->samplesPerPixel;

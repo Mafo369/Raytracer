@@ -69,7 +69,7 @@ class Transform
   public:
     Transform() : m_translation( 0, 0, 0 ) {
         m_transform    = mat4( 1.f );
-        m_invTransform = inverse( m_transform );
+        m_invTransform = mat4( 1.f );
     }
 
     mat3 const& getTransform() const { return m_transform; }

@@ -23,8 +23,9 @@ color3 trace_ray( Scene* scene,
             // Compute necessary differential information for texture filtering
             if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
 
-            if ( !isBlack( scene->GetMaterial( intersection->materialIndex ).m_emission ) &&
-                 depth == 0 ) {
+            const Material& intersectedMaterial = scene->GetMaterial( intersection->materialIndex );
+
+            if ( !isBlack( intersectedMaterial.m_emission ) && depth == 0 ) {
                 ret += throughput *
                        static_cast<ShapeLight*>( scene->lights[0] )->L( *intersection, -ray->dir );
             }
@@ -38,8 +39,8 @@ color3 trace_ray( Scene* scene,
             }
             float pdf;
             vec3 wi;
-            color3 bsdf = scene->GetMaterial( intersection->materialIndex )
-                              .sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
+            color3 bsdf =
+                intersectedMaterial.sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
             wi = normalize( wi );
             if ( isBlack( bsdf ) || pdf == 0.f ) break;
 
@@ -78,10 +79,10 @@ color3 directIllumination( Scene* scene,
     float lightPdf = 0, scatteringPdf = 0;
     bool vis;
     auto Li = light->sample_Li( scene, tree, *intersection, uLight, &wi, &lightPdf, &vis );
+    const Material& intersectedMaterial = scene->GetMaterial( intersection->materialIndex );
     if ( lightPdf > 0 && !isBlack( Li ) ) {
         vec3 normal = intersection->isOutside ? intersection->normal : -intersection->normal;
-        color3 bsdf = scene->GetMaterial( intersection->materialIndex )
-                          .eval( ray, intersection, wi, &scatteringPdf ) *
+        color3 bsdf = intersectedMaterial.eval( ray, intersection, wi, &scatteringPdf ) *
                       max( dot( normal, wi ), 0.f );
         if ( !isBlack( bsdf ) ) {
             if ( vis ) { Li = color3( 0 ); }
@@ -92,9 +93,9 @@ color3 directIllumination( Scene* scene,
         }
     }
 
-    color3 bsdf = scene->GetMaterial( intersection->materialIndex )
-                      .sample( ray, intersection, uScattering, &wi, &scatteringPdf ) *
-                  max( dot( intersection->normal, wi ), 0.f );
+    color3 bsdf =
+        intersectedMaterial.sample( ray, intersection, uScattering, &wi, &scatteringPdf ) *
+        max( dot( intersection->normal, wi ), 0.f );
     if ( !isBlack( bsdf ) && scatteringPdf > 0 ) {
         float weight = 1;
         lightPdf     = light->pdf_Li( *intersection, wi );
@@ -125,7 +126,7 @@ void Pathtracer::preprocess( Scene* scene, Sampler* sampler ) {
 }
 
 color3 Pathtracer::trace_ray( Scene* scene,
-                              Ray* ray,
+                              Ray& ray,
                               KdTree* tree,
                               Intersection* intersection,
                               Sampler* sampler ) {
@@ -138,15 +139,14 @@ color3 Pathtracer::trace_ray( Scene* scene,
 
     for ( depth = 0;; depth++ ) {
 
-        if ( intersectKdTree( scene, tree, ray, intersection ) ) {
+        if ( intersectKdTree( scene, tree, &ray, intersection ) ) {
             intersection->hit = true;
             // Compute necessary differential information for texture filtering
-            if ( ray->hasDifferentials ) intersection->computeDifferentials( ray );
-
-            if ( !isBlack( scene->GetMaterial( intersection->materialIndex ).m_emission ) &&
-                 depth == 0 ) {
+            if ( ray.hasDifferentials ) intersection->computeDifferentials( &ray );
+            const Material& intersectedMaterial = scene->GetMaterial( intersection->materialIndex );
+            if ( !isBlack( intersectedMaterial.m_emission ) && depth == 0 ) {
                 ret += throughput *
-                       static_cast<ShapeLight*>( scene->lights[0] )->L( *intersection, -ray->dir );
+                       static_cast<ShapeLight*>( scene->lights[0] )->L( *intersection, -ray.dir );
             }
 
             int nLights = int( scene->lights.size() );
@@ -169,7 +169,7 @@ color3 Pathtracer::trace_ray( Scene* scene,
                     ret += throughput *
                            directIllumination( scene,
                                                tree,
-                                               ray,
+                                               &ray,
                                                intersection,
                                                scene->lights[lightNum],
                                                uScattering,
@@ -180,21 +180,21 @@ color3 Pathtracer::trace_ray( Scene* scene,
 
             float pdf;
             vec3 wi;
-            color3 bsdf = scene->GetMaterial( intersection->materialIndex )
-                              .sample( ray, intersection, sampler->Get2D(), &wi, &pdf );
+            color3 bsdf =
+                intersectedMaterial.sample( &ray, intersection, sampler->Get2D(), &wi, &pdf );
             wi = normalize( wi );
             if ( isBlack( bsdf ) || pdf == 0.f ) break;
-            if ( scene->GetMaterial( intersection->materialIndex ).m_MatType != TRANSPARENT )
+            if ( intersectedMaterial.m_MatType != TRANSPARENT )
                 throughput *= bsdf * abs( dot( wi, intersection->normal ) ) / pdf;
             else {
                 // std::cout << dot( wi, intersection->normal ) << std::endl;
             }
 
-            ray = new Ray( intersection->position + acne_eps * wi, wi, 0, 10000, 0 );
+            ray = Ray( intersection->position + acne_eps * wi, wi, 0, 10000, 0 );
         }
         else {
             for ( auto& env : scene->envLights )
-                ret += throughput * env->Le( ray );
+                ret += throughput * env->Le( &ray );
             break;
         }
 
@@ -203,8 +203,8 @@ color3 Pathtracer::trace_ray( Scene* scene,
         // if ( ray->tmax < 0 || !intersection->hit || ray->dir.z == 0 ) return ret;
 
         if ( scene->medium != nullptr )
-            ret = ret * scene->medium->tr( *ray, scene->ysol ) +
-                  scene->medium->sample( *ray, scene, tree, scene->ysol );
+            ret = ret * scene->medium->tr( ray, scene->ysol ) +
+                  scene->medium->sample( ray, scene, tree, scene->ysol );
     }
 
     return ret;

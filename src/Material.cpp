@@ -981,7 +981,7 @@ color3 Material::scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersectio
 }
 
 color3
-Material::eval( Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf ) {
+Material::eval( Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf ) const {
     if ( m_MatModel == MaterialModel::COOK_TORRANCE ) {
         if ( m_MatType == TRANSPARENT ) return color3( 0 );
         BrdfData data;
@@ -1016,7 +1016,7 @@ color3 Material::sample( Ray* ray,
                          Intersection* intersection,
                          const vec2& uScattering,
                          vec3* wi,
-                         float* scatteringPdf ) {
+                         float* scatteringPdf ) const {
 
     if ( m_MatModel == MaterialModel::COOK_TORRANCE ) {
         if ( m_MatType == TRANSPARENT ) {

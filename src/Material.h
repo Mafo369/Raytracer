@@ -99,12 +99,12 @@ class Material
     color3 textureColor( float u, float v, int face );
     color3 ambientColor( Ray* ray, Intersection* intersection, color3 lightColor );
     color3 scatterColor( Scene* scene, KdTree* tree, Ray* ray, Intersection* intersection );
-    color3 eval( Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf );
+    color3 eval( Ray* ray, Intersection* intersection, const vec3& wi, float* scatteringPdf ) const;
     color3 sample( Ray* ray,
                    Intersection* intersection,
                    const vec2& uScattering,
                    vec3* wi,
-                   float* scatteringPdf );
+                   float* scatteringPdf ) const;
 
     color3 refractionColor( Scene* scene,
                             KdTree* tree,

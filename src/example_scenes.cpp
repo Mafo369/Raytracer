@@ -1163,20 +1163,22 @@ Scene* initScene17() {
 
 Scene* initScene18() {
     Scene* scene = initScene();
-    auto from    = point3( 0, 0.9, 3 );
-    auto at      = vec3( 0, 0.5, 0 );
+    auto from    = point3( 1.9166, 0.4598, 1.1936 );
+    auto at      = vec3( 0.7520, 0.33266, 0.4188 );
     setSimpleCamera( scene,
                      from,
                      at,
                      vec3( 0, 1, 0 ),
-                     90,
+                     80,
                      (float)WIDTH,
                      (float)HEIGHT,
                      0.04,
-                     glm::length( at - from ) );
+                     glm::length( at - from ) * 1.5 );
 
+    // auto sky =
+    //     new IBL( "C:/Users/marco/Documents/GitRepos/Raytracer/assets/rainforest_trail_4k.hdr" );
     auto sky =
-        new IBL( "C:/Users/marco/Documents/GitRepos/Raytracer/assets/rainforest_trail_4k.hdr" );
+        new IBL( "C:/Users/marco/Documents/GitRepos/Raytracer/assets/brown_photostudio_06_4k.hdr" );
 
     addLight( scene, sky );
     scene->envLights.push_back( sky );
@@ -1383,10 +1385,12 @@ Scene* initScene20() {
     auto sky =
         new IBL( "C:/Users/marco/Documents/GitRepos/Raytracer/assets/rainforest_trail_4k.hdr" );
     // auto sky = new IBL( "/home/mafo/dev/Raytracer/assets/spaichingen_hill_4k.hdr" );
-    // Transform skyT;
+    Transform skyT;
     //// skyT.rotate(vec3(0,1,0), 80);
     // sky->m_transform = skyT;
-    // scene->sky       = sky;
+    //  scene->sky       = sky;
+    addLight( scene, sky );
+    scene->envLights.push_back( sky );
 
     auto& mat       = scene->CreateMaterial( MaterialModel::COOK_TORRANCE );
     mat.m_albedo    = color3( 0.6 );
